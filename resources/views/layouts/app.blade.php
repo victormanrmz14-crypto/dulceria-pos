@@ -1,36 +1,199 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $title ?? 'Dulcería POS' }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        :root {
+            --dark-red:   #8B0000;
+            --medium-red: #A52A2A;
+            --deep-red:   #580000;
+            --accent:     #ff7043;
+            --sidebar-w:  240px;
+            --white:      #ffffff;
+            --text-soft:  #ffcccc;
+            --bg:         #f4f4f4;
+        }
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        body {
+            font-family: 'DM Sans', sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--bg);
+        }
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
+        /* SIDEBAR */
+        aside {
+            width: var(--sidebar-w);
+            min-width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--dark-red);
+            display: flex;
+            flex-direction: column;
+        }
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+        .sidebar-header {
+            background: var(--medium-red);
+            padding: 28px 0 24px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
-        </div>
-    </body>
+        .sidebar-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--white);
+        }
+
+        .sidebar-header span {
+            display: block;
+            font-size: 0.82rem;
+            color: var(--text-soft);
+            margin-top: 6px;
+        }
+
+        nav { flex: 1; padding: 8px 0; }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            height: 58px;
+            padding: 0 0 0 36px;
+            background: transparent;
+            border: none;
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            position: relative;
+            transition: background 0.18s ease, padding-left 0.18s ease;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 50%;
+            transform: translateY(-50%) scaleY(0);
+            width: 3px; height: 55%;
+            background: var(--accent);
+            border-radius: 0 3px 3px 0;
+            transition: transform 0.18s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255,255,255,0.12);
+            padding-left: 42px;
+        }
+
+        .nav-link:hover::before,
+        .nav-link.active::before {
+            transform: translateY(-50%) scaleY(1);
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            height: 58px;
+            background: var(--deep-red);
+            border: none;
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.18s ease;
+        }
+
+        .btn-logout:hover { background: #3d0000; }
+
+        /* CONTENIDO */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px;
+            background: var(--bg);
+        }
+
+        /* ALERTAS FLASH */
+        .alert {
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .alert-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .alert-error   { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+    </style>
+</head>
+<body>
+
+<aside>
+    <div class="sidebar-header">
+        <h1>🍬 Dulcería POS</h1>
+        <span>{{ Auth::user()->nombre }}</span>
+    </div>
+
+    <nav>
+        <a href="{{ route('dashboard') }}"
+           class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            🏠 &nbsp; Inicio
+        </a>
+        <a href="#"
+           class="nav-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}">
+            🛒 &nbsp; Ventas
+        </a>
+        <a href="#"
+           class="nav-link {{ request()->routeIs('productos.*') ? 'active' : '' }}">
+            🍬 &nbsp; Productos
+        </a>
+        <a href="#"
+           class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
+            👥 &nbsp; Usuarios
+        </a>
+        <a href="#"
+           class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
+            📊 &nbsp; Reportes
+        </a>
+        <a href="#"
+           class="nav-link {{ request()->routeIs('catalogos.*') ? 'active' : '' }}">
+            📝 &nbsp; Catálogos
+        </a>
+    </nav>
+
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button type="submit" class="btn-logout">
+            🚪 &nbsp; Cerrar Sesión
+        </button>
+    </form>
+</aside>
+
+<main>
+    @if(session('success'))
+        <div class="alert alert-success">✅ {{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-error">❌ {{ session('error') }}</div>
+    @endif
+
+    @yield('content')
+</main>
+
+</body>
 </html>
