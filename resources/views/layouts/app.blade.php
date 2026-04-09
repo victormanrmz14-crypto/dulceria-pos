@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'Dulcería POS' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -27,7 +28,6 @@
             background: var(--bg);
         }
 
-        /* SIDEBAR */
         aside {
             width: var(--sidebar-w);
             min-width: var(--sidebar-w);
@@ -57,7 +57,7 @@
             margin-top: 6px;
         }
 
-        nav { flex: 1; padding: 8px 0; }
+        nav { flex: 1; padding: 8px 0; overflow-y: auto; }
 
         .nav-link {
             display: flex;
@@ -100,6 +100,35 @@
             transform: translateY(-50%) scaleY(1);
         }
 
+        .nav-submenu {
+            background: rgba(0,0,0,0.15);
+        }
+
+        .nav-sublink {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            height: 46px;
+            padding: 0 0 0 60px;
+            background: transparent;
+            border: none;
+            color: var(--text-soft);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            position: relative;
+            transition: background 0.18s ease, color 0.18s ease;
+        }
+
+        .nav-sublink:hover,
+        .nav-sublink.active {
+            background: rgba(255,255,255,0.10);
+            color: var(--white);
+        }
+
         .btn-logout {
             display: flex;
             align-items: center;
@@ -120,7 +149,6 @@
 
         .btn-logout:hover { background: #3d0000; }
 
-        /* CONTENIDO */
         main {
             flex: 1;
             overflow-y: auto;
@@ -128,7 +156,6 @@
             background: var(--bg);
         }
 
-        /* ALERTAS FLASH */
         .alert {
             padding: 12px 18px;
             border-radius: 8px;
@@ -146,7 +173,7 @@
 <aside>
     <div class="sidebar-header">
         <h1>🍬 Dulcería POS</h1>
-        <span>{{ Auth::user()->nombre }}</span>
+        <span>{{ Auth::user()->nombre ?? 'Usuario' }}</span>
     </div>
 
     <nav>
@@ -154,26 +181,52 @@
            class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
             🏠 &nbsp; Inicio
         </a>
+
         <a href="#"
            class="nav-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}">
             🛒 &nbsp; Ventas
         </a>
+
         <a href="#"
            class="nav-link {{ request()->routeIs('productos.*') ? 'active' : '' }}">
             🍬 &nbsp; Productos
         </a>
+
         <a href="#"
            class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
             👥 &nbsp; Usuarios
         </a>
+
         <a href="#"
            class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
             📊 &nbsp; Reportes
         </a>
-        <a href="#"
-           class="nav-link {{ request()->routeIs('catalogos.*') ? 'active' : '' }}">
-            📝 &nbsp; Catálogos
-        </a>
+
+        {{-- Catálogos expandible --}}
+        <div x-data="{ open: {{ request()->routeIs('catalogos.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="nav-link {{ request()->routeIs('catalogos.*') ? 'active' : '' }}"
+                    style="justify-content:space-between; padding-right:20px;">
+                <span>📝 &nbsp; Catálogos</span>
+                <span x-text="open ? '▲' : '▼'" style="font-size:0.7rem;"></span>
+            </button>
+
+            <div x-show="open" x-transition class="nav-submenu">
+                <a href="{{ route('catalogos.categorias.index') }}"
+                   class="nav-sublink {{ request()->routeIs('catalogos.categorias.*') ? 'active' : '' }}">
+                    🏷️ &nbsp; Categorías
+                </a>
+                <a href="{{ route('catalogos.marcas.index') }}"
+                   class="nav-sublink {{ request()->routeIs('catalogos.marcas.*') ? 'active' : '' }}">
+                    🏭 &nbsp; Marcas
+                </a>
+                <a href="#"
+                    class="nav-sublink {{ request()->routeIs('catalogos.proveedores.*') ? 'active' : '' }}">
+                    🚚 &nbsp; Proveedores
+    </a>
+            </div>
+        </div>
+
     </nav>
 
     <form method="POST" action="{{ route('logout') }}">
