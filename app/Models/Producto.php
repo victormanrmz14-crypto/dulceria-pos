@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Producto extends Model
+{
+    protected $table = 'productos';
+
+    protected $fillable = [
+        'categoria_id',
+        'marca_id',
+        'nombre',
+        'precio',
+        'stock',
+        'stock_minimo',
+        'unidad_medida',
+        'activo',
+    ];
+
+    // Relación con Categoria
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class);
+    }
+
+    // Relación con Marca
+    public function marca()
+    {
+        return $this->belongsTo(Marca::class);
+    }
+
+    // Verificar si el stock está bajo
+    public function stockBajo()
+    {
+        return $this->stock <= $this->stock_minimo;
+    }
+}

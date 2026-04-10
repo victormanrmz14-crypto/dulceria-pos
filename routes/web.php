@@ -1,25 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
 });
-
-// Rutas de autenticación (sin registro público)
-Route::get('login', [AuthenticatedSessionController::class, 'create'])
-    ->middleware('guest')
-    ->name('login');
-
-Route::post('login', [AuthenticatedSessionController::class, 'store'])
-    ->middleware('guest');
-
-Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('logout');
 
 // Rutas protegidas
 Route::middleware(['auth'])->group(function () {
@@ -35,4 +24,12 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('catalogos/marcas', MarcaController::class)
         ->names('catalogos.marcas');
 
+    Route::resource('productos', ProductoController::class);
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
 });
+
+require __DIR__.'/auth.php';

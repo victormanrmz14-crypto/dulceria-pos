@@ -167,6 +167,7 @@
         .alert-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
         .alert-error   { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
     </style>
+    @livewireStyles
 </head>
 <body>
 
@@ -187,8 +188,8 @@
             🛒 &nbsp; Ventas
         </a>
 
-        <a href="#"
-           class="nav-link {{ request()->routeIs('productos.*') ? 'active' : '' }}">
+        <a href="{{ route('productos.index') }}"
+            class="nav-link {{ request()->routeIs('productos.*') ? 'active' : '' }}">
             🍬 &nbsp; Productos
         </a>
 
@@ -247,6 +248,6 @@
 
     @yield('content')
 </main>
-
+@livewireScripts
 </body>
 </html>
