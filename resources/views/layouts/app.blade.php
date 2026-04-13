@@ -177,24 +177,26 @@
         <span>{{ Auth::user()->nombre ?? 'Usuario' }}</span>
     </div>
 
-    <nav>
-        <a href="{{ route('dashboard') }}"
-           class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-            🏠 &nbsp; Inicio
-        </a>
+<nav>
+    <a href="{{ route('dashboard') }}"
+       class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+        🏠 &nbsp; Inicio
+    </a>
 
-        <a href="#"
-           class="nav-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}">
-            🛒 &nbsp; Ventas
-        </a>
+    <a href="#"
+       class="nav-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}">
+        🛒 &nbsp; Ventas
+    </a>
+
+    @if(auth()->user()->rol === 'admin')
 
         <a href="{{ route('productos.index') }}"
-            class="nav-link {{ request()->routeIs('productos.*') ? 'active' : '' }}">
+           class="nav-link {{ request()->routeIs('productos.*') ? 'active' : '' }}">
             🍬 &nbsp; Productos
         </a>
 
         <a href="{{ route('usuarios.index') }}"
-            class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
+           class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
             👥 &nbsp; Usuarios
         </a>
 
@@ -203,7 +205,6 @@
             📊 &nbsp; Reportes
         </a>
 
-        {{-- Catálogos expandible --}}
         <div x-data="{ open: {{ request()->routeIs('catalogos.*') ? 'true' : 'false' }} }">
             <button @click="open = !open"
                     class="nav-link {{ request()->routeIs('catalogos.*') ? 'active' : '' }}"
@@ -222,13 +223,14 @@
                     🏭 &nbsp; Marcas
                 </a>
                 <a href="#"
-                    class="nav-sublink {{ request()->routeIs('catalogos.proveedores.*') ? 'active' : '' }}">
+                   class="nav-sublink {{ request()->routeIs('catalogos.proveedores.*') ? 'active' : '' }}">
                     🚚 &nbsp; Proveedores
-    </a>
+                </a>
             </div>
         </div>
 
-    </nav>
+    @endif
+</nav>
 
     <form method="POST" action="{{ route('logout') }}">
         @csrf

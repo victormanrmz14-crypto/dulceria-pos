@@ -11,29 +11,31 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-// Rutas protegidas
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // Catálogos
-    Route::resource('catalogos/categorias', CategoriaController::class)
-        ->names('catalogos.categorias');
+    // Solo admin
+    Route::middleware(['solo.admin'])->group(function () {
 
-    Route::resource('catalogos/marcas', MarcaController::class)
-        ->names('catalogos.marcas');
+        Route::resource('catalogos/categorias', CategoriaController::class)
+            ->names('catalogos.categorias');
 
-    Route::resource('productos', ProductoController::class);
+        Route::resource('catalogos/marcas', MarcaController::class)
+            ->names('catalogos.marcas');
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        Route::resource('productos', ProductoController::class);
 
+        Route::resource('usuarios', UsuarioController::class)
+            ->except(['show']);
 
-    Route::resource('usuarios', UsuarioController::class)
-        ->except(['show']);
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    });
 
 });
 
