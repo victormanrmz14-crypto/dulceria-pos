@@ -193,8 +193,8 @@
             🍬 &nbsp; Productos
         </a>
 
-        <a href="#"
-           class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
+        <a href="{{ route('usuarios.index') }}"
+            class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
             👥 &nbsp; Usuarios
         </a>
 
