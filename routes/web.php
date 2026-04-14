@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\VentaController;
@@ -31,7 +32,13 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
         Route::resource('catalogos/marcas', MarcaController::class)
             ->names('catalogos.marcas');
 
+        Route::resource('catalogos/proveedores', ProveedorController::class)
+            ->names('catalogos.proveedores')
+            ->parameters(['proveedores' => 'proveedor']);
+
         Route::resource('productos', ProductoController::class);
+        Route::post('productos/{producto}/notificar-proveedor', [ProductoController::class, 'notificarProveedor'])
+            ->name('productos.notificar-proveedor');
 
         Route::resource('usuarios', UsuarioController::class)
             ->except(['show']);

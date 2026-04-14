@@ -14,6 +14,21 @@
         </p>
     </div>
 
+    {{-- Alerta stock bajo --}}
+    @if($producto->stockBajo() && $producto->activo)
+    <div style="background:#fff3cd; color:#856404; padding:14px 18px; border-radius:10px;
+                border-left:4px solid #f0a500; margin-bottom:20px; font-size:0.9rem;">
+        ⚠️ Este producto tiene <strong>stock bajo</strong>.
+        Stock actual: <strong>{{ number_format($producto->stock, 0) }}</strong> /
+        Mínimo: <strong>{{ number_format($producto->stock_minimo, 0) }}</strong>
+        @if($producto->proveedor)
+            — Proveedor asignado: <strong>{{ $producto->proveedor->nombre }}</strong>
+        @else
+            — <span style="color:#dc3545;">Sin proveedor asignado</span>
+        @endif
+    </div>
+    @endif
+
     <div style="background:#fff; border-radius:12px; padding:32px;
                 box-shadow:0 2px 8px rgba(0,0,0,0.06);">
         <form method="POST" action="{{ route('productos.update', $producto) }}">
@@ -31,6 +46,28 @@
                        style="width:100%; padding:10px 14px; border:1px solid #ddd;
                               border-radius:8px; font-size:0.95rem; outline:none;">
                 @error('nombre')
+                    <p style="color:#dc3545; font-size:0.82rem; margin-top:6px;">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- Proveedor --}}
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-weight:600; margin-bottom:6px;
+                              font-size:0.9rem; color:#555;">
+                    Proveedor
+                </label>
+                <select name="proveedor_id"
+                        style="width:100%; padding:10px 14px; border:1px solid #ddd;
+                               border-radius:8px; font-size:0.95rem; outline:none; background:#fff;">
+                    <option value="">Sin proveedor</option>
+                    @foreach($proveedores as $proveedor)
+                        <option value="{{ $proveedor->id }}"
+                            {{ old('proveedor_id', $producto->proveedor_id) == $proveedor->id ? 'selected' : '' }}>
+                            {{ $proveedor->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('proveedor_id')
                     <p style="color:#dc3545; font-size:0.82rem; margin-top:6px;">{{ $message }}</p>
                 @enderror
             </div>
@@ -150,7 +187,8 @@
                 </div>
             </div>
 
-            <div style="display:flex; gap:12px;">
+            {{-- Botones --}}
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
                 <button type="submit"
                         style="background:#8B0000; color:white; padding:10px 24px;
                                border:none; border-radius:8px; font-weight:600;
@@ -165,6 +203,26 @@
                 </a>
             </div>
         </form>
+
+        {{-- Botón notificar proveedor FUERA del form --}}
+        @if($producto->proveedor && $producto->stockBajo() && $producto->activo)
+        <div style="margin-top:16px; padding-top:16px; border-top:1px solid #f0f0f0;">
+            <p style="color:#856404; font-size:0.85rem; margin-bottom:10px;">
+                ⚠️ Stock bajo detectado. ¿Deseas notificar al proveedor?
+            </p>
+            <form method="POST"
+                  action="{{ route('productos.notificar-proveedor', $producto) }}">
+                @csrf
+                <button type="submit"
+                        style="background:#f0a500; color:white; padding:10px 24px;
+                               border:none; border-radius:8px; font-weight:600;
+                               font-size:0.9rem; cursor:pointer;">
+                    📧 Notificar a {{ $producto->proveedor->nombre }}
+                </button>
+            </form>
+        </div>
+        @endif
+
     </div>
 </div>
 

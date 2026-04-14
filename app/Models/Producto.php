@@ -11,6 +11,7 @@ class Producto extends Model
     protected $fillable = [
         'categoria_id',
         'marca_id',
+        'proveedor_id',
         'nombre',
         'precio',
         'stock',
@@ -36,6 +37,12 @@ class Producto extends Model
     public function marca()
     {
         return $this->belongsTo(Marca::class);
+    }
+
+    // Relación con Proveedor
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedor::class);
     }
 
     // Verificar si el stock está bajo

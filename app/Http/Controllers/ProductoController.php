@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\NotificarProveedor;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\Marca;
+use App\Models\Proveedor;
 use App\Http\Requests\StoreProductoRequest;
 use App\Http\Requests\UpdateProductoRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class ProductoController extends Controller
 {
@@ -31,9 +34,10 @@ class ProductoController extends Controller
 
     public function create()
     {
-        $categorias = Categoria::where('activo', true)->orderBy('nombre')->get();
-        $marcas     = Marca::where('activo', true)->orderBy('nombre')->get();
-        return view('productos.create', compact('categorias', 'marcas'));
+        $categorias  = Categoria::where('activo', true)->orderBy('nombre')->get();
+        $marcas      = Marca::where('activo', true)->orderBy('nombre')->get();
+        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
+        return view('productos.create', compact('categorias', 'marcas', 'proveedores'));
     }
 
     public function store(StoreProductoRequest $request)
@@ -46,9 +50,10 @@ class ProductoController extends Controller
 
     public function edit(Producto $producto)
     {
-        $categorias = Categoria::where('activo', true)->orderBy('nombre')->get();
-        $marcas     = Marca::where('activo', true)->orderBy('nombre')->get();
-        return view('productos.edit', compact('producto', 'categorias', 'marcas'));
+        $categorias  = Categoria::where('activo', true)->orderBy('nombre')->get();
+        $marcas      = Marca::where('activo', true)->orderBy('nombre')->get();
+        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
+        return view('productos.edit', compact('producto', 'categorias', 'marcas', 'proveedores'));
     }
 
     public function update(UpdateProductoRequest $request, Producto $producto)
@@ -67,5 +72,20 @@ class ProductoController extends Controller
 
         return redirect()->route('productos.index')
             ->with('success', $mensaje);
+    }
+
+    public function notificarProveedor(Producto $producto)
+    {
+        $proveedor = $producto->proveedor;
+
+        if (!$proveedor) {
+            return redirect()->route('productos.index')
+                ->with('error', 'Este producto no tiene un proveedor asignado.');
+        }
+
+        Mail::to($proveedor->email)->send(new NotificarProveedor($proveedor, $producto));
+
+        return redirect()->route('productos.index')
+            ->with('success', "Notificación enviada a {$proveedor->nombre} ({$proveedor->email}).");
     }
 }

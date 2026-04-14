@@ -34,6 +34,28 @@
                 @enderror
             </div>
 
+            {{-- Proveedor --}}
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-weight:600; margin-bottom:6px;
+                              font-size:0.9rem; color:#555;">
+                    Proveedor
+                </label>
+                <select name="proveedor_id"
+                        style="width:100%; padding:10px 14px; border:1px solid #ddd;
+                               border-radius:8px; font-size:0.95rem; outline:none; background:#fff;">
+                    <option value="">Sin proveedor</option>
+                    @foreach($proveedores as $proveedor)
+                        <option value="{{ $proveedor->id }}"
+                            {{ old('proveedor_id') == $proveedor->id ? 'selected' : '' }}>
+                            {{ $proveedor->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('proveedor_id')
+                    <p style="color:#dc3545; font-size:0.82rem; margin-top:6px;">{{ $message }}</p>
+                @enderror
+            </div>
+
             {{-- Categoría y Marca --}}
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
                 <div>

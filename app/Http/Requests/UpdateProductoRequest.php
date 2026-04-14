@@ -17,6 +17,7 @@ class UpdateProductoRequest extends FormRequest
             'nombre'        => ['required', 'string', 'max:255'],
             'categoria_id'  => ['required', 'exists:categorias,id'],
             'marca_id'      => ['required', 'exists:marcas,id'],
+            'proveedor_id'  => ['nullable', 'exists:proveedores,id'],
             'precio'        => ['required', 'numeric', 'min:0'],
             'stock'         => ['required', 'numeric', 'min:0'],
             'stock_minimo'  => ['required', 'numeric', 'min:0'],

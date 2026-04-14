@@ -225,7 +225,7 @@
                        class="nav-sublink {{ request()->routeIs('catalogos.marcas.*') ? 'active' : '' }}">
                         🏭 &nbsp; Marcas
                     </a>
-                    <a href="#"
+                    <a href="{{ route('catalogos.proveedores.index') }}"
                        class="nav-sublink {{ request()->routeIs('catalogos.proveedores.*') ? 'active' : '' }}">
                         🚚 &nbsp; Proveedores
                     </a>
