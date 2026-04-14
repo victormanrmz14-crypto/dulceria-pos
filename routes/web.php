@@ -6,6 +6,7 @@ use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\VentaController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -17,9 +18,13 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
+    // Ventas (accesible para admin y cajero)
+    Route::get('/ventas',           [VentaController::class, 'index'])->name('ventas.index');
+    Route::get('/ventas/historial', [VentaController::class, 'historial'])->name('ventas.historial');
+    Route::get('/ventas/{venta}/ticket', [VentaController::class, 'ticket'])->name('ventas.ticket');
+
     // Solo admin
     Route::middleware(['solo.admin'])->group(function () {
-
         Route::resource('catalogos/categorias', CategoriaController::class)
             ->names('catalogos.categorias');
 

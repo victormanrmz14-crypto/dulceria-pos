@@ -100,9 +100,7 @@
             transform: translateY(-50%) scaleY(1);
         }
 
-        .nav-submenu {
-            background: rgba(0,0,0,0.15);
-        }
+        .nav-submenu { background: rgba(0,0,0,0.15); }
 
         .nav-sublink {
             display: flex;
@@ -156,6 +154,11 @@
             background: var(--bg);
         }
 
+        main.ventas-layout {
+            overflow: hidden;
+            padding: 24px 32px;
+        }
+
         .alert {
             padding: 12px 18px;
             border-radius: 8px;
@@ -177,60 +180,60 @@
         <span>{{ Auth::user()->nombre ?? 'Usuario' }}</span>
     </div>
 
-<nav>
-    <a href="{{ route('dashboard') }}"
-       class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-        🏠 &nbsp; Inicio
-    </a>
-
-    <a href="#"
-       class="nav-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}">
-        🛒 &nbsp; Ventas
-    </a>
-
-    @if(auth()->user()->rol === 'admin')
-
-        <a href="{{ route('productos.index') }}"
-           class="nav-link {{ request()->routeIs('productos.*') ? 'active' : '' }}">
-            🍬 &nbsp; Productos
+    <nav>
+        <a href="{{ route('dashboard') }}"
+           class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            🏠 &nbsp; Inicio
         </a>
 
-        <a href="{{ route('usuarios.index') }}"
-           class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
-            👥 &nbsp; Usuarios
+        <a href="{{ route('ventas.index') }}"
+           class="nav-link {{ request()->routeIs('ventas.*') ? 'active' : '' }}">
+            🛒 &nbsp; Ventas
         </a>
 
-        <a href="#"
-           class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
-            📊 &nbsp; Reportes
-        </a>
+        @if(auth()->user()->rol === 'admin')
 
-        <div x-data="{ open: {{ request()->routeIs('catalogos.*') ? 'true' : 'false' }} }">
-            <button @click="open = !open"
-                    class="nav-link {{ request()->routeIs('catalogos.*') ? 'active' : '' }}"
-                    style="justify-content:space-between; padding-right:20px;">
-                <span>📝 &nbsp; Catálogos</span>
-                <span x-text="open ? '▲' : '▼'" style="font-size:0.7rem;"></span>
-            </button>
+            <a href="{{ route('productos.index') }}"
+               class="nav-link {{ request()->routeIs('productos.*') ? 'active' : '' }}">
+                🍬 &nbsp; Productos
+            </a>
 
-            <div x-show="open" x-transition class="nav-submenu">
-                <a href="{{ route('catalogos.categorias.index') }}"
-                   class="nav-sublink {{ request()->routeIs('catalogos.categorias.*') ? 'active' : '' }}">
-                    🏷️ &nbsp; Categorías
-                </a>
-                <a href="{{ route('catalogos.marcas.index') }}"
-                   class="nav-sublink {{ request()->routeIs('catalogos.marcas.*') ? 'active' : '' }}">
-                    🏭 &nbsp; Marcas
-                </a>
-                <a href="#"
-                   class="nav-sublink {{ request()->routeIs('catalogos.proveedores.*') ? 'active' : '' }}">
-                    🚚 &nbsp; Proveedores
-                </a>
+            <a href="{{ route('usuarios.index') }}"
+               class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
+                👥 &nbsp; Usuarios
+            </a>
+
+            <a href="#"
+               class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
+                📊 &nbsp; Reportes
+            </a>
+
+            <div x-data="{ open: {{ request()->routeIs('catalogos.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open"
+                        class="nav-link {{ request()->routeIs('catalogos.*') ? 'active' : '' }}"
+                        style="justify-content:space-between; padding-right:20px;">
+                    <span>📝 &nbsp; Catálogos</span>
+                    <span x-text="open ? '▲' : '▼'" style="font-size:0.7rem;"></span>
+                </button>
+
+                <div x-show="open" x-transition class="nav-submenu">
+                    <a href="{{ route('catalogos.categorias.index') }}"
+                       class="nav-sublink {{ request()->routeIs('catalogos.categorias.*') ? 'active' : '' }}">
+                        🏷️ &nbsp; Categorías
+                    </a>
+                    <a href="{{ route('catalogos.marcas.index') }}"
+                       class="nav-sublink {{ request()->routeIs('catalogos.marcas.*') ? 'active' : '' }}">
+                        🏭 &nbsp; Marcas
+                    </a>
+                    <a href="#"
+                       class="nav-sublink {{ request()->routeIs('catalogos.proveedores.*') ? 'active' : '' }}">
+                        🚚 &nbsp; Proveedores
+                    </a>
+                </div>
             </div>
-        </div>
 
-    @endif
-</nav>
+        @endif
+    </nav>
 
     <form method="POST" action="{{ route('logout') }}">
         @csrf
@@ -240,7 +243,7 @@
     </form>
 </aside>
 
-<main>
+<main class="{{ request()->routeIs('ventas.index') ? 'ventas-layout' : '' }}">
     @if(session('success'))
         <div class="alert alert-success">✅ {{ session('success') }}</div>
     @endif
@@ -250,6 +253,7 @@
 
     @yield('content')
 </main>
+
 @livewireScripts
 </body>
 </html>
