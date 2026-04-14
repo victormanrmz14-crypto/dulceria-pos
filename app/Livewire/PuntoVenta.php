@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Producto;
 use App\Models\Venta;
 use App\Models\DetalleVenta;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class PuntoVenta extends Component
@@ -116,40 +117,46 @@ class PuntoVenta extends Component
     {
         if (empty($this->carrito)) return;
 
-        // Verificar stock de todos los productos
-        foreach ($this->carrito as $item) {
-            $producto = Producto::find($item['id']);
-            if (!$producto || $producto->stock < $item['cantidad']) {
-                session()->flash('error', "Stock insuficiente para {$item['nombre']}.");
-                $this->mostrarConfirmacion = false;
-                return;
+        try {
+        $venta = DB::transaction(function () {
+            // Re-verificar stock dentro de la transacción con lock pesimista
+            foreach ($this->carrito as $item) {
+                $producto = Producto::lockForUpdate()->find($item['id']);
+                if (!$producto || $producto->stock < $item['cantidad']) {
+                    throw new \RuntimeException("Stock insuficiente para {$item['nombre']}.");
+                }
             }
-        }
 
-        // Crear venta
-        $venta = Venta::create([
-            'user_id'     => auth()->id(),
-            'folio'       => Venta::generarFolio(),
-            'metodo_pago' => $this->metodoPago,
-            'subtotal'    => $this->subtotal,
-            'impuestos'   => $this->iva,
-            'total'       => $this->total,
-        ]);
-
-        // Crear detalles y descontar stock
-        foreach ($this->carrito as $item) {
-            DetalleVenta::create([
-                'venta_id'        => $venta->id,
-                'producto_id'     => $item['id'],
-                'cantidad'        => $item['cantidad'],
-                'precio_unitario' => $item['precio'],
-                'importe'         => $item['importe'],
+            // Crear venta (sin folio aún)
+            $venta = Venta::create([
+                'user_id'     => auth()->id(),
+                'folio'       => '',
+                'metodo_pago' => $this->metodoPago,
+                'subtotal'    => $this->subtotal,
+                'impuestos'   => $this->iva,
+                'total'       => $this->total,
             ]);
 
-            // Descontar stock
-            Producto::where('id', $item['id'])
-                ->decrement('stock', $item['cantidad']);
-        }
+            // Asignar folio basado en el id real (sin race condition)
+            $venta->folio = Venta::folioDesdeId($venta->id);
+            $venta->save();
+
+            // Crear detalles y descontar stock
+            foreach ($this->carrito as $item) {
+                DetalleVenta::create([
+                    'venta_id'        => $venta->id,
+                    'producto_id'     => $item['id'],
+                    'cantidad'        => $item['cantidad'],
+                    'precio_unitario' => $item['precio'],
+                    'importe'         => $item['importe'],
+                ]);
+
+                Producto::where('id', $item['id'])
+                    ->decrement('stock', $item['cantidad']);
+            }
+
+            return $venta;
+        });
 
         // Limpiar carrito
         $this->carrito             = [];
@@ -161,6 +168,11 @@ class PuntoVenta extends Component
 
         // Redirigir al ticket
         $this->redirect(route('ventas.ticket', $venta->id));
+
+        } catch (\RuntimeException $e) {
+            session()->flash('error', $e->getMessage());
+            $this->mostrarConfirmacion = false;
+        }
     }
 
     // Cancelar confirmación

@@ -17,6 +17,14 @@ class Venta extends Model
         'total',
     ];
 
+    protected $casts = [
+        'subtotal'   => 'decimal:2',
+        'impuestos'  => 'decimal:2',
+        'total'      => 'decimal:2',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
     // Relación con usuario
     public function usuario()
     {
@@ -29,11 +37,9 @@ class Venta extends Model
         return $this->hasMany(DetalleVenta::class, 'venta_id');
     }
 
-    // Generar folio consecutivo
-    public static function generarFolio(): string
+    // Generar folio a partir del id ya asignado por la BD
+    public static function folioDesdeId(int $id): string
     {
-        $ultimo = self::latest('id')->first();
-        $numero = $ultimo ? $ultimo->id + 1 : 1;
-        return 'VTA-' . str_pad($numero, 6, '0', STR_PAD_LEFT);
+        return 'VTA-' . str_pad($id, 6, '0', STR_PAD_LEFT);
     }
 }

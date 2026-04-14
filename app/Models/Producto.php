@@ -19,6 +19,13 @@ class Producto extends Model
         'activo',
     ];
 
+    protected $casts = [
+        'precio'       => 'decimal:2',
+        'stock'        => 'integer',
+        'stock_minimo' => 'integer',
+        'activo'       => 'boolean',
+    ];
+
     // Relación con Categoria
     public function categoria()
     {
