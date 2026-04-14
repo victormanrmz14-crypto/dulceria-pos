@@ -203,8 +203,8 @@
                 👥 &nbsp; Usuarios
             </a>
 
-            <a href="#"
-               class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
+            <a href="{{ route('reportes.index') }}"
+                class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
                 📊 &nbsp; Reportes
             </a>
 
