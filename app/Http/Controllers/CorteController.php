@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CorteCaja;
+use App\Models\MovimientoCaja;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 
@@ -27,6 +28,13 @@ class CorteController extends Controller
             ->whereBetween('created_at', [$fechaInicio, $fechaCorte])
             ->get();
 
+        $movimientos = MovimientoCaja::where('user_id', $userId)
+            ->whereBetween('created_at', [$fechaInicio, $fechaCorte])
+            ->get();
+
+        $ingresosCaja = $movimientos->where('tipo', 'ingreso')->sum('monto');
+        $retirosCaja  = $movimientos->where('tipo', 'retiro')->sum('monto');
+
         $efectivoContado = $request->input('efectivo_contado');
         $dineroEnCaja    = $request->input('dinero_en_caja');
 
@@ -35,9 +43,9 @@ class CorteController extends Controller
             'fecha_inicio'      => $fechaInicio,
             'fecha_corte'       => $fechaCorte,
             'num_transacciones' => $ventas->count(),
-            'total_efectivo'    => $ventas->where('metodo_pago', 'efectivo')->sum('total'),
+            'total_efectivo'    => $ventas->where('metodo_pago', 'efectivo')->sum('total') + $ingresosCaja - $retirosCaja,
             'total_tarjeta'     => $ventas->where('metodo_pago', 'tarjeta')->sum('total'),
-            'total_general'     => $ventas->sum('total'),
+            'total_general'     => $ventas->sum('total') + $ingresosCaja - $retirosCaja,
             'notas'             => $request->input('notas'),
             'efectivo_contado'  => $efectivoContado !== '' ? $efectivoContado : null,
             'dinero_en_caja'    => $dineroEnCaja    !== '' ? $dineroEnCaja    : null,
