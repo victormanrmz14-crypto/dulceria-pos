@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\CorteController;
 use App\Http\Controllers\DashboardController;
@@ -19,6 +20,11 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Caja (accesible para admin y cajero)
+    Route::get('/caja',             [CajaController::class, 'index'])->name('caja.index');
+    Route::post('/caja/ingreso',    [CajaController::class, 'ingreso'])->name('caja.ingreso');
+    Route::post('/caja/retiro',     [CajaController::class, 'retiro'])->name('caja.retiro');
 
     // Cortes de caja (admin ve todos, cajero solo los suyos)
     Route::post('/cortes',          [CorteController::class, 'store'])->name('cortes.store');
