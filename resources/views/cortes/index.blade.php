@@ -13,16 +13,16 @@
             {{ auth()->user()->rol === 'admin' ? 'Cortes de todos los cajeros.' : 'Tus cortes de caja.' }}
         </p>
     </div>
-    <form method="POST" action="{{ route('cortes.store') }}"
-          x-data
-          @submit.prevent="if(confirm('¿Confirmas el corte de caja ahora?')) $el.submit()">
-        @csrf
-        <button type="submit"
-                style="background:#8B0000; color:#fff; padding:10px 20px; border:none;
-                       border-radius:8px; font-weight:600; font-size:0.9rem; cursor:pointer;">
-            📋 Nuevo corte
-        </button>
-    </form>
+    <div style="text-align:right;">
+        <p style="color:#777; font-size:0.88rem; margin:0 0 6px;">
+            Para hacer un nuevo corte ve al Dashboard
+        </p>
+        <a href="{{ route('dashboard') }}"
+           style="background:#8B0000; color:#fff; padding:10px 20px; border-radius:8px;
+                  text-decoration:none; font-weight:600; font-size:0.9rem;">
+            → Ir al Dashboard
+        </a>
+    </div>
 </div>
 
 <div style="background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); overflow:hidden;">

@@ -4,19 +4,61 @@
 
 @section('content')
 
-<div x-data="{ modalCorte: false, notas: '' }">
+<div x-data="{
+    modalCorte: false,
+    notas: '',
+    efectivoContado: '',
+    dineroEnCaja: '',
+    get errorRecuento() {
+        return this.efectivoContado !== '' && parseFloat(this.efectivoContado) > {{ $miEfectivoModal }};
+    },
+    get errorDineroEnCaja() {
+        return this.dineroEnCaja !== '' && this.efectivoContado !== '' &&
+               parseFloat(this.dineroEnCaja) > parseFloat(this.efectivoContado);
+    },
+    get formInvalido() {
+        return this.errorRecuento || this.errorDineroEnCaja;
+    }
+}">
 
 @if(auth()->user()->rol === 'admin')
 
 {{-- ═══════════════════════════════ VISTA ADMIN ═══════════════════════════════ --}}
 
-<div style="margin-bottom:28px;">
-    <h2 style="font-family:'Playfair Display',serif; font-size:1.8rem; color:#8B0000;">
-        Bienvenido, {{ Auth::user()->nombre }} 👋
-    </h2>
-    <p style="color:#999; font-size:0.9rem; margin-top:4px;">
-        {{ now()->isoFormat('dddd, D [de] MMMM [de] YYYY') }}
-    </p>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+    <div>
+        <h2 style="font-family:'Playfair Display',serif; font-size:1.8rem; color:#8B0000;">
+            Bienvenido, {{ Auth::user()->nombre }} 👋
+        </h2>
+        <p style="color:#999; font-size:0.9rem; margin-top:4px;">
+            {{ now()->isoFormat('dddd, D [de] MMMM [de] YYYY') }}
+        </p>
+    </div>
+    <div style="text-align:right;">
+        <button @click="modalCorte = true"
+                style="background:#fff; color:#8B0000; padding:12px 28px; border-radius:10px;
+                       border:2px solid #8B0000; font-weight:700; font-size:0.95rem; cursor:pointer;">
+            📋 Hacer corte
+        </button>
+        @if($ultimoCorte)
+        <p style="color:#aaa; font-size:0.78rem; margin:6px 0 0;">
+            Último corte: {{ $ultimoCorte->fecha_corte->isoFormat('D MMM [a las] HH:mm') }}
+            —
+            <a href="{{ route('cortes.show', $ultimoCorte) }}"
+               style="color:#8B0000; font-weight:600; text-decoration:none;">Ver</a>
+            &nbsp;·&nbsp;
+            <a href="{{ route('cortes.index') }}"
+               style="color:#8B0000; font-weight:600; text-decoration:none;">Ver todos →</a>
+        </p>
+        @else
+        <p style="margin:6px 0 0;">
+            <a href="{{ route('cortes.index') }}"
+               style="color:#8B0000; font-weight:600; font-size:0.78rem; text-decoration:none;">
+                Ver historial de cortes →
+            </a>
+        </p>
+        @endif
+    </div>
 </div>
 
 {{-- Tarjetas admin --}}
@@ -153,31 +195,6 @@
         <p style="font-size:0.9rem; margin:8px 0 0;">No hay ventas registradas hoy.</p>
     </div>
     @endforelse
-</div>
-
-{{-- Corte de caja admin --}}
-<div style="display:flex; gap:16px; align-items:center; margin-top:20px;">
-    <button @click="modalCorte = true"
-            style="background:#fff; color:#8B0000; padding:12px 28px; border-radius:10px;
-                   border:2px solid #8B0000; font-weight:700; font-size:0.95rem; cursor:pointer;">
-        📋 Hacer corte
-    </button>
-    @if($ultimoCorte)
-    <p style="color:#aaa; font-size:0.8rem; margin:0;">
-        Último corte propio: {{ $ultimoCorte->fecha_corte->isoFormat('D MMM [a las] HH:mm') }}
-        —
-        <a href="{{ route('cortes.show', $ultimoCorte) }}"
-           style="color:#8B0000; font-weight:600; text-decoration:none;">Ver</a>
-        &nbsp;·&nbsp;
-        <a href="{{ route('cortes.index') }}"
-           style="color:#8B0000; font-weight:600; text-decoration:none;">Ver todos →</a>
-    </p>
-    @else
-    <a href="{{ route('cortes.index') }}"
-       style="color:#8B0000; font-weight:600; font-size:0.8rem; text-decoration:none;">
-        Ver historial de cortes →
-    </a>
-    @endif
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -338,72 +355,128 @@
 <div x-show="modalCorte"
      x-transition.opacity
      style="position:fixed; inset:0; background:rgba(0,0,0,0.5);
-            display:flex; align-items:center; justify-content:center; z-index:1000;"
+            display:flex; align-items:center; justify-content:center; z-index:1000;
+            font-family:'DM Sans',sans-serif;"
      @keydown.escape.window="modalCorte = false">
 
-    <div style="background:#fff; border-radius:16px; padding:32px; width:440px;
-                box-shadow:0 24px 64px rgba(0,0,0,0.25);"
+    <div style="background:#fff; border-radius:16px; padding:32px; width:100%;
+                max-width:520px; box-shadow:0 24px 64px rgba(0,0,0,0.25); margin:16px;"
          @click.stop>
 
         {{-- Encabezado --}}
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
             <h3 style="font-family:'Playfair Display',serif; color:#8B0000;
                        font-size:1.4rem; margin:0;">
                 📋 Corte de Caja
             </h3>
-            <button @click="modalCorte = false"
+            <button @click="modalCorte = false; notas = ''; efectivoContado = ''; dineroEnCaja = ''"
                     style="background:none; border:none; font-size:1.2rem;
-                           cursor:pointer; color:#aaa; line-height:1;">✕</button>
+                           cursor:pointer; color:#aaa; line-height:1; padding:4px 8px;">✕</button>
         </div>
 
-        {{-- Tabla de totales del turno --}}
-        <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:0.9rem;">
+        {{-- Tabla: método / total esperado / recuento manual --}}
+        <table style="width:100%; border-collapse:collapse; font-size:0.88rem; margin-bottom:0;">
             <thead>
                 <tr style="background:#f9f9f9; border-bottom:2px solid #eee;">
                     <th style="padding:10px 14px; text-align:left; color:#777;
-                               font-weight:600; font-size:0.82rem;">Método</th>
+                               font-weight:600; font-size:0.8rem; white-space:nowrap;">
+                        Método de pago
+                    </th>
                     <th style="padding:10px 14px; text-align:right; color:#777;
-                               font-weight:600; font-size:0.82rem;">Total del turno</th>
+                               font-weight:600; font-size:0.8rem; white-space:nowrap;">
+                        Total esperado
+                    </th>
+                    <th style="padding:10px 14px; text-align:right; color:#777;
+                               font-weight:600; font-size:0.8rem; white-space:nowrap;">
+                        Recuento manual
+                    </th>
                 </tr>
             </thead>
             <tbody>
+                {{-- Efectivo --}}
                 <tr style="border-bottom:1px solid #f0f0f0;">
                     <td style="padding:12px 14px;">
                         <span style="display:inline-flex; align-items:center; gap:8px;">
                             <span style="width:10px; height:10px; border-radius:50%;
-                                         background:#17a2b8; display:inline-block;"></span>
+                                         background:#17a2b8; display:inline-block; flex-shrink:0;"></span>
                             💵 Efectivo
                         </span>
                     </td>
-                    <td style="padding:12px 14px; text-align:right; font-weight:600;
-                               color:#17a2b8;">
-                        ${{ number_format($miEfectivo, 2) }}
+                    <td style="padding:12px 14px; text-align:right; font-weight:600; color:#17a2b8;">
+                        ${{ number_format($miEfectivoModal, 2) }}
+                    </td>
+                    <td style="padding:12px 14px; text-align:right;">
+                        <input type="number"
+                               x-model="efectivoContado"
+                               min="0" step="0.01"
+                               placeholder="0.00"
+                               :style="errorRecuento
+                                   ? 'width:100px;padding:6px 10px;border:1.5px solid #dc3545;border-radius:8px;font-size:0.88rem;text-align:right;outline:none;font-family:inherit;-moz-appearance:textfield;'
+                                   : 'width:100px;padding:6px 10px;border:1px solid #ddd;border-radius:8px;font-size:0.88rem;text-align:right;outline:none;font-family:inherit;-moz-appearance:textfield;'">
+                        <p x-show="errorRecuento"
+                           style="color:#dc3545; font-size:0.72rem; margin:5px 0 0;
+                                  text-align:right; line-height:1.3; max-width:130px;
+                                  margin-left:auto;">
+                            El recuento no puede ser mayor al efectivo esperado
+                        </p>
                     </td>
                 </tr>
+                {{-- Tarjeta --}}
                 <tr style="border-bottom:1px solid #f0f0f0;">
                     <td style="padding:12px 14px;">
                         <span style="display:inline-flex; align-items:center; gap:8px;">
                             <span style="width:10px; height:10px; border-radius:50%;
-                                         background:#6f42c1; display:inline-block;"></span>
+                                         background:#6f42c1; display:inline-block; flex-shrink:0;"></span>
                             💳 Tarjeta
                         </span>
                     </td>
-                    <td style="padding:12px 14px; text-align:right; font-weight:600;
-                               color:#6f42c1;">
+                    <td style="padding:12px 14px; text-align:right; font-weight:600; color:#6f42c1;">
                         ${{ number_format($miTarjeta, 2) }}
                     </td>
-                </tr>
-                <tr style="background:#fff5f5;">
-                    <td style="padding:12px 14px; font-weight:700; color:#333;">
-                        Total general
-                    </td>
-                    <td style="padding:12px 14px; text-align:right; font-weight:700;
-                               font-size:1.05rem; color:#8B0000;">
-                        ${{ number_format($miTotalHoy, 2) }}
+                    <td style="padding:12px 14px; text-align:right; color:#bbb; font-size:0.82rem;">
+                        Sin recuento
                     </td>
                 </tr>
             </tbody>
         </table>
+
+        {{-- Separador --}}
+        <hr style="border:none; border-top:1px solid #eee; margin:20px 0;">
+
+        {{-- Dinero que queda en caja --}}
+        <div style="margin-bottom:8px;">
+            <label style="display:block; font-size:0.85rem; font-weight:600;
+                          color:#555; margin-bottom:8px;">
+                ¿Cuánto dinero dejas en caja?
+            </label>
+            <input type="number"
+                   x-model="dineroEnCaja"
+                   min="0" step="0.01"
+                   placeholder="0.00"
+                   :style="errorDineroEnCaja
+                       ? 'width:100%;padding:10px 12px;border:1.5px solid #dc3545;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;box-sizing:border-box;-moz-appearance:textfield;'
+                       : 'width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;box-sizing:border-box;-moz-appearance:textfield;'">
+            <p x-show="errorDineroEnCaja"
+               style="color:#dc3545; font-size:0.78rem; margin:5px 0 0;">
+                No puedes dejar más dinero del que contaste
+            </p>
+            <p x-show="!errorDineroEnCaja"
+               style="color:#aaa; font-size:0.78rem; margin:6px 0 0;">
+                El resto se considera retirado.
+            </p>
+        </div>
+
+        {{-- Separador --}}
+        <hr style="border:none; border-top:1px solid #eee; margin:20px 0;">
+
+        {{-- Total general del turno --}}
+        <div style="display:flex; justify-content:space-between; align-items:center;
+                    background:#fff5f5; border-radius:10px; padding:14px 16px; margin-bottom:20px;">
+            <span style="font-weight:700; color:#333; font-size:0.95rem;">Total general del turno</span>
+            <span style="font-weight:700; font-size:1.15rem; color:#8B0000;">
+                ${{ number_format($miTotalHoy, 2) }}
+            </span>
+        </div>
 
         {{-- Notas opcionales --}}
         <div style="margin-bottom:24px;">
@@ -416,25 +489,28 @@
                       placeholder="Ej. Turno tarde, cajero Juan..."
                       style="width:100%; padding:10px 12px; border:1px solid #ddd;
                              border-radius:8px; font-size:0.9rem; outline:none;
-                             resize:none; font-family:inherit;"></textarea>
+                             resize:none; font-family:inherit; box-sizing:border-box;"></textarea>
         </div>
 
-        {{-- Botones --}}
+        {{-- Formulario con botones --}}
         <form method="POST" action="{{ route('cortes.store') }}">
             @csrf
-            <input type="hidden" name="notas" :value="notas">
+            <input type="hidden" name="notas"             :value="notas">
+            <input type="hidden" name="efectivo_contado"  :value="efectivoContado">
+            <input type="hidden" name="dinero_en_caja"    :value="dineroEnCaja">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                 <button type="button"
-                        @click="modalCorte = false; notas = ''"
-                        style="padding:12px; background:#f0f0f0; color:#555; border:none;
-                               border-radius:8px; font-weight:600; font-size:0.9rem;
-                               cursor:pointer;">
+                        @click="modalCorte = false; notas = ''; efectivoContado = ''; dineroEnCaja = ''"
+                        style="padding:13px; background:#f0f0f0; color:#555; border:none;
+                               border-radius:10px; font-weight:600; font-size:0.9rem;
+                               cursor:pointer; font-family:inherit;">
                     Cancelar
                 </button>
                 <button type="submit"
-                        style="padding:12px; background:#8B0000; color:#fff; border:none;
-                               border-radius:8px; font-weight:700; font-size:0.9rem;
-                               cursor:pointer;">
+                        :disabled="formInvalido"
+                        :style="formInvalido
+                            ? 'padding:13px;background:#ccc;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:not-allowed;font-family:inherit;'
+                            : 'padding:13px;background:#8B0000;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:inherit;'">
                     ✅ Confirmar corte
                 </button>
             </div>
