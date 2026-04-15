@@ -27,6 +27,9 @@ class CorteController extends Controller
             ->whereBetween('created_at', [$fechaInicio, $fechaCorte])
             ->get();
 
+        $efectivoContado = $request->input('efectivo_contado');
+        $dineroEnCaja    = $request->input('dinero_en_caja');
+
         $corte = CorteCaja::create([
             'user_id'           => $userId,
             'fecha_inicio'      => $fechaInicio,
@@ -36,6 +39,8 @@ class CorteController extends Controller
             'total_tarjeta'     => $ventas->where('metodo_pago', 'tarjeta')->sum('total'),
             'total_general'     => $ventas->sum('total'),
             'notas'             => $request->input('notas'),
+            'efectivo_contado'  => $efectivoContado !== '' ? $efectivoContado : null,
+            'dinero_en_caja'    => $dineroEnCaja    !== '' ? $dineroEnCaja    : null,
         ]);
 
         return redirect()->route('cortes.show', $corte)

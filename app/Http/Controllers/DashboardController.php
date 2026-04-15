@@ -71,11 +71,16 @@ class DashboardController extends Controller
                                 ->limit(5)
                                 ->get();
 
+        // Efectivo esperado en caja = ventas en efectivo del período + fondo dejado en el último corte
+        $fondoCaja         = $ultimoCorte ? (float) ($ultimoCorte->dinero_en_caja ?? 0) : 0;
+        $miEfectivoModal   = $miEfectivo + $fondoCaja;
+
         return view('dashboard', compact(
             'ventasHoy', 'totalHoy', 'productosActivos', 'stockBajo',
             'ultimasVentas', 'ultimos7Dias', 'masVendidos',
             'misVentasHoy', 'miTotalHoy', 'miEfectivo',
-            'miTarjeta', 'misUltimasVentas', 'ultimoCorte'
+            'miTarjeta', 'misUltimasVentas', 'ultimoCorte',
+            'miEfectivoModal'
         ));
     }
 }

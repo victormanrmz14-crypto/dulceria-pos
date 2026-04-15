@@ -95,16 +95,22 @@
                         ✕
                     </button>
                 </div>
-                <div style="display:flex; align-items:center; margin-top:8px;">
-    <input type="number"
-           wire:change="cambiarCantidad({{ $item['id'] }}, $event.target.value)"
-           value="{{ $item['cantidad'] }}"
-           min="1"
-           max="{{ $item['stock'] }}"
-           style="width:64px; height:32px; border:1px solid #ddd; border-radius:6px;
-                  text-align:center; font-weight:600; font-size:0.9rem; outline:none;
-                  padding:0 8px;">
-</div>
+                <div style="margin-top:8px;">
+                    <input type="number"
+                           wire:change="cambiarCantidad({{ $item['id'] }}, $event.target.value)"
+                           value="{{ $item['cantidad'] }}"
+                           min="1"
+                           max="{{ $item['stock'] }}"
+                           style="width:64px; height:32px;
+                                  border:1px solid {{ isset($erroresCantidad[$item['id']]) ? '#dc3545' : '#ddd' }};
+                                  border-radius:6px; text-align:center; font-weight:600;
+                                  font-size:0.9rem; outline:none; padding:0 8px;">
+                    @isset($erroresCantidad[$item['id']])
+                    <p style="color:#dc3545; font-size:0.75rem; margin:4px 0 0;">
+                        {{ $erroresCantidad[$item['id']] }}
+                    </p>
+                    @endisset
+                </div>
             </div>
             @empty
             <div style="text-align:center; padding:40px 0; color:#ccc;">
@@ -169,6 +175,7 @@
                 </label>
                 <input type="number"
                        wire:model.live="montoRecibido"
+                       wire:keydown.enter.prevent="confirmarVenta"
                        step="0.01"
                        min="{{ $this->total }}"
                        placeholder="0.00"
@@ -185,11 +192,16 @@
             @endif
 
             <button wire:click="confirmarVenta"
-                    style="width:100%; padding:14px; background:#8B0000; color:white;
-                           border:none; border-radius:10px; font-weight:700;
-                           font-size:1rem; cursor:pointer;"
+                    {{ !empty($erroresCantidad) ? 'disabled' : '' }}
+                    style="width:100%; padding:14px;
+                           background:{{ !empty($erroresCantidad) ? '#ccc' : '#8B0000' }};
+                           color:white; border:none; border-radius:10px; font-weight:700;
+                           font-size:1rem;
+                           cursor:{{ !empty($erroresCantidad) ? 'not-allowed' : 'pointer' }};"
+                    @if(empty($erroresCantidad))
                     onmouseover="this.style.background='#6d0000'"
-                    onmouseout="this.style.background='#8B0000'">
+                    onmouseout="this.style.background='#8B0000'"
+                    @endif>
                 Cobrar ${{ number_format($this->total, 2) }}
             </button>
 

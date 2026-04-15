@@ -17,6 +17,8 @@ class CorteCaja extends Model
         'total_tarjeta',
         'total_general',
         'notas',
+        'efectivo_contado',
+        'dinero_en_caja',
     ];
 
     protected $casts = [
@@ -26,6 +28,8 @@ class CorteCaja extends Model
         'total_tarjeta'     => 'decimal:2',
         'total_general'     => 'decimal:2',
         'num_transacciones' => 'integer',
+        'efectivo_contado'  => 'decimal:2',
+        'dinero_en_caja'    => 'decimal:2',
     ];
 
     public function usuario()

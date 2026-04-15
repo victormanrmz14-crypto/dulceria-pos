@@ -22,6 +22,9 @@ class PuntoVenta extends Component
 
     // Modal confirmación
     public bool $mostrarConfirmacion = false;
+
+    // Errores de cantidad por ítem del carrito [id => mensaje]
+    public array $erroresCantidad = [];
     
     public function getProductosProperty()
     {
@@ -67,6 +70,7 @@ class PuntoVenta extends Component
     public function quitarProducto(int $id): void
     {
         unset($this->carrito[$id]);
+        unset($this->erroresCantidad[$id]);
     }
 
     // Cambiar cantidad
@@ -80,10 +84,13 @@ class PuntoVenta extends Component
 
         $producto = Producto::find($id);
         if (!$producto) return;
+
         if ($cantidad > (int) $producto->stock) {
-            $cantidad = (int) $producto->stock;
+            $this->erroresCantidad[$id] = "Solo hay {$producto->stock} disponibles";
+            return;
         }
 
+        unset($this->erroresCantidad[$id]);
         $this->carrito[$id]['cantidad'] = $cantidad;
         $this->carrito[$id]['importe']  = round($cantidad * $this->carrito[$id]['precio'], 2);
     }
@@ -188,6 +195,7 @@ class PuntoVenta extends Component
         $this->buscar              = '';
         $this->metodoPago          = 'efectivo';
         $this->montoRecibido       = null;
+        $this->erroresCantidad     = [];
         $this->mostrarConfirmacion = false;
 
         session()->flash('success', "Venta {$venta->folio} registrada correctamente.");
@@ -210,10 +218,11 @@ class PuntoVenta extends Component
     // Limpiar carrito
     public function limpiarCarrito(): void
     {
-        $this->carrito       = [];
-        $this->buscar        = '';
-        $this->metodoPago    = 'efectivo';
-        $this->montoRecibido = null;
+        $this->carrito          = [];
+        $this->buscar           = '';
+        $this->metodoPago       = 'efectivo';
+        $this->montoRecibido    = null;
+        $this->erroresCantidad  = [];
     }
 
     public function render()
