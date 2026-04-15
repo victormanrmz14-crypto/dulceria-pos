@@ -17,7 +17,8 @@ class PuntoVenta extends Component
     public array $carrito = [];
 
     // Pago
-    public string $metodoPago = 'efectivo';
+    public string $metodoPago    = 'efectivo';
+    public float  $montoRecibido = 0;
 
     // Modal confirmación
     public bool $mostrarConfirmacion = false;
@@ -105,6 +106,15 @@ class PuntoVenta extends Component
         return round($this->subtotal + $this->iva, 2);
     }
 
+    // Calcular cambio
+    public function getCambioProperty(): float
+    {
+        if ($this->metodoPago === 'efectivo' && $this->montoRecibido >= $this->total) {
+            return round($this->montoRecibido - $this->total, 2);
+        }
+        return 0;
+    }
+
     // Confirmar venta
     public function confirmarVenta(): void
     {
@@ -117,6 +127,13 @@ class PuntoVenta extends Component
     {
         if (empty($this->carrito)) return;
 
+        // Validar monto recibido cuando el pago es en efectivo
+        if ($this->metodoPago === 'efectivo' && $this->montoRecibido > 0
+            && $this->montoRecibido < $this->total) {
+            session()->flash('error', 'El monto recibido es menor al total de la venta.');
+            return;
+        }
+
         try {
         $venta = DB::transaction(function () {
             // Re-verificar stock dentro de la transacción con lock pesimista
@@ -128,13 +145,19 @@ class PuntoVenta extends Component
             }
 
             // Crear venta sin folio (null no viola UNIQUE), se asigna tras conocer el id
+            $esEfectivo      = $this->metodoPago === 'efectivo';
+            $montoRecibido   = $esEfectivo && $this->montoRecibido > 0 ? $this->montoRecibido : null;
+            $cambio          = $montoRecibido !== null ? $this->cambio : null;
+
             $venta = Venta::create([
-                'user_id'     => auth()->id(),
-                'folio'       => null,
-                'metodo_pago' => $this->metodoPago,
-                'subtotal'    => $this->subtotal,
-                'impuestos'   => $this->iva,
-                'total'       => $this->total,
+                'user_id'        => auth()->id(),
+                'folio'          => null,
+                'metodo_pago'    => $this->metodoPago,
+                'subtotal'       => $this->subtotal,
+                'impuestos'      => $this->iva,
+                'total'          => $this->total,
+                'monto_recibido' => $montoRecibido,
+                'cambio'         => $cambio,
             ]);
 
             // Asignar folio basado en el id real (sin race condition)
@@ -162,6 +185,7 @@ class PuntoVenta extends Component
         $this->carrito             = [];
         $this->buscar              = '';
         $this->metodoPago          = 'efectivo';
+        $this->montoRecibido       = 0;
         $this->mostrarConfirmacion = false;
 
         session()->flash('success', "Venta {$venta->folio} registrada correctamente.");
@@ -184,9 +208,10 @@ class PuntoVenta extends Component
     // Limpiar carrito
     public function limpiarCarrito(): void
     {
-        $this->carrito  = [];
-        $this->buscar   = '';
-        $this->metodoPago = 'efectivo';
+        $this->carrito       = [];
+        $this->buscar        = '';
+        $this->metodoPago    = 'efectivo';
+        $this->montoRecibido = 0;
     }
 
     public function render()
