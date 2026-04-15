@@ -6,7 +6,6 @@ use App\Models\Producto;
 use App\Models\Venta;
 use App\Models\DetalleVenta;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Livewire\Component;
 
 class PuntoVenta extends Component
@@ -128,10 +127,10 @@ class PuntoVenta extends Component
                 }
             }
 
-            // Crear venta con folio temporal único (UUID), se reemplaza tras conocer el id
+            // Crear venta sin folio (null no viola UNIQUE), se asigna tras conocer el id
             $venta = Venta::create([
                 'user_id'     => auth()->id(),
-                'folio'       => Str::uuid(),
+                'folio'       => null,
                 'metodo_pago' => $this->metodoPago,
                 'subtotal'    => $this->subtotal,
                 'impuestos'   => $this->iva,

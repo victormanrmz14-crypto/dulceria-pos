@@ -153,6 +153,36 @@
     @endforelse
 </div>
 
+{{-- Corte de caja admin --}}
+<div style="display:flex; gap:16px; align-items:center; margin-top:20px;">
+    <form method="POST" action="{{ route('cortes.store') }}"
+          x-data
+          @submit.prevent="if(confirm('¿Confirmas el corte de caja ahora?')) $el.submit()">
+        @csrf
+        <button type="submit"
+                style="background:#fff; color:#8B0000; padding:12px 28px; border-radius:10px;
+                       border:2px solid #8B0000; font-weight:700; font-size:0.95rem; cursor:pointer;">
+            📋 Hacer corte
+        </button>
+    </form>
+    @if($ultimoCorte)
+    <p style="color:#aaa; font-size:0.8rem; margin:0;">
+        Último corte propio: {{ $ultimoCorte->fecha_corte->isoFormat('D MMM [a las] HH:mm') }}
+        —
+        <a href="{{ route('cortes.show', $ultimoCorte) }}"
+           style="color:#8B0000; font-weight:600; text-decoration:none;">Ver</a>
+        &nbsp;·&nbsp;
+        <a href="{{ route('cortes.index') }}"
+           style="color:#8B0000; font-weight:600; text-decoration:none;">Ver todos →</a>
+    </p>
+    @else
+    <a href="{{ route('cortes.index') }}"
+       style="color:#8B0000; font-weight:600; font-size:0.8rem; text-decoration:none;">
+        Ver historial de cortes →
+    </a>
+    @endif
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const ctx = document.getElementById('graficaVentas').getContext('2d');
@@ -247,18 +277,33 @@
 </div>
 
 {{-- Botones de acción --}}
-<div style="display:flex; gap:16px; margin-bottom:28px;">
+<div style="display:flex; gap:16px; align-items:center; margin-bottom:16px;">
     <a href="{{ route('ventas.index') }}"
        style="background:#8B0000; color:white; padding:14px 32px; border-radius:10px;
               text-decoration:none; font-weight:700; font-size:1rem;">
         🛒 Ir a vender
     </a>
-    <button onclick="alert('Corte de caja próximamente')"
-            style="background:#fff; color:#8B0000; padding:14px 32px; border-radius:10px;
-                   border:2px solid #8B0000; font-weight:700; font-size:1rem; cursor:pointer;">
-        📋 Hacer corte
-    </button>
+    <form method="POST" action="{{ route('cortes.store') }}"
+          x-data
+          @submit.prevent="if(confirm('¿Confirmas el corte de caja ahora? Se cerrarán las ventas del turno actual.')) $el.submit()">
+        @csrf
+        <button type="submit"
+                style="background:#fff; color:#8B0000; padding:14px 32px; border-radius:10px;
+                       border:2px solid #8B0000; font-weight:700; font-size:1rem; cursor:pointer;">
+            📋 Hacer corte
+        </button>
+    </form>
 </div>
+@if($ultimoCorte)
+<p style="color:#aaa; font-size:0.8rem; margin-bottom:28px;">
+    Último corte: {{ $ultimoCorte->fecha_corte->isoFormat('D MMM YYYY [a las] HH:mm') }}
+    —
+    <a href="{{ route('cortes.show', $ultimoCorte) }}"
+       style="color:#8B0000; font-weight:600; text-decoration:none;">Ver detalle</a>
+</p>
+@else
+<p style="color:#aaa; font-size:0.8rem; margin-bottom:28px;">Sin cortes registrados aún.</p>
+@endif
 
 {{-- Mis últimas ventas --}}
 <div style="background:#fff; border-radius:12px;

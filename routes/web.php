@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\CorteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\ProductoController;
@@ -18,6 +19,11 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Cortes de caja (admin ve todos, cajero solo los suyos)
+    Route::post('/cortes',          [CorteController::class, 'store'])->name('cortes.store');
+    Route::get('/cortes',           [CorteController::class, 'index'])->name('cortes.index');
+    Route::get('/cortes/{corte}',   [CorteController::class, 'show'])->name('cortes.show');
 
     // Ventas (accesible para admin y cajero)
     Route::get('/ventas',           [VentaController::class, 'index'])->name('ventas.index');

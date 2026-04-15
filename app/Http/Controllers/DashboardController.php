@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CorteCaja;
 use App\Models\DetalleVenta;
 use App\Models\Producto;
 use App\Models\Venta;
@@ -60,11 +61,15 @@ class DashboardController extends Controller
                                 ->limit(5)
                                 ->get();
 
+        $ultimoCorte = CorteCaja::where('user_id', $userId)
+                                ->latest('fecha_corte')
+                                ->first();
+
         return view('dashboard', compact(
             'ventasHoy', 'totalHoy', 'productosActivos', 'stockBajo',
             'ultimasVentas', 'ultimos7Dias', 'masVendidos',
             'misVentasHoy', 'miTotalHoy', 'miEfectivo',
-            'miTarjeta', 'misUltimasVentas'
+            'miTarjeta', 'misUltimasVentas', 'ultimoCorte'
         ));
     }
 }

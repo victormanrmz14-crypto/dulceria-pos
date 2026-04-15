@@ -208,6 +208,11 @@
                 📊 &nbsp; Reportes
             </a>
 
+            <a href="{{ route('cortes.index') }}"
+               class="nav-link {{ request()->routeIs('cortes.*') ? 'active' : '' }}">
+                📋 &nbsp; Cortes de caja
+            </a>
+
             <div x-data="{ open: {{ request()->routeIs('catalogos.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                         class="nav-link {{ request()->routeIs('catalogos.*') ? 'active' : '' }}"
