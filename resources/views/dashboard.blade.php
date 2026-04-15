@@ -25,76 +25,80 @@
 
 {{-- ═══════════════════════════════ VISTA ADMIN ═══════════════════════════════ --}}
 
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
-    <div>
-        <h2 style="font-family:'Playfair Display',serif; font-size:1.8rem; color:#8B0000;">
-            Bienvenido, {{ Auth::user()->nombre }} 👋
-        </h2>
-        <p style="color:#999; font-size:0.9rem; margin-top:4px;">
-            {{ now()->isoFormat('dddd, D [de] MMMM [de] YYYY') }}
-        </p>
-    </div>
-    <div style="text-align:right;">
-        <button @click="modalCorte = true"
-                style="background:#fff; color:#8B0000; padding:12px 28px; border-radius:10px;
-                       border:2px solid #8B0000; font-weight:700; font-size:0.95rem; cursor:pointer;">
-            📋 Hacer corte
-        </button>
-        @if($ultimoCorte)
-        <p style="color:#aaa; font-size:0.78rem; margin:6px 0 0;">
-            Último corte: {{ $ultimoCorte->fecha_corte->isoFormat('D MMM [a las] HH:mm') }}
-            —
-            <a href="{{ route('cortes.show', $ultimoCorte) }}"
-               style="color:#8B0000; font-weight:600; text-decoration:none;">Ver</a>
-            &nbsp;·&nbsp;
-            <a href="{{ route('cortes.index') }}"
-               style="color:#8B0000; font-weight:600; text-decoration:none;">Ver todos →</a>
-        </p>
-        @else
-        <p style="margin:6px 0 0;">
-            <a href="{{ route('cortes.index') }}"
-               style="color:#8B0000; font-weight:600; font-size:0.78rem; text-decoration:none;">
-                Ver historial de cortes →
-            </a>
-        </p>
-        @endif
-    </div>
+<div style="margin-bottom:28px;">
+    <h2 style="font-family:'Playfair Display',serif; font-size:1.8rem; color:#8B0000;">
+        Bienvenido, {{ Auth::user()->nombre }} 👋
+    </h2>
+    <p style="color:#999; font-size:0.9rem; margin-top:4px;">
+        {{ now()->isoFormat('dddd, D [de] MMMM [de] YYYY') }}
+    </p>
 </div>
 
 {{-- Tarjetas admin --}}
+<style>
+    .metric-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.13);
+        text-decoration: none;
+    }
+    .corte-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139,0,0,0.35);
+    }
+    .accion-vender:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139,0,0,0.35);
+        text-decoration: none;
+    }
+    .accion-corte-cajero:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139,0,0,0.18);
+    }
+</style>
+
 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
             gap:20px; margin-bottom:28px;">
 
-    <div style="background:#fff; border-radius:12px; padding:24px 20px;
-                box-shadow:0 2px 8px rgba(0,0,0,0.06); border-left:4px solid #8B0000;">
+    <a href="{{ route('ventas.historial') }}" class="metric-card"
+       style="border-left:4px solid #8B0000;">
         <p style="color:#999; font-size:0.82rem; margin:0;">Ventas hoy</p>
         <p style="font-size:2rem; font-weight:700; color:#8B0000; margin:8px 0 0;">
             {{ $ventasHoy }}
         </p>
         <p style="color:#bbb; font-size:0.78rem; margin:4px 0 0;">transacciones</p>
-    </div>
+    </a>
 
-    <div style="background:#fff; border-radius:12px; padding:24px 20px;
-                box-shadow:0 2px 8px rgba(0,0,0,0.06); border-left:4px solid #28a745;">
+    <a href="{{ route('ventas.historial') }}" class="metric-card"
+       style="border-left:4px solid #28a745;">
         <p style="color:#999; font-size:0.82rem; margin:0;">Total del día</p>
         <p style="font-size:2rem; font-weight:700; color:#28a745; margin:8px 0 0;">
             ${{ number_format($totalHoy, 2) }}
         </p>
         <p style="color:#bbb; font-size:0.78rem; margin:4px 0 0;">ingresos</p>
-    </div>
+    </a>
 
-    <div style="background:#fff; border-radius:12px; padding:24px 20px;
-                box-shadow:0 2px 8px rgba(0,0,0,0.06); border-left:4px solid #f0a500;">
+    <a href="{{ route('productos.index') }}" class="metric-card"
+       style="border-left:4px solid #f0a500;">
         <p style="color:#999; font-size:0.82rem; margin:0;">Productos activos</p>
         <p style="font-size:2rem; font-weight:700; color:#f0a500; margin:8px 0 0;">
             {{ $productosActivos }}
         </p>
         <p style="color:#bbb; font-size:0.78rem; margin:4px 0 0;">en catálogo</p>
-    </div>
+    </a>
 
-    <div style="background:#fff; border-radius:12px; padding:24px 20px;
-                box-shadow:0 2px 8px rgba(0,0,0,0.06);
-                border-left:4px solid {{ $stockBajo > 0 ? '#dc3545' : '#28a745' }};">
+    <a href="{{ route('productos.index', ['stock_bajo' => 1]) }}" class="metric-card"
+       style="border-left:4px solid {{ $stockBajo > 0 ? '#dc3545' : '#28a745' }};">
         <p style="color:#999; font-size:0.82rem; margin:0;">Stock bajo</p>
         <p style="font-size:2rem; font-weight:700;
                   color:{{ $stockBajo > 0 ? '#dc3545' : '#28a745' }}; margin:8px 0 0;">
@@ -103,18 +107,34 @@
         <p style="color:#bbb; font-size:0.78rem; margin:4px 0 0;">
             {{ $stockBajo > 0 ? 'requieren reabasto' : 'todo en orden' }}
         </p>
-    </div>
-</div>
+        @if($stockBajo > 0)
+        <span style="display:inline-block; margin-top:10px; background:#dc3545;
+                     color:#fff; font-size:0.72rem; font-weight:700;
+                     padding:3px 10px; border-radius:20px;">
+            Ver productos →
+        </span>
+        @endif
+    </a>
 
-{{-- Alerta stock bajo --}}
-@if($stockBajo > 0)
-<div style="background:#fff3cd; color:#856404; padding:14px 18px; border-radius:10px;
-            border-left:4px solid #f0a500; margin-bottom:28px; font-size:0.9rem;">
-    ⚠️ <strong>{{ $stockBajo }} producto(s)</strong> tienen stock por debajo del mínimo.
-    <a href="{{ route('productos.index') }}"
-       style="color:#8B0000; font-weight:600; margin-left:8px;">Ver productos →</a>
+    <button @click="modalCorte = true" class="corte-card"
+            style="background:#8B0000; border-radius:12px; padding:24px 20px;
+                   box-shadow:0 2px 8px rgba(0,0,0,0.06); border:none;
+                   cursor:pointer; transition:all 0.2s ease; text-align:center;
+                   display:flex; flex-direction:column; align-items:center;
+                   justify-content:center; gap:8px; font-family:'DM Sans',sans-serif;">
+        <span style="font-size:2rem; line-height:1;">📋</span>
+        <span style="font-size:1rem; font-weight:700; color:#fff;">Hacer corte</span>
+        @if($ultimoCorte)
+        <span style="font-size:0.72rem; color:rgba(255,255,255,0.65); margin-top:2px;">
+            Último: {{ $ultimoCorte->fecha_corte->isoFormat('D MMM [a las] HH:mm') }}
+        </span>
+        @else
+        <span style="font-size:0.72rem; color:rgba(255,255,255,0.55); margin-top:2px;">
+            Sin cortes aún
+        </span>
+        @endif
+    </button>
 </div>
-@endif
 
 {{-- Gráfica + más vendidos --}}
 <div style="display:grid; grid-template-columns:1fr 340px; gap:20px; margin-bottom:28px;">
@@ -249,9 +269,9 @@
     </p>
 </div>
 
-{{-- Tarjetas cajero --}}
+{{-- Tarjetas cajero (4 métricas + 2 acción) --}}
 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
-            gap:20px; margin-bottom:28px;">
+            gap:20px; margin-bottom:16px;">
 
     <div style="background:#fff; border-radius:12px; padding:24px 20px;
                 box-shadow:0 2px 8px rgba(0,0,0,0.06); border-left:4px solid #8B0000;">
@@ -288,30 +308,38 @@
         </p>
         <p style="color:#bbb; font-size:0.78rem; margin:4px 0 0;">cobrado</p>
     </div>
-</div>
 
-{{-- Botones de acción --}}
-<div style="display:flex; gap:16px; align-items:center; margin-bottom:16px;">
-    <a href="{{ route('ventas.index') }}"
-       style="background:#8B0000; color:white; padding:14px 32px; border-radius:10px;
-              text-decoration:none; font-weight:700; font-size:1rem;">
-        🛒 Ir a vender
+    <a href="{{ route('ventas.index') }}" class="accion-vender"
+       style="background:#8B0000; border-radius:12px; padding:24px 20px;
+              box-shadow:0 2px 8px rgba(0,0,0,0.06); border:none;
+              text-decoration:none; cursor:pointer; transition:all 0.2s ease;
+              display:flex; flex-direction:column; align-items:center;
+              justify-content:center; gap:8px; text-align:center;">
+        <span style="font-size:2rem; line-height:1;">🛒</span>
+        <span style="font-size:1rem; font-weight:700; color:#fff;">Ir a vender</span>
     </a>
-    <button @click="modalCorte = true"
-            style="background:#fff; color:#8B0000; padding:14px 32px; border-radius:10px;
-                   border:2px solid #8B0000; font-weight:700; font-size:1rem; cursor:pointer;">
-        📋 Hacer corte
+
+    <button @click="modalCorte = true" class="accion-corte-cajero"
+            style="background:#fff; border-radius:12px; padding:24px 20px;
+                   box-shadow:0 2px 8px rgba(0,0,0,0.06); border:2px solid #8B0000;
+                   cursor:pointer; transition:all 0.2s ease;
+                   display:flex; flex-direction:column; align-items:center;
+                   justify-content:center; gap:8px; font-family:'DM Sans',sans-serif;">
+        <span style="font-size:2rem; line-height:1;">📋</span>
+        <span style="font-size:1rem; font-weight:700; color:#8B0000;">Hacer corte</span>
     </button>
 </div>
+
+{{-- Último corte --}}
 @if($ultimoCorte)
-<p style="color:#aaa; font-size:0.8rem; margin-bottom:28px;">
+<p style="color:#aaa; font-size:0.78rem; margin-bottom:28px;">
     Último corte: {{ $ultimoCorte->fecha_corte->isoFormat('D MMM YYYY [a las] HH:mm') }}
     —
     <a href="{{ route('cortes.show', $ultimoCorte) }}"
        style="color:#8B0000; font-weight:600; text-decoration:none;">Ver detalle</a>
 </p>
 @else
-<p style="color:#aaa; font-size:0.8rem; margin-bottom:28px;">Sin cortes registrados aún.</p>
+<p style="color:#aaa; font-size:0.78rem; margin-bottom:28px;">Sin cortes registrados aún.</p>
 @endif
 
 {{-- Mis últimas ventas --}}
