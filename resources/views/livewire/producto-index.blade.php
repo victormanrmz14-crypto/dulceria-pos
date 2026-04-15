@@ -34,6 +34,23 @@
         }
     </style>
 
+    {{-- Badge filtro stock bajo --}}
+    @if($filtroStockBajo)
+    <div style="background:#fff0f0; border-left:4px solid #dc3545; border-radius:10px;
+                padding:12px 18px; margin-bottom:16px; display:flex;
+                align-items:center; justify-content:space-between; gap:12px;">
+        <span style="color:#721c24; font-size:0.88rem; font-weight:600;">
+            ⚠️ Mostrando solo productos con stock bajo
+        </span>
+        <a href="{{ route('productos.index') }}"
+           style="background:#dc3545; color:#fff; border-radius:8px;
+                  padding:6px 16px; font-size:0.82rem; font-weight:600;
+                  cursor:pointer; text-decoration:none; white-space:nowrap;">
+            Ver todos
+        </a>
+    </div>
+    @endif
+
     {{-- Filtros --}}
     <div style="background:#fff; border-radius:12px; padding:20px 24px;
                 box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:24px;

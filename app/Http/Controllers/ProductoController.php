@@ -60,8 +60,11 @@ class ProductoController extends Controller
     {
         $producto->update($request->validated());
 
-        return redirect()->route('productos.index')
-            ->with('success', 'Producto actualizado correctamente.');
+        $route = session('filtro_stock_bajo')
+            ? route('productos.index', ['stock_bajo' => 1])
+            : route('productos.index');
+
+        return redirect($route)->with('success', 'Producto actualizado correctamente.');
     }
 
     public function destroy(Producto $producto)

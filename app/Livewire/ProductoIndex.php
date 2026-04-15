@@ -5,20 +5,45 @@ namespace App\Livewire;
 use App\Models\Producto;
 use App\Models\Categoria;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class ProductoIndex extends Component
 {
+    use WithPagination;
     public array $productos = [];
     public $categorias;
+    public bool $filtroStockBajo = false;
 
     public function mount(): void
     {
+        if (request()->get('stock_bajo')) {
+            $this->filtroStockBajo = true;
+            session(['filtro_stock_bajo' => true]);
+        } else {
+            session()->forget('filtro_stock_bajo');
+            $this->filtroStockBajo = false;
+        }
+
         $this->categorias = Categoria::query()
             ->where('activo', true)
             ->orderBy('nombre')
             ->get(['id', 'nombre']);
 
         $this->loadProductos();
+    }
+
+    public function limpiarFiltroStock(): void
+    {
+        $this->filtroStockBajo = false;
+        session()->forget('filtro_stock_bajo');
+        $this->resetPage();
+        $this->loadProductos();
+    }
+
+    public function verTodos(): void
+    {
+        $this->filtroStockBajo = false;
+        session()->forget('filtro_stock_bajo');
     }
 
     public function toggleActivo(Producto $producto): void
@@ -45,6 +70,9 @@ class ProductoIndex extends Component
                 'categoria:id,nombre',
                 'marca:id,nombre',
             ])
+            ->when($this->filtroStockBajo, function ($q) {
+                $q->whereColumn('stock', '<=', 'stock_minimo');
+            })
             ->orderBy('nombre')
             ->get()
             ->map(function ($producto) {
