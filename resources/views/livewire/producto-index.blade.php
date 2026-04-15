@@ -163,16 +163,33 @@
         </table>
 
         {{-- Paginación --}}
-        <div x-show="totalPaginas > 1" style="padding:16px 20px; border-top:1px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center;">
-            <p style="font-size:0.85rem; color:#999; margin:0;" x-text="`Mostrando ${inicio + 1} - ${fin} de ${filtrados.length} productos`"></p>
+        <div x-show="totalPaginas > 1" style="padding:16px 20px; border-top:1px solid #f0f0f0;
+             display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
 
-            <div style="display:flex; gap:8px;">
+            <p style="font-size:0.85rem; color:#999; margin:0;"
+               x-text="`Mostrando ${inicio + 1} - ${fin} de ${filtrados.length} productos`"></p>
+
+            <div style="display:flex; gap:6px; align-items:center;">
                 <button x-on:click="prev()" :disabled="pagina === 1"
-                        style="padding:6px 14px; border-radius:6px; border:none; background:#f0f0f0; color:#555; font-weight:600; cursor:pointer;">
+                        :style="pagina === 1
+                            ? 'padding:6px 14px; border-radius:6px; border:1px solid #e0e0e0; background:#f5f5f5; color:#ccc; font-weight:600; font-size:0.85rem; cursor:not-allowed; font-family:inherit;'
+                            : 'padding:6px 14px; border-radius:6px; border:1px solid #8B0000; background:#fff; color:#8B0000; font-weight:600; font-size:0.85rem; cursor:pointer; font-family:inherit;'">
                     ← Anterior
                 </button>
+
+                <template x-for="n in totalPaginas" :key="n">
+                    <button x-on:click="pagina = n"
+                            :style="pagina === n
+                                ? 'padding:6px 12px; border-radius:6px; border:1px solid #8B0000; background:#8B0000; color:#fff; font-weight:600; font-size:0.85rem; cursor:default; font-family:inherit;'
+                                : 'padding:6px 12px; border-radius:6px; border:1px solid #e0e0e0; background:#fff; color:#555; font-weight:600; font-size:0.85rem; cursor:pointer; font-family:inherit;'"
+                            x-text="n">
+                    </button>
+                </template>
+
                 <button x-on:click="next()" :disabled="pagina >= totalPaginas"
-                        style="padding:6px 14px; border-radius:6px; border:none; background:#f0f0f0; color:#555; font-weight:600; cursor:pointer;">
+                        :style="pagina >= totalPaginas
+                            ? 'padding:6px 14px; border-radius:6px; border:1px solid #e0e0e0; background:#f5f5f5; color:#ccc; font-weight:600; font-size:0.85rem; cursor:not-allowed; font-family:inherit;'
+                            : 'padding:6px 14px; border-radius:6px; border:1px solid #8B0000; background:#fff; color:#8B0000; font-weight:600; font-size:0.85rem; cursor:pointer; font-family:inherit;'">
                     Siguiente →
                 </button>
             </div>
