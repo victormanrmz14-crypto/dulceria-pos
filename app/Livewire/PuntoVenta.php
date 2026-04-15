@@ -18,7 +18,7 @@ class PuntoVenta extends Component
 
     // Pago
     public string $metodoPago    = 'efectivo';
-    public float  $montoRecibido = 0;
+    public ?float $montoRecibido = null;
 
     // Modal confirmación
     public bool $mostrarConfirmacion = false;
@@ -109,6 +109,7 @@ class PuntoVenta extends Component
     // Calcular cambio
     public function getCambioProperty(): float
     {
+        if (!$this->montoRecibido || $this->montoRecibido <= 0) return 0;
         if ($this->metodoPago === 'efectivo' && $this->montoRecibido >= $this->total) {
             return round($this->montoRecibido - $this->total, 2);
         }
@@ -127,8 +128,9 @@ class PuntoVenta extends Component
     {
         if (empty($this->carrito)) return;
 
-        // Validar monto recibido cuando el pago es en efectivo
-        if ($this->metodoPago === 'efectivo' && $this->montoRecibido > 0
+        // Validar monto recibido solo si el cajero capturó uno
+        if ($this->metodoPago === 'efectivo'
+            && $this->montoRecibido !== null && $this->montoRecibido > 0
             && $this->montoRecibido < $this->total) {
             session()->flash('error', 'El monto recibido es menor al total de la venta.');
             return;
@@ -185,7 +187,7 @@ class PuntoVenta extends Component
         $this->carrito             = [];
         $this->buscar              = '';
         $this->metodoPago          = 'efectivo';
-        $this->montoRecibido       = 0;
+        $this->montoRecibido       = null;
         $this->mostrarConfirmacion = false;
 
         session()->flash('success', "Venta {$venta->folio} registrada correctamente.");
