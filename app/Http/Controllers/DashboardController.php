@@ -44,26 +44,32 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // Métricas propias del cajero autenticado
-        $misVentasHoy     = Venta::whereDate('created_at', $hoy)->where('user_id', $userId)->count();
-        $miTotalHoy       = Venta::whereDate('created_at', $hoy)->where('user_id', $userId)->sum('total');
-        $miEfectivo       = Venta::whereDate('created_at', $hoy)
+        // Último corte del cajero para delimitar su período actual
+        $ultimoCorte = CorteCaja::where('user_id', $userId)
+                                ->latest('fecha_corte')
+                                ->first();
+
+        // Desde el último corte hasta ahora; si no hay corte, desde el inicio del día actual
+        $desdeCorte = $ultimoCorte
+            ? Carbon::parse($ultimoCorte->fecha_corte)->setTimezone('America/Mexico_City')
+            : now('America/Mexico_City')->startOfDay();
+
+        // Métricas propias del cajero autenticado (desde su último corte)
+        $misVentasHoy     = Venta::where('created_at', '>=', $desdeCorte)->where('user_id', $userId)->count();
+        $miTotalHoy       = Venta::where('created_at', '>=', $desdeCorte)->where('user_id', $userId)->sum('total');
+        $miEfectivo       = Venta::where('created_at', '>=', $desdeCorte)
                                 ->where('user_id', $userId)
                                 ->where('metodo_pago', 'efectivo')
                                 ->sum('total');
-        $miTarjeta        = Venta::whereDate('created_at', $hoy)
+        $miTarjeta        = Venta::where('created_at', '>=', $desdeCorte)
                                 ->where('user_id', $userId)
                                 ->where('metodo_pago', 'tarjeta')
                                 ->sum('total');
-        $misUltimasVentas = Venta::whereDate('created_at', $hoy)
+        $misUltimasVentas = Venta::where('created_at', '>=', $desdeCorte)
                                 ->where('user_id', $userId)
                                 ->latest()
                                 ->limit(5)
                                 ->get();
-
-        $ultimoCorte = CorteCaja::where('user_id', $userId)
-                                ->latest('fecha_corte')
-                                ->first();
 
         return view('dashboard', compact(
             'ventasHoy', 'totalHoy', 'productosActivos', 'stockBajo',

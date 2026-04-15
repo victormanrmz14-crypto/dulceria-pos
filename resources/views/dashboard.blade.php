@@ -4,6 +4,8 @@
 
 @section('content')
 
+<div x-data="{ modalCorte: false, notas: '' }">
+
 @if(auth()->user()->rol === 'admin')
 
 {{-- ═══════════════════════════════ VISTA ADMIN ═══════════════════════════════ --}}
@@ -155,16 +157,11 @@
 
 {{-- Corte de caja admin --}}
 <div style="display:flex; gap:16px; align-items:center; margin-top:20px;">
-    <form method="POST" action="{{ route('cortes.store') }}"
-          x-data
-          @submit.prevent="if(confirm('¿Confirmas el corte de caja ahora?')) $el.submit()">
-        @csrf
-        <button type="submit"
-                style="background:#fff; color:#8B0000; padding:12px 28px; border-radius:10px;
-                       border:2px solid #8B0000; font-weight:700; font-size:0.95rem; cursor:pointer;">
-            📋 Hacer corte
-        </button>
-    </form>
+    <button @click="modalCorte = true"
+            style="background:#fff; color:#8B0000; padding:12px 28px; border-radius:10px;
+                   border:2px solid #8B0000; font-weight:700; font-size:0.95rem; cursor:pointer;">
+        📋 Hacer corte
+    </button>
     @if($ultimoCorte)
     <p style="color:#aaa; font-size:0.8rem; margin:0;">
         Último corte propio: {{ $ultimoCorte->fecha_corte->isoFormat('D MMM [a las] HH:mm') }}
@@ -283,16 +280,11 @@
               text-decoration:none; font-weight:700; font-size:1rem;">
         🛒 Ir a vender
     </a>
-    <form method="POST" action="{{ route('cortes.store') }}"
-          x-data
-          @submit.prevent="if(confirm('¿Confirmas el corte de caja ahora? Se cerrarán las ventas del turno actual.')) $el.submit()">
-        @csrf
-        <button type="submit"
-                style="background:#fff; color:#8B0000; padding:14px 32px; border-radius:10px;
-                       border:2px solid #8B0000; font-weight:700; font-size:1rem; cursor:pointer;">
-            📋 Hacer corte
-        </button>
-    </form>
+    <button @click="modalCorte = true"
+            style="background:#fff; color:#8B0000; padding:14px 32px; border-radius:10px;
+                   border:2px solid #8B0000; font-weight:700; font-size:1rem; cursor:pointer;">
+        📋 Hacer corte
+    </button>
 </div>
 @if($ultimoCorte)
 <p style="color:#aaa; font-size:0.8rem; margin-bottom:28px;">
@@ -341,5 +333,116 @@
 </div>
 
 @endif
+
+{{-- ═══════════════ MODAL CORTE DE CAJA ═══════════════ --}}
+<div x-show="modalCorte"
+     x-transition.opacity
+     style="position:fixed; inset:0; background:rgba(0,0,0,0.5);
+            display:flex; align-items:center; justify-content:center; z-index:1000;"
+     @keydown.escape.window="modalCorte = false">
+
+    <div style="background:#fff; border-radius:16px; padding:32px; width:440px;
+                box-shadow:0 24px 64px rgba(0,0,0,0.25);"
+         @click.stop>
+
+        {{-- Encabezado --}}
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="font-family:'Playfair Display',serif; color:#8B0000;
+                       font-size:1.4rem; margin:0;">
+                📋 Corte de Caja
+            </h3>
+            <button @click="modalCorte = false"
+                    style="background:none; border:none; font-size:1.2rem;
+                           cursor:pointer; color:#aaa; line-height:1;">✕</button>
+        </div>
+
+        {{-- Tabla de totales del turno --}}
+        <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:0.9rem;">
+            <thead>
+                <tr style="background:#f9f9f9; border-bottom:2px solid #eee;">
+                    <th style="padding:10px 14px; text-align:left; color:#777;
+                               font-weight:600; font-size:0.82rem;">Método</th>
+                    <th style="padding:10px 14px; text-align:right; color:#777;
+                               font-weight:600; font-size:0.82rem;">Total del turno</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:12px 14px;">
+                        <span style="display:inline-flex; align-items:center; gap:8px;">
+                            <span style="width:10px; height:10px; border-radius:50%;
+                                         background:#17a2b8; display:inline-block;"></span>
+                            💵 Efectivo
+                        </span>
+                    </td>
+                    <td style="padding:12px 14px; text-align:right; font-weight:600;
+                               color:#17a2b8;">
+                        ${{ number_format($miEfectivo, 2) }}
+                    </td>
+                </tr>
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                    <td style="padding:12px 14px;">
+                        <span style="display:inline-flex; align-items:center; gap:8px;">
+                            <span style="width:10px; height:10px; border-radius:50%;
+                                         background:#6f42c1; display:inline-block;"></span>
+                            💳 Tarjeta
+                        </span>
+                    </td>
+                    <td style="padding:12px 14px; text-align:right; font-weight:600;
+                               color:#6f42c1;">
+                        ${{ number_format($miTarjeta, 2) }}
+                    </td>
+                </tr>
+                <tr style="background:#fff5f5;">
+                    <td style="padding:12px 14px; font-weight:700; color:#333;">
+                        Total general
+                    </td>
+                    <td style="padding:12px 14px; text-align:right; font-weight:700;
+                               font-size:1.05rem; color:#8B0000;">
+                        ${{ number_format($miTotalHoy, 2) }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        {{-- Notas opcionales --}}
+        <div style="margin-bottom:24px;">
+            <label style="display:block; font-size:0.85rem; font-weight:600;
+                          color:#555; margin-bottom:6px;">
+                Notas <span style="font-weight:400; color:#aaa;">(opcional)</span>
+            </label>
+            <textarea x-model="notas"
+                      rows="2"
+                      placeholder="Ej. Turno tarde, cajero Juan..."
+                      style="width:100%; padding:10px 12px; border:1px solid #ddd;
+                             border-radius:8px; font-size:0.9rem; outline:none;
+                             resize:none; font-family:inherit;"></textarea>
+        </div>
+
+        {{-- Botones --}}
+        <form method="POST" action="{{ route('cortes.store') }}">
+            @csrf
+            <input type="hidden" name="notas" :value="notas">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <button type="button"
+                        @click="modalCorte = false; notas = ''"
+                        style="padding:12px; background:#f0f0f0; color:#555; border:none;
+                               border-radius:8px; font-weight:600; font-size:0.9rem;
+                               cursor:pointer;">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        style="padding:12px; background:#8B0000; color:#fff; border:none;
+                               border-radius:8px; font-weight:700; font-size:0.9rem;
+                               cursor:pointer;">
+                    ✅ Confirmar corte
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+</div>{{-- cierre x-data --}}
 
 @endsection

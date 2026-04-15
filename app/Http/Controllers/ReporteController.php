@@ -68,10 +68,17 @@ $graficaDias = collect($dias);
             'ayer'     => [now()->subDay()->startOfDay(), now()->subDay()->endOfDay()],
             '7dias'    => [now()->subDays(6)->startOfDay(), now()->endOfDay()],
             '30dias'   => [now()->subDays(29)->startOfDay(), now()->endOfDay()],
-            'personalizado' => [
-                Carbon::parse($request->get('desde'))->startOfDay(),
-                Carbon::parse($request->get('hasta'))->endOfDay(),
-            ],
+            'personalizado' => (function () use ($request) {
+                $desde = $request->get('desde');
+                $hasta = $request->get('hasta');
+                if (empty($desde) || empty($hasta)) {
+                    return [now()->subDays(6)->startOfDay(), now()->endOfDay()];
+                }
+                return [
+                    Carbon::parse($desde)->startOfDay(),
+                    Carbon::parse($hasta)->endOfDay(),
+                ];
+            })(),
             default    => [now()->subDays(6)->startOfDay(), now()->endOfDay()],
         };
     }
