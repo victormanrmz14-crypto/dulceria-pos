@@ -49,9 +49,10 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
         Route::resource('usuarios', UsuarioController::class)
             ->except(['show']);
 
-        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        // Rutas de /profile deshabilitadas: usan vistas Breeze con Tailwind que no carga en este proyecto
+        // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
         
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
 

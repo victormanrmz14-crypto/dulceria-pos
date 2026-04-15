@@ -109,7 +109,7 @@ class PuntoVenta extends Component
     // Calcular cambio
     public function getCambioProperty(): float
     {
-        if (!$this->montoRecibido || $this->montoRecibido <= 0) return 0;
+        if (!isset($this->montoRecibido) || $this->montoRecibido <= 0) return 0;
         if ($this->metodoPago === 'efectivo' && $this->montoRecibido >= $this->total) {
             return round($this->montoRecibido - $this->total, 2);
         }
@@ -213,7 +213,7 @@ class PuntoVenta extends Component
         $this->carrito       = [];
         $this->buscar        = '';
         $this->metodoPago    = 'efectivo';
-        $this->montoRecibido = 0;
+        $this->montoRecibido = null;
     }
 
     public function render()
