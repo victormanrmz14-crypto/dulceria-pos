@@ -191,6 +191,28 @@
             🛒 &nbsp; Ventas
         </a>
 
+        {{-- Caja (visible para admin y cajero) --}}
+        <div x-data="{ open: {{ request()->routeIs('caja.*') || request()->routeIs('cortes.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="nav-link {{ request()->routeIs('caja.*') || request()->routeIs('cortes.*') ? 'active' : '' }}"
+                    style="justify-content:space-between; padding-right:20px;">
+                <span>🏦 &nbsp; Caja</span>
+                <span x-text="open ? '▲' : '▼'" style="font-size:0.7rem;"></span>
+            </button>
+            <div x-show="open" x-transition class="nav-submenu">
+                <a href="{{ route('caja.index') }}"
+                   class="nav-sublink {{ request()->routeIs('caja.*') ? 'active' : '' }}">
+                    💰 &nbsp; Caja Actual
+                </a>
+                @if(auth()->user()->rol === 'admin')
+                <a href="{{ route('cortes.index') }}"
+                   class="nav-sublink {{ request()->routeIs('cortes.*') ? 'active' : '' }}">
+                    📋 &nbsp; Cortes Históricos
+                </a>
+                @endif
+            </div>
+        </div>
+
         @if(auth()->user()->rol === 'admin')
 
             <a href="{{ route('productos.index') }}"
@@ -206,11 +228,6 @@
             <a href="{{ route('reportes.index') }}"
                 class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
                 📊 &nbsp; Reportes
-            </a>
-
-            <a href="{{ route('cortes.index') }}"
-               class="nav-link {{ request()->routeIs('cortes.*') ? 'active' : '' }}">
-                📋 &nbsp; Cortes de caja
             </a>
 
             <div x-data="{ open: {{ request()->routeIs('catalogos.*') ? 'true' : 'false' }} }">
