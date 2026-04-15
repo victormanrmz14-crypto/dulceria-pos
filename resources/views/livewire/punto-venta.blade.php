@@ -160,6 +160,30 @@
                 </div>
             </div>
 
+            {{-- Monto recibido (solo efectivo) --}}
+            @if($metodoPago === 'efectivo')
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:0.82rem; font-weight:600;
+                              color:#555; margin-bottom:6px;">
+                    Monto recibido
+                </label>
+                <input type="number"
+                       wire:model.live="montoRecibido"
+                       step="0.01"
+                       min="{{ $this->total }}"
+                       placeholder="0.00"
+                       style="width:100%; padding:9px 12px; border:1px solid #ddd;
+                              border-radius:8px; font-size:0.95rem; outline:none;
+                              text-align:right;">
+                @if($this->cambio > 0)
+                <p style="margin:6px 0 0; text-align:right; font-weight:700;
+                          color:#28a745; font-size:0.95rem;">
+                    Cambio: ${{ number_format($this->cambio, 2) }}
+                </p>
+                @endif
+            </div>
+            @endif
+
             <button wire:click="confirmarVenta"
                     style="width:100%; padding:14px; background:#8B0000; color:white;
                            border:none; border-radius:10px; font-weight:700;
@@ -197,9 +221,21 @@
                     ${{ number_format($this->total, 2) }}
                 </strong>
             </p>
-            <p style="color:#777; font-size:0.9rem; margin:0 0 24px;">
+            <p style="color:#777; font-size:0.9rem; margin:0 0 4px;">
                 Método: {{ $metodoPago === 'efectivo' ? '💵 Efectivo' : '💳 Tarjeta' }}
             </p>
+            @if($metodoPago === 'efectivo' && $montoRecibido > 0)
+            <p style="color:#777; font-size:0.9rem; margin:0 0 4px;">
+                Recibido: <strong>${{ number_format($montoRecibido, 2) }}</strong>
+            </p>
+            @endif
+            @if($this->cambio > 0)
+            <p style="color:#28a745; font-size:0.9rem; font-weight:700; margin:0 0 24px;">
+                Cambio: ${{ number_format($this->cambio, 2) }}
+            </p>
+            @else
+            <p style="margin:0 0 24px;"></p>
+            @endif
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                 <button wire:click="cancelarConfirmacion"
                         style="padding:12px; background:#f0f0f0; color:#555; border:none;

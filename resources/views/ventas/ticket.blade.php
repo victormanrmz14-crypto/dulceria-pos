@@ -102,6 +102,16 @@
                     ${{ number_format($venta->total, 2) }}
                 </span>
             </div>
+            @if($venta->monto_recibido !== null)
+            <div style="display:flex; justify-content:space-between; margin-top:10px; margin-bottom:2px;">
+                <span style="color:#777; font-size:0.9rem;">Recibido</span>
+                <span style="font-weight:600;">${{ number_format($venta->monto_recibido, 2) }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="color:#28a745; font-size:0.9rem; font-weight:600;">Cambio</span>
+                <span style="font-weight:700; color:#28a745;">${{ number_format($venta->cambio, 2) }}</span>
+            </div>
+            @endif
             <div style="margin-top:12px; text-align:right;">
                 @if($venta->metodo_pago === 'efectivo')
                     <span style="background:#d4edda; color:#155724; padding:4px 12px;

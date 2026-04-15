@@ -15,14 +15,18 @@ class Venta extends Model
         'subtotal',
         'impuestos',
         'total',
+        'monto_recibido',
+        'cambio',
     ];
 
     protected $casts = [
-        'subtotal'   => 'decimal:2',
-        'impuestos'  => 'decimal:2',
-        'total'      => 'decimal:2',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'subtotal'       => 'decimal:2',
+        'impuestos'      => 'decimal:2',
+        'total'          => 'decimal:2',
+        'monto_recibido' => 'decimal:2',
+        'cambio'         => 'decimal:2',
+        'created_at'     => 'datetime',
+        'updated_at'     => 'datetime',
     ];
 
     // Relación con usuario
