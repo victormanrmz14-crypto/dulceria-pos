@@ -34,6 +34,23 @@
         }
     </style>
 
+    {{-- Badge filtro stock bajo --}}
+    @if($filtroStockBajo)
+    <div style="background:#fff0f0; border-left:4px solid #dc3545; border-radius:10px;
+                padding:12px 18px; margin-bottom:16px; display:flex;
+                align-items:center; justify-content:space-between; gap:12px;">
+        <span style="color:#721c24; font-size:0.88rem; font-weight:600;">
+            ⚠️ Mostrando solo productos con stock bajo
+        </span>
+        <a href="{{ route('productos.index') }}"
+           style="background:#dc3545; color:#fff; border-radius:8px;
+                  padding:6px 16px; font-size:0.82rem; font-weight:600;
+                  cursor:pointer; text-decoration:none; white-space:nowrap;">
+            Ver todos
+        </a>
+    </div>
+    @endif
+
     {{-- Filtros --}}
     <div style="background:#fff; border-radius:12px; padding:20px 24px;
                 box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:24px;
@@ -146,16 +163,33 @@
         </table>
 
         {{-- Paginación --}}
-        <div x-show="totalPaginas > 1" style="padding:16px 20px; border-top:1px solid #f0f0f0; display:flex; justify-content:space-between; align-items:center;">
-            <p style="font-size:0.85rem; color:#999; margin:0;" x-text="`Mostrando ${inicio + 1} - ${fin} de ${filtrados.length} productos`"></p>
+        <div x-show="totalPaginas > 1" style="padding:16px 20px; border-top:1px solid #f0f0f0;
+             display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
 
-            <div style="display:flex; gap:8px;">
+            <p style="font-size:0.85rem; color:#999; margin:0;"
+               x-text="`Mostrando ${inicio + 1} - ${fin} de ${filtrados.length} productos`"></p>
+
+            <div style="display:flex; gap:6px; align-items:center;">
                 <button x-on:click="prev()" :disabled="pagina === 1"
-                        style="padding:6px 14px; border-radius:6px; border:none; background:#f0f0f0; color:#555; font-weight:600; cursor:pointer;">
+                        :style="pagina === 1
+                            ? 'padding:6px 14px; border-radius:6px; border:1px solid #e0e0e0; background:#f5f5f5; color:#ccc; font-weight:600; font-size:0.85rem; cursor:not-allowed; font-family:inherit;'
+                            : 'padding:6px 14px; border-radius:6px; border:1px solid #8B0000; background:#fff; color:#8B0000; font-weight:600; font-size:0.85rem; cursor:pointer; font-family:inherit;'">
                     ← Anterior
                 </button>
+
+                <template x-for="n in totalPaginas" :key="n">
+                    <button x-on:click="pagina = n"
+                            :style="pagina === n
+                                ? 'padding:6px 12px; border-radius:6px; border:1px solid #8B0000; background:#8B0000; color:#fff; font-weight:600; font-size:0.85rem; cursor:default; font-family:inherit;'
+                                : 'padding:6px 12px; border-radius:6px; border:1px solid #e0e0e0; background:#fff; color:#555; font-weight:600; font-size:0.85rem; cursor:pointer; font-family:inherit;'"
+                            x-text="n">
+                    </button>
+                </template>
+
                 <button x-on:click="next()" :disabled="pagina >= totalPaginas"
-                        style="padding:6px 14px; border-radius:6px; border:none; background:#f0f0f0; color:#555; font-weight:600; cursor:pointer;">
+                        :style="pagina >= totalPaginas
+                            ? 'padding:6px 14px; border-radius:6px; border:1px solid #e0e0e0; background:#f5f5f5; color:#ccc; font-weight:600; font-size:0.85rem; cursor:not-allowed; font-family:inherit;'
+                            : 'padding:6px 14px; border-radius:6px; border:1px solid #8B0000; background:#fff; color:#8B0000; font-weight:600; font-size:0.85rem; cursor:pointer; font-family:inherit;'">
                     Siguiente →
                 </button>
             </div>
