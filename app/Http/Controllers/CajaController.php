@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CorteCaja;
 use App\Models\MovimientoCaja;
 use App\Models\User;
-use App\Models\Venta;
+use App\Services\CajaResumen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +13,7 @@ class CajaController extends Controller
     public function index()
     {
         $userId  = auth()->id();
-        $resumen = $this->resumenCaja($userId);
+        $resumen = CajaResumen::paraUsuario($userId);
 
         $movimientos = MovimientoCaja::with('usuario')
             ->where('user_id', $userId)
@@ -72,10 +71,11 @@ class CajaController extends Controller
         try {
             DB::transaction(function () use ($request, $userId) {
                 // Lock sobre el usuario: serializa retiros simultáneos del mismo
-                // cajero para que dos retiros no pasen la validación a la vez
+                // cajero (y cortes, que usan el mismo lock) para que dos retiros
+                // no pasen la validación a la vez
                 User::lockForUpdate()->find($userId);
 
-                $resumen = $this->resumenCaja($userId);
+                $resumen = CajaResumen::paraUsuario($userId);
 
                 if ((float) $request->monto > $resumen['efectivoDisponible']) {
                     throw new \RuntimeException(
@@ -96,56 +96,5 @@ class CajaController extends Controller
 
         return redirect()->route('caja.index')
             ->with('success', 'Retiro registrado correctamente.');
-    }
-
-    /**
-     * Resumen de caja del usuario desde su último corte (o inicio del día).
-     * El inicio es exclusivo cuando viene de un corte previo, para no contar
-     * dos veces una venta registrada en el segundo exacto del corte.
-     */
-    private function resumenCaja(int $userId): array
-    {
-        $ultimoCorte = CorteCaja::where('user_id', $userId)
-            ->latest('fecha_corte')
-            ->first();
-
-        $fechaInicio = $ultimoCorte
-            ? $ultimoCorte->fecha_corte
-            : now()->startOfDay();
-
-        $opInicio = $ultimoCorte ? '>' : '>=';
-
-        $ventasEfectivo = Venta::where('user_id', $userId)
-            ->where('created_at', $opInicio, $fechaInicio)
-            ->where('metodo_pago', 'efectivo')
-            ->sum('total');
-
-        $tarjetaEsperada = Venta::where('user_id', $userId)
-            ->where('created_at', $opInicio, $fechaInicio)
-            ->where('metodo_pago', 'tarjeta')
-            ->sum('total');
-
-        $ingresos = MovimientoCaja::where('user_id', $userId)
-            ->where('created_at', $opInicio, $fechaInicio)
-            ->where('tipo', 'ingreso')
-            ->sum('monto');
-
-        $retiros = MovimientoCaja::where('user_id', $userId)
-            ->where('created_at', $opInicio, $fechaInicio)
-            ->where('tipo', 'retiro')
-            ->sum('monto');
-
-        $fondoCaja = $ultimoCorte ? (float) ($ultimoCorte->dinero_en_caja ?? 0) : 0;
-
-        return [
-            'ultimoCorte'        => $ultimoCorte,
-            'fechaInicio'        => $fechaInicio,
-            'ventasEfectivo'     => (float) $ventasEfectivo,
-            'tarjetaEsperada'    => (float) $tarjetaEsperada,
-            'ingresos'           => (float) $ingresos,
-            'retiros'            => (float) $retiros,
-            'fondoCaja'          => $fondoCaja,
-            'efectivoDisponible' => (float) $ventasEfectivo + (float) $ingresos - (float) $retiros + $fondoCaja,
-        ];
     }
 }
