@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\CorteCaja;
-use App\Models\MovimientoCaja;
+use App\Models\User;
 use App\Models\Venta;
+use App\Services\CajaResumen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CorteController extends Controller
 {
@@ -23,53 +25,46 @@ class CorteController extends Controller
             'notas.max'                => 'Las notas no pueden exceder 500 caracteres.',
         ]);
 
-        $userId     = auth()->id();
-        $fechaCorte = now();
+        $userId = auth()->id();
 
-        // Inicio del período: último corte del usuario o inicio del día actual
-        $ultimoCorte = CorteCaja::where('user_id', $userId)
-            ->latest('fecha_corte')
-            ->first();
+        try {
+            $corte = DB::transaction(function () use ($request, $userId) {
+                // Lock sobre el usuario: serializa cortes simultáneos del mismo
+                // cajero (y retiros, que usan el mismo lock) para que un doble
+                // submit no genere dos cortes del mismo período
+                User::lockForUpdate()->find($userId);
 
-        $fechaInicio = $ultimoCorte
-            ? $ultimoCorte->fecha_corte
-            : now()->startOfDay();
+                $fechaCorte = now();
+                $resumen    = CajaResumen::paraUsuario($userId, $fechaCorte);
 
-        // El período es exclusivo en el inicio cuando viene de un corte previo,
-        // para que una venta en el segundo exacto del corte no cuente dos veces
-        $opInicio = $ultimoCorte ? '>' : '>=';
+                // Evitar cortes vacíos: sin ventas ni movimientos no hay nada que cortar
+                if ($resumen['numVentas'] === 0 && $resumen['numMovimientos'] === 0) {
+                    throw new \RuntimeException('No hay ventas ni movimientos desde el último corte.');
+                }
 
-        // Ventas del usuario en ese período
-        $ventas = Venta::where('user_id', $userId)
-            ->where('created_at', $opInicio, $fechaInicio)
-            ->where('created_at', '<=', $fechaCorte)
-            ->get();
+                // El efectivo del corte es lo que debe haber físicamente en el
+                // cajón (incluye el fondo del corte anterior): es el mismo
+                // "efectivo esperado" que vio el cajero al contar, así la
+                // diferencia contra efectivo_contado cuadra
+                $totalEfectivo = $resumen['efectivoDisponible'];
+                $totalTarjeta  = $resumen['tarjetaEsperada'];
 
-        $movimientos = MovimientoCaja::where('user_id', $userId)
-            ->where('created_at', $opInicio, $fechaInicio)
-            ->where('created_at', '<=', $fechaCorte)
-            ->get();
-
-        // Evitar cortes vacíos: sin ventas ni movimientos no hay nada que cortar
-        if ($ventas->isEmpty() && $movimientos->isEmpty()) {
-            return back()->with('error', 'No hay ventas ni movimientos desde el último corte.');
+                return CorteCaja::create([
+                    'user_id'           => $userId,
+                    'fecha_inicio'      => $resumen['fechaInicio'],
+                    'fecha_corte'       => $fechaCorte,
+                    'num_transacciones' => $resumen['numVentas'],
+                    'total_efectivo'    => $totalEfectivo,
+                    'total_tarjeta'     => $totalTarjeta,
+                    'total_general'     => $totalEfectivo + $totalTarjeta,
+                    'notas'             => $request->input('notas'),
+                    'efectivo_contado'  => $request->input('efectivo_contado'),
+                    'dinero_en_caja'    => $request->input('dinero_en_caja'),
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        $ingresosCaja = $movimientos->where('tipo', 'ingreso')->sum('monto');
-        $retirosCaja  = $movimientos->where('tipo', 'retiro')->sum('monto');
-
-        $corte = CorteCaja::create([
-            'user_id'           => $userId,
-            'fecha_inicio'      => $fechaInicio,
-            'fecha_corte'       => $fechaCorte,
-            'num_transacciones' => $ventas->count(),
-            'total_efectivo'    => $ventas->where('metodo_pago', 'efectivo')->sum('total') + $ingresosCaja - $retirosCaja,
-            'total_tarjeta'     => $ventas->where('metodo_pago', 'tarjeta')->sum('total'),
-            'total_general'     => $ventas->sum('total') + $ingresosCaja - $retirosCaja,
-            'notas'             => $request->input('notas'),
-            'efectivo_contado'  => $request->input('efectivo_contado'),
-            'dinero_en_caja'    => $request->input('dinero_en_caja'),
-        ]);
 
         return redirect()->route('cortes.show', $corte)
             ->with('success', 'Corte de caja generado correctamente.');

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CorteCaja;
 use App\Models\DetalleVenta;
 use App\Models\Producto;
 use App\Models\Venta;
+use App\Services\CajaResumen;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -77,39 +77,24 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        // Último corte del cajero para delimitar su período actual
-        $ultimoCorte = CorteCaja::where('user_id', $userId)
-                                ->latest('fecha_corte')
-                                ->first();
+        // Métricas propias del cajero autenticado (desde su último corte),
+        // con el mismo cálculo que usan Caja y Cortes
+        $resumen     = CajaResumen::paraUsuario($userId);
+        $ultimoCorte = $resumen['ultimoCorte'];
 
-        // Desde el último corte hasta ahora; si no hay corte, desde el inicio del día actual.
-        // El inicio es exclusivo cuando viene de un corte para no contar dos veces
-        // una venta registrada en el segundo exacto del corte.
-        $desdeCorte = $ultimoCorte
-            ? $ultimoCorte->fecha_corte
-            : now()->startOfDay();
-        $opInicio = $ultimoCorte ? '>' : '>=';
+        $misVentasHoy = $resumen['numVentas'];
+        $miEfectivo   = $resumen['ventasEfectivo'];
+        $miTarjeta    = $resumen['tarjetaEsperada'];
+        $miTotalHoy   = $miEfectivo + $miTarjeta;
 
-        // Métricas propias del cajero autenticado (desde su último corte)
-        $misVentasHoy     = Venta::where('created_at', $opInicio, $desdeCorte)->where('user_id', $userId)->count();
-        $miTotalHoy       = Venta::where('created_at', $opInicio, $desdeCorte)->where('user_id', $userId)->sum('total');
-        $miEfectivo       = Venta::where('created_at', $opInicio, $desdeCorte)
-                                ->where('user_id', $userId)
-                                ->where('metodo_pago', 'efectivo')
-                                ->sum('total');
-        $miTarjeta        = Venta::where('created_at', $opInicio, $desdeCorte)
-                                ->where('user_id', $userId)
-                                ->where('metodo_pago', 'tarjeta')
-                                ->sum('total');
-        $misUltimasVentas = Venta::where('created_at', $opInicio, $desdeCorte)
+        $misUltimasVentas = Venta::where('created_at', $resumen['opInicio'], $resumen['fechaInicio'])
                                 ->where('user_id', $userId)
                                 ->latest()
                                 ->limit(5)
                                 ->get();
 
-        // Efectivo esperado en caja = ventas en efectivo del período + fondo dejado en el último corte
-        $fondoCaja         = $ultimoCorte ? (float) ($ultimoCorte->dinero_en_caja ?? 0) : 0;
-        $miEfectivoModal   = $miEfectivo + $fondoCaja;
+        // Efectivo esperado en caja: ventas en efectivo + ingresos - retiros + fondo
+        $miEfectivoModal = $resumen['efectivoDisponible'];
 
         return Inertia::render('Dashboard', [
             'ventasHoy'        => $ventasHoy,
