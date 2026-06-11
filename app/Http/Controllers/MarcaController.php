@@ -4,18 +4,35 @@ namespace App\Http\Controllers;
 
 use App\Models\Marca;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class MarcaController extends Controller
 {
     public function index()
     {
-        $marcas = Marca::orderBy('nombre')->get();
-        return view('catalogos.marcas.index', compact('marcas'));
+        return Inertia::render('Catalogos/Simple', [
+            'titulo'   => 'Marcas',
+            'singular' => 'marca',
+            'icono'    => '🏭',
+            'base'     => '/catalogos/marcas',
+            'items'    => Marca::orderBy('nombre')->get(['id', 'nombre', 'activo'])
+                ->map(fn ($m) => [
+                    'id'     => $m->id,
+                    'nombre' => $m->nombre,
+                    'activo' => (bool) $m->activo,
+                ])->values(),
+        ]);
     }
 
+    // El alta/edición se hace con modales en el index
     public function create()
     {
-        return view('catalogos.marcas.create');
+        return redirect()->route('catalogos.marcas.index');
+    }
+
+    public function edit(Marca $marca)
+    {
+        return redirect()->route('catalogos.marcas.index');
     }
 
     public function store(Request $request)
@@ -28,11 +45,6 @@ class MarcaController extends Controller
 
         return redirect()->route('catalogos.marcas.index')
             ->with('success', 'Marca creada correctamente.');
-    }
-
-    public function edit(Marca $marca)
-    {
-        return view('catalogos.marcas.edit', compact('marca'));
     }
 
     public function update(Request $request, Marca $marca)

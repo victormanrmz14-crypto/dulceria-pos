@@ -17,7 +17,7 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -33,6 +33,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 
     // Ventas (accesible para admin y cajero)
     Route::get('/ventas',           [VentaController::class, 'index'])->name('ventas.index');
+    Route::post('/ventas',          [VentaController::class, 'store'])->name('ventas.store');
+    Route::get('/ventas/buscar-productos', [VentaController::class, 'buscarProductos'])->name('ventas.buscar');
     Route::get('/ventas/historial', [VentaController::class, 'historial'])->name('ventas.historial');
     Route::get('/ventas/{venta}/ticket', [VentaController::class, 'ticket'])->name('ventas.ticket');
 

@@ -11,8 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+        ]);
+
         $middleware->alias([
-            'solo.admin' => \App\Http\Middleware\SoloAdmin::class,
+            'solo.admin'     => \App\Http\Middleware\SoloAdmin::class,
+            'usuario.activo' => \App\Http\Middleware\UsuarioActivo::class,
             ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
