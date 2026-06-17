@@ -1,0 +1,261 @@
+/* ============================================================
+   Tema Dulcería POS — personalización encima de Bootstrap 5
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+    --dulce-rojo:        #8B0000;
+    --dulce-rojo-medio:  #A52A2A;
+    --dulce-rojo-oscuro: #580000;
+    --dulce-rojo-hover:  #6d0000;
+    --dulce-acento:      #ff7043;
+    --dulce-rosa-suave:  #fff5f5;
+    --dulce-texto-suave: #ffcccc;
+    --dulce-fondo:       #f4f4f5;
+
+    /* Re-mapeo de variables Bootstrap */
+    --bs-primary: #8B0000;
+    --bs-primary-rgb: 139, 0, 0;
+    --bs-link-color: #8B0000;
+    --bs-link-hover-color: #6d0000;
+    --bs-body-font-family: 'DM Sans', system-ui, sans-serif;
+    --bs-body-bg: #f4f4f5;
+    --bs-border-radius: 0.625rem;
+    --bs-border-radius-lg: 0.875rem;
+}
+
+body { font-family: var(--bs-body-font-family); background: var(--dulce-fondo); }
+
+h1, h2, h3, .titulo-marca {
+    font-family: 'Playfair Display', serif;
+}
+
+/* ---- Botones primarios en rojo dulcería ---- */
+.btn-primary {
+    --bs-btn-bg: var(--dulce-rojo);
+    --bs-btn-border-color: var(--dulce-rojo);
+    --bs-btn-hover-bg: var(--dulce-rojo-hover);
+    --bs-btn-hover-border-color: var(--dulce-rojo-hover);
+    --bs-btn-active-bg: var(--dulce-rojo-oscuro);
+    --bs-btn-active-border-color: var(--dulce-rojo-oscuro);
+    --bs-btn-disabled-bg: #c9a0a0;
+    --bs-btn-disabled-border-color: #c9a0a0;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--dulce-rojo);
+    --bs-btn-border-color: var(--dulce-rojo);
+    --bs-btn-hover-bg: var(--dulce-rojo);
+    --bs-btn-hover-border-color: var(--dulce-rojo);
+    --bs-btn-active-bg: var(--dulce-rojo-oscuro);
+    --bs-btn-active-border-color: var(--dulce-rojo-oscuro);
+}
+
+.text-primary { color: var(--dulce-rojo) !important; }
+.bg-primary   { background-color: var(--dulce-rojo) !important; }
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--dulce-rojo);
+    box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.15);
+}
+
+.nav-pills .nav-link.active { background-color: var(--dulce-rojo); }
+.page-link { color: var(--dulce-rojo); }
+.active > .page-link { background-color: var(--dulce-rojo); border-color: var(--dulce-rojo); }
+
+/* ---- Sidebar ---- */
+.sidebar {
+    width: 250px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--dulce-rojo);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+}
+
+.sidebar .marca {
+    background: var(--dulce-rojo-medio);
+    padding: 1.6rem 0 1.4rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar .marca h1 { color: #fff; font-size: 1.4rem; margin: 0; }
+.sidebar .marca span { color: var(--dulce-texto-suave); font-size: 0.82rem; }
+
+.sidebar .nav-item-pos {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.95rem 0 0.95rem 2rem;
+    color: #fff;
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-decoration: none;
+    position: relative;
+    transition: background 0.18s ease, padding-left 0.18s ease;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+}
+
+.sidebar .nav-item-pos::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) scaleY(0);
+    width: 3px;
+    height: 55%;
+    background: var(--dulce-acento);
+    border-radius: 0 3px 3px 0;
+    transition: transform 0.18s ease;
+}
+
+.sidebar .nav-item-pos:hover,
+.sidebar .nav-item-pos.activo {
+    background: rgba(255, 255, 255, 0.12);
+    padding-left: 2.4rem;
+    color: #fff;
+}
+
+.sidebar .nav-item-pos:hover::before,
+.sidebar .nav-item-pos.activo::before {
+    transform: translateY(-50%) scaleY(1);
+}
+
+.sidebar .submenu { background: rgba(0, 0, 0, 0.15); }
+
+.sidebar .subitem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.7rem 0 0.7rem 3.4rem;
+    color: var(--dulce-texto-suave);
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.sidebar .subitem:hover,
+.sidebar .subitem.activo {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.sidebar .btn-salir {
+    background: var(--dulce-rojo-oscuro);
+    color: #fff;
+    border: none;
+    width: 100%;
+    padding: 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background 0.18s ease;
+}
+
+.sidebar .btn-salir:hover { background: #3d0000; }
+
+/* Offcanvas móvil hereda el mismo look */
+.offcanvas.sidebar-offcanvas {
+    background: var(--dulce-rojo);
+    width: 270px;
+}
+
+/* ---- Topbar móvil ---- */
+.topbar-movil {
+    background: var(--dulce-rojo);
+    color: #fff;
+}
+
+/* ---- Cards de métricas ---- */
+.stat-card {
+    border: none;
+    border-left: 4px solid var(--stat-color, var(--dulce-rojo));
+    border-radius: var(--bs-border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+a.stat-card-link { text-decoration: none; color: inherit; }
+a.stat-card-link .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card .valor {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--stat-color, var(--dulce-rojo));
+    line-height: 1.1;
+}
+
+/* ---- Tarjetas generales ---- */
+.card { border: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+.card-header.encabezado {
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    font-family: 'Playfair Display', serif;
+    color: var(--dulce-rojo);
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+/* ---- Tablas ---- */
+.table thead th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #999;
+    font-weight: 600;
+    background: #f9f9f9;
+}
+
+.table tbody td { vertical-align: middle; font-size: 0.9rem; }
+
+/* ---- POS ---- */
+.producto-fila { cursor: pointer; transition: background 0.15s ease; }
+.producto-fila:hover { background: var(--dulce-rosa-suave); }
+
+.metodo-pago {
+    border: 2px solid #ddd;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #777;
+    background: #fff;
+    transition: all 0.15s ease;
+}
+
+.metodo-pago.activo {
+    border-color: var(--dulce-rojo);
+    background: var(--dulce-rosa-suave);
+    color: var(--dulce-rojo);
+}
+
+/* ---- Toasts ---- */
+.toast-container-pos {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1080;
+}
+
+/* ---- Impresión de ticket ---- */
+@media print {
+    .no-imprimir { display: none !important; }
+    body { background: #fff; }
+    .ticket-imprimible {
+        box-shadow: none !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+}
