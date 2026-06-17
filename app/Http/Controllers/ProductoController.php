@@ -15,29 +15,57 @@ use Illuminate\Support\Facades\Mail;
 class ProductoController extends Controller
 {
     public function index(Request $request)
-{
-    $query = Producto::with(['categoria', 'marca']);
+    {
+        // Recordar el filtro de stock bajo para volver a él tras editar
+        if ($request->boolean('stock_bajo')) {
+            session(['filtro_stock_bajo' => true]);
+        } else {
+            session()->forget('filtro_stock_bajo');
+        }
 
-    if ($request->filled('buscar')) {
-        $query->where('nombre', 'like', '%' . $request->buscar . '%');
+        $query = Producto::with(['categoria:id,nombre', 'marca:id,nombre', 'proveedor:id,nombre']);
+
+        if ($request->filled('buscar')) {
+            $query->where('nombre', 'like', '%' . $request->buscar . '%');
+        }
+
+        if ($request->filled('categoria_id')) {
+            $query->where('categoria_id', $request->categoria_id);
+        }
+
+        if ($request->boolean('stock_bajo')) {
+            $query->whereColumn('stock', '<=', 'stock_minimo');
+        }
+
+        $productos = $query->orderBy('nombre')->paginate(15)->withQueryString()
+            ->through(fn ($p) => [
+                'id'            => $p->id,
+                'nombre'        => $p->nombre,
+                'categoria'     => $p->categoria->nombre ?? '—',
+                'marca'         => $p->marca->nombre ?? '—',
+                'proveedor'     => $p->proveedor->nombre ?? null,
+                'precio'        => (float) $p->precio,
+                'stock'         => (float) $p->stock,
+                'stock_minimo'  => (float) $p->stock_minimo,
+                'unidad_medida' => $p->unidad_medida,
+                'activo'        => (bool) $p->activo,
+                'stock_bajo'    => (float) $p->stock <= (float) $p->stock_minimo,
+            ]);
+
+        return \Inertia\Inertia::render('Productos/Index', [
+            'productos'  => $productos,
+            'categorias' => Categoria::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
+            'filtros'    => [
+                'buscar'       => $request->buscar ?? '',
+                'categoria_id' => $request->categoria_id ?? '',
+                'stock_bajo'   => $request->boolean('stock_bajo'),
+            ],
+        ]);
     }
-
-    if ($request->filled('categoria_id')) {
-        $query->where('categoria_id', $request->categoria_id);
-    }
-
-    $productos  = $query->orderBy('nombre')->paginate(15);
-    $categorias = Categoria::where('activo', true)->orderBy('nombre')->get();
-
-    return view('productos.index', compact('productos', 'categorias'));
-}
 
     public function create()
     {
-        $categorias  = Categoria::where('activo', true)->orderBy('nombre')->get();
-        $marcas      = Marca::where('activo', true)->orderBy('nombre')->get();
-        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
-        return view('productos.create', compact('categorias', 'marcas', 'proveedores'));
+        return \Inertia\Inertia::render('Productos/Create', $this->opcionesCatalogos());
     }
 
     public function store(StoreProductoRequest $request)
@@ -50,10 +78,28 @@ class ProductoController extends Controller
 
     public function edit(Producto $producto)
     {
-        $categorias  = Categoria::where('activo', true)->orderBy('nombre')->get();
-        $marcas      = Marca::where('activo', true)->orderBy('nombre')->get();
-        $proveedores = Proveedor::where('activo', true)->orderBy('nombre')->get();
-        return view('productos.edit', compact('producto', 'categorias', 'marcas', 'proveedores'));
+        return \Inertia\Inertia::render('Productos/Edit', [
+            'producto' => [
+                'id'            => $producto->id,
+                'nombre'        => $producto->nombre,
+                'categoria_id'  => $producto->categoria_id,
+                'marca_id'      => $producto->marca_id,
+                'proveedor_id'  => $producto->proveedor_id,
+                'precio'        => (float) $producto->precio,
+                'stock'         => (float) $producto->stock,
+                'stock_minimo'  => (float) $producto->stock_minimo,
+                'unidad_medida' => $producto->unidad_medida,
+            ],
+        ] + $this->opcionesCatalogos());
+    }
+
+    private function opcionesCatalogos(): array
+    {
+        return [
+            'categorias'  => Categoria::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
+            'marcas'      => Marca::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
+            'proveedores' => Proveedor::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
+        ];
     }
 
     public function update(UpdateProductoRequest $request, Producto $producto)

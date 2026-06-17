@@ -12,13 +12,22 @@ class UsuarioController extends Controller
 {
     public function index()
     {
-        $usuarios = User::orderBy('nombre')->get();
-        return view('usuarios.index', compact('usuarios'));
+        $usuarios = User::orderBy('nombre')->get()->map(fn ($u) => [
+            'id'       => $u->id,
+            'nombre'   => $u->nombre,
+            'apellido' => $u->apellido,
+            'username' => $u->username,
+            'email'    => $u->email,
+            'rol'      => $u->rol,
+            'activo'   => (bool) $u->activo,
+        ])->values();
+
+        return \Inertia\Inertia::render('Usuarios/Index', ['usuarios' => $usuarios]);
     }
 
     public function create()
     {
-        return view('usuarios.create');
+        return \Inertia\Inertia::render('Usuarios/Create');
     }
 
     public function store(StoreUsuarioRequest $request)
@@ -39,11 +48,27 @@ class UsuarioController extends Controller
 
     public function edit(User $usuario)
     {
-        return view('usuarios.edit', compact('usuario'));
+        return \Inertia\Inertia::render('Usuarios/Edit', [
+            'usuario' => [
+                'id'       => $usuario->id,
+                'nombre'   => $usuario->nombre,
+                'apellido' => $usuario->apellido,
+                'username' => $usuario->username,
+                'email'    => $usuario->email,
+                'rol'      => $usuario->rol,
+            ],
+        ]);
     }
 
     public function update(UpdateUsuarioRequest $request, User $usuario)
     {
+        // No permitir que un admin se quite su propio rol (podría dejar
+        // el sistema sin administradores)
+        if ($usuario->id === auth()->id() && $request->rol !== 'admin') {
+            return back()->withInput()
+                ->with('error', 'No puedes quitarte tu propio rol de administrador.');
+        }
+
         $datos = [
             'nombre'   => $request->nombre,
             'apellido' => $request->apellido,

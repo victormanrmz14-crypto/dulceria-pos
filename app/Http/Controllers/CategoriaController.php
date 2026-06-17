@@ -4,20 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Models\Categoria;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class CategoriaController extends Controller
 {
     // Listar todas las categorías
     public function index()
     {
-        $categorias = Categoria::orderBy('nombre')->get();
-        return view('catalogos.categorias.index', compact('categorias'));
+        return Inertia::render('Catalogos/Simple', [
+            'titulo'   => 'Categorías',
+            'singular' => 'categoría',
+            'icono'    => '🏷️',
+            'base'     => '/catalogos/categorias',
+            'items'    => Categoria::orderBy('nombre')->get(['id', 'nombre', 'activo'])
+                ->map(fn ($c) => [
+                    'id'     => $c->id,
+                    'nombre' => $c->nombre,
+                    'activo' => (bool) $c->activo,
+                ])->values(),
+        ]);
     }
 
-    // Mostrar formulario de creación
+    // El alta/edición se hace con modales en el index
     public function create()
     {
-        return view('catalogos.categorias.create');
+        return redirect()->route('catalogos.categorias.index');
+    }
+
+    public function edit(Categoria $categoria)
+    {
+        return redirect()->route('catalogos.categorias.index');
     }
 
     // Guardar nueva categoría
@@ -34,12 +50,6 @@ class CategoriaController extends Controller
 
         return redirect()->route('catalogos.categorias.index')
             ->with('success', 'Categoría creada correctamente.');
-    }
-
-    // Mostrar formulario de edición
-    public function edit(Categoria $categoria)
-    {
-        return view('catalogos.categorias.edit', compact('categoria'));
     }
 
     // Actualizar categoría
