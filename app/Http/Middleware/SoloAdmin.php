@@ -10,7 +10,7 @@ class SoloAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->user()->rol !== 'admin') {
+        if (! auth()->user()->esAdmin()) {
             abort(403, 'No tienes permiso para acceder a esta sección.');
         }
 

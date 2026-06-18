@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\CorteController;
@@ -12,6 +11,7 @@ use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\VentaController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -19,21 +19,21 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Caja (accesible para admin y cajero)
-    Route::get('/caja',             [CajaController::class, 'index'])->name('caja.index');
-    Route::post('/caja/ingreso',    [CajaController::class, 'ingreso'])->name('caja.ingreso');
-    Route::post('/caja/retiro',     [CajaController::class, 'retiro'])->name('caja.retiro');
+    Route::get('/caja', [CajaController::class, 'index'])->name('caja.index');
+    Route::post('/caja/ingreso', [CajaController::class, 'ingreso'])->name('caja.ingreso');
+    Route::post('/caja/retiro', [CajaController::class, 'retiro'])->name('caja.retiro');
 
     // Cortes de caja (admin ve todos, cajero solo los suyos)
-    Route::post('/cortes',          [CorteController::class, 'store'])->name('cortes.store');
-    Route::get('/cortes',           [CorteController::class, 'index'])->name('cortes.index');
-    Route::get('/cortes/{corte}',   [CorteController::class, 'show'])->name('cortes.show');
+    Route::post('/cortes', [CorteController::class, 'store'])->name('cortes.store');
+    Route::get('/cortes', [CorteController::class, 'index'])->name('cortes.index');
+    Route::get('/cortes/{corte}', [CorteController::class, 'show'])->name('cortes.show');
 
     // Ventas (accesible para admin y cajero)
-    Route::get('/ventas',           [VentaController::class, 'index'])->name('ventas.index');
-    Route::post('/ventas',          [VentaController::class, 'store'])->name('ventas.store');
+    Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
+    Route::post('/ventas', [VentaController::class, 'store'])->name('ventas.store');
     Route::get('/ventas/buscar-productos', [VentaController::class, 'buscarProductos'])->name('ventas.buscar');
     Route::get('/ventas/historial', [VentaController::class, 'historial'])->name('ventas.historial');
     Route::get('/ventas/{venta}/ticket', [VentaController::class, 'ticket'])->name('ventas.ticket');
@@ -41,16 +41,20 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     // Solo admin
     Route::middleware(['solo.admin'])->group(function () {
         Route::resource('catalogos/categorias', CategoriaController::class)
+            ->except(['show'])
             ->names('catalogos.categorias');
 
         Route::resource('catalogos/marcas', MarcaController::class)
+            ->except(['show'])
             ->names('catalogos.marcas');
 
         Route::resource('catalogos/proveedores', ProveedorController::class)
+            ->except(['show'])
             ->names('catalogos.proveedores')
             ->parameters(['proveedores' => 'proveedor']);
 
-        Route::resource('productos', ProductoController::class);
+        Route::resource('productos', ProductoController::class)
+            ->except(['show']);
         Route::post('productos/{producto}/notificar-proveedor', [ProductoController::class, 'notificarProveedor'])
             ->name('productos.notificar-proveedor');
 
@@ -61,7 +65,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
         // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-        
+
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
 
     });

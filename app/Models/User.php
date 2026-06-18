@@ -17,6 +17,7 @@ class User extends Authenticatable
         'email',
         'password',
         'rol',
+        'es_super_admin',
         'activo',
     ];
 
@@ -29,8 +30,14 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'activo'            => 'boolean',
+            'password' => 'hashed',
+            'es_super_admin' => 'boolean',
+            'activo' => 'boolean',
         ];
+    }
+
+    public function esAdmin(): bool
+    {
+        return $this->es_super_admin || $this->rol === 'admin';
     }
 }

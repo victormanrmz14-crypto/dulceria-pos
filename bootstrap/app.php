@@ -1,5 +1,9 @@
 <?php
 
+use App\Console\Commands\CreatePlatformAdmin;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SoloAdmin;
+use App\Http\Middleware\UsuarioActivo;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -10,15 +14,18 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        CreatePlatformAdmin::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
-            \App\Http\Middleware\HandleInertiaRequests::class,
+            HandleInertiaRequests::class,
         ]);
 
         $middleware->alias([
-            'solo.admin'     => \App\Http\Middleware\SoloAdmin::class,
-            'usuario.activo' => \App\Http\Middleware\UsuarioActivo::class,
-            ]);
+            'solo.admin' => SoloAdmin::class,
+            'usuario.activo' => UsuarioActivo::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

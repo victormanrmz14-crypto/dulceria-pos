@@ -134,14 +134,15 @@ Accede en: [http://localhost:8000](http://localhost:8000)
 
 ---
 
-## 🔑 Credenciales de prueba
+## 🔑 Primer super admin
 
-| Rol | Correo | Contraseña |
-|---|---|---|
-| Administrador | admin@dulceria.com | password |
-| Cajero | cajero@dulceria.com | password |
+El proyecto no crea usuarios ni datos demo al ejecutar `php artisan migrate --seed`. Crea el primer administrador de la plataforma con:
 
-> Las credenciales se crean automáticamente al ejecutar `php artisan migrate --seed`.
+```bash
+php artisan platform-admin:create
+```
+
+Ese usuario queda marcado como `es_super_admin` y, temporalmente, accede al dashboard actual con rol `admin` mientras se implementa la arquitectura multitenant completa.
 
 ---
 
