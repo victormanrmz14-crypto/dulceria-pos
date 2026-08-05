@@ -65,3 +65,58 @@ jobs:
       # en produccion via Docker.
       - name: Run tests
         run: php artisan test
+
+      - name: Static analysis (PHPStan)
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+
+  docker:
+    # Solo si los tests pasan: valida que el Dockerfile compile en cada push
+    # y escanea la imagen resultante en busca de vulnerabilidades.
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: production
+          tags: dulceria-pos:ci
+          load: true
+          push: false
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: dulceria-pos:ci
+          format: table
+          output: security/trivy-report.txt
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+
+      - name: Upload Trivy report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: security/trivy-report.txt
+
+      # Commitea una copia fresca del reporte al repo (verificable #28).
+      # Solo en push a main, con [skip ci] para no reentrar el pipeline, y
+      # continue-on-error para que un fallo aqui nunca tumbe la build.
+      - name: Commit Trivy report
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- security/trivy-report.txt; then
+            git add security/trivy-report.txt
+            git commit -m "chore(security): actualizar reporte de Trivy [skip ci]"
+            git push
+          fi
