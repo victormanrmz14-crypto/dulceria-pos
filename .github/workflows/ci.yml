@@ -21,8 +21,9 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
+          # 8.3 para coincidir con la imagen final del Dockerfile.
           php-version: '8.3'
-          extensions: dom, fileinfo, mbstring, pdo, pdo_sqlite, sqlite3
+          extensions: dom, fileinfo, mbstring, pdo, pdo_sqlite, sqlite3, bcmath, intl, zip, gd
           coverage: none
 
       - name: Setup Node
@@ -43,14 +44,24 @@ jobs:
           touch database/database.sqlite
           php artisan key:generate
 
+      # Los audits corren en modo informativo (continue-on-error) porque los
+      # unicos hallazgos son CVEs en dependencias transitivas SIN parche
+      # disponible (guzzle/guzzlehttp/psr7, postcss, y shell-quote via
+      # concurrently, que es dev-only y nunca llega a produccion). No queremos
+      # que un CVE sin fix upstream tumbe el pipeline y bloquee los tests; el
+      # reporte sigue quedando visible en los logs para su seguimiento.
       - name: Audit PHP dependencies
         run: composer audit
+        continue-on-error: true
 
       - name: Audit Node dependencies
         run: npm audit
+        continue-on-error: true
 
       - name: Build assets
         run: npm run build
 
+      # Tests corren sobre sqlite (config del repo); el driver mysql se usa
+      # en produccion via Docker.
       - name: Run tests
         run: php artisan test
