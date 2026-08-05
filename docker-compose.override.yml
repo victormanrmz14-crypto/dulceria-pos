@@ -1,0 +1,32 @@
+# Overlay de DESARROLLO. docker-compose carga este archivo automaticamente,
+# asi que 'docker compose up' en la laptop de un dev monta el codigo del host
+# y levanta Vite para recarga en caliente.
+#
+# En produccion se usa: docker compose -f docker-compose.yml <cmd>
+# (el -f explicito evita cargar este override).
+services:
+  app:
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+    volumes:
+      # Los cambios en .php se reflejan sin rebuild.
+      # (Requiere vendor/ instalado en el host: composer install.)
+      - ./:/var/www/html
+
+  nginx:
+    volumes:
+      - ./public:/var/www/html/public
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+  vite:
+    image: node:20-alpine
+    working_dir: /var/www/html
+    # Recarga en caliente de Vue.
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - dulceria

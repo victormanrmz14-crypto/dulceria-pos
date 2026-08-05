@@ -1,0 +1,47 @@
+# Control de versiones y CI
+.git
+.github
+.gitignore
+.gitattributes
+
+# Dependencias (se instalan dentro de las etapas de build)
+node_modules
+vendor
+
+# Secretos y entorno (NO excluir .env.example)
+.env
+.env.*
+!.env.example
+
+# Artefactos de runtime de Laravel
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+
+# Assets generados (se recompilan en la etapa assets)
+public/build
+public/hot
+
+# Pruebas y config de pruebas
+tests
+phpunit.xml
+
+# Archivos de Docker (no necesarios dentro del contexto de la imagen)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Documentacion
+README.md
+docs
+
+# Basura de editores / SO
+.idea
+.vscode
+.fleet
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

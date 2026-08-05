@@ -1,0 +1,71 @@
+# Configuracion base (produccion).
+# En desarrollo, docker-compose.override.yml se carga automaticamente encima.
+services:
+  app:
+    build:
+      context: .
+      target: production
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        # MySQL tarda 30-60s en inicializar; sin esperar a que este sano el
+        # primer 'up' arranca la app contra una base que aun no acepta conexiones.
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - dulceria
+
+  nginx:
+    build:
+      context: .
+      target: web
+    restart: unless-stopped
+    # Unico servicio que publica puerto al host.
+    ports:
+      - "${APP_PORT:-80}:80"
+    depends_on:
+      - app
+    networks:
+      - dulceria
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-dulceria}
+      MYSQL_USER: ${DB_USERNAME:-dulceria}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    # Sin puertos publicados: solo accesible en la red interna.
+    networks:
+      - dulceria
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    # Sin puertos publicados: solo accesible en la red interna.
+    networks:
+      - dulceria
+
+volumes:
+  dbdata:
+  redisdata:
+
+networks:
+  dulceria:
+    driver: bridge
