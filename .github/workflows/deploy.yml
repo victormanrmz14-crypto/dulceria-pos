@@ -1,0 +1,50 @@
+name: Deploy
+
+# CRITICO: solo push a main. NUNCA pull_request.
+# El repo es publico y el deploy corre en un runner self-hosted (la laptop del
+# equipo). Un trigger con PRs de forks permitiria ejecutar codigo arbitrario en
+# esa maquina. Los forks no pueden generar eventos de push a main, asi que esta
+# restriccion es la mitigacion.
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Actualizar codigo
+        run: |
+          cd /var/www/dulceria-pos
+          git pull origin main
+
+      - name: Construir imagenes
+        # El -f explicito es obligatorio: sin el, Docker tambien carga
+        # docker-compose.override.yml (desarrollo) y montaria el codigo del
+        # host ademas de arrancar Vite en produccion.
+        run: |
+          cd /var/www/dulceria-pos
+          docker compose -f docker-compose.yml build
+
+      - name: Levantar servicios
+        run: |
+          cd /var/www/dulceria-pos
+          docker compose -f docker-compose.yml up -d
+
+      - name: Migraciones y caches
+        # -T desactiva la asignacion de TTY; sin el, 'exec' falla en entornos
+        # no interactivos como este runner.
+        run: |
+          cd /var/www/dulceria-pos
+          docker compose -f docker-compose.yml exec -T app php artisan migrate --force
+          docker compose -f docker-compose.yml exec -T app php artisan config:cache
+          docker compose -f docker-compose.yml exec -T app php artisan route:cache
+          docker compose -f docker-compose.yml exec -T app php artisan view:cache
+
+      - name: Verificar que la app responde
+        # -f hace fallar el step si el HTTP status es >= 400; -sS mantiene el
+        # output limpio pero muestra errores. Asi un sitio caido rompe el
+        # deploy en vez de reportar exito.
+        run: curl -fsS http://localhost:${APP_PORT:-80} > /dev/null
