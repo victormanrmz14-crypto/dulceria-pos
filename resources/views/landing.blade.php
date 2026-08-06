@@ -113,7 +113,7 @@
         <a href="#punto-de-venta" class="lp-nav lp-nav-links" style="color:#ffcccc;text-decoration:none;white-space:nowrap">Punto de venta</a>
         <a href="#roles"          class="lp-nav lp-nav-links" style="color:#ffcccc;text-decoration:none;white-space:nowrap">Roles</a>
         <a href="{{ route('login') }}"    class="lp-nav2" style="color:#fff;text-decoration:none;padding:10px 6px;font-weight:600;white-space:nowrap">Iniciar sesión</a>
-        <a href="{{ route('register') }}" class="lp-btn"  style="background:#ff7043;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:600;white-space:nowrap">Registrarse</a>
+        <a href="{{ route('login') }}"    class="lp-btn"  style="background:#ff7043;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:600;white-space:nowrap">Ingresar</a>
       </nav>
     </div>
   </header>
@@ -138,7 +138,7 @@
           Cobra rápido, controla tu inventario y cierra el turno sin sacar la calculadora. Un sistema de punto de venta pensado para dulcerías y tiendas de abarrotes.
         </p>
         <div class="lp-hero-buttons" style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:34px">
-          <a href="{{ route('register') }}" class="lp-btn"   style="background:#ff7043;color:#fff;text-decoration:none;padding:15px 28px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Registrarse gratis</a>
+          <a href="{{ route('login') }}"    class="lp-btn"   style="background:#ff7043;color:#fff;text-decoration:none;padding:15px 28px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Ingresar al sistema</a>
           <a href="{{ route('login') }}"    class="lp-ghost" style="border:1.5px solid rgba(255,255,255,0.35);color:#fff;text-decoration:none;padding:15px 28px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Iniciar sesión</a>
         </div>
         <div class="lp-hero-bullets" style="display:flex;gap:34px;flex-wrap:wrap;font-size:14px;color:#ffcccc">
@@ -358,7 +358,7 @@
           Cree su cuenta y cargue sus productos en unos minutos. Si ya tiene cuenta, entre directo al mostrador.
         </p>
         <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-          <a href="{{ route('register') }}" class="lp-btn"   style="background:#ff7043;color:#fff;text-decoration:none;padding:16px 30px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Crear mi cuenta</a>
+          <a href="{{ route('login') }}"    class="lp-btn"   style="background:#ff7043;color:#fff;text-decoration:none;padding:16px 30px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Ingresar al sistema</a>
           <a href="{{ route('login') }}"    class="lp-ghost" style="border:1.5px solid rgba(255,255,255,0.35);color:#fff;text-decoration:none;padding:16px 30px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Iniciar sesión</a>
         </div>
       </div>
