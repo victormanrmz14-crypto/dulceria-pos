@@ -105,18 +105,3 @@ jobs:
         with:
           name: trivy-report
           path: security/trivy-report.txt
-
-      # Commitea una copia fresca del reporte al repo (verificable #28).
-      # Solo en push a main, con [skip ci] para no reentrar el pipeline, y
-      # continue-on-error para que un fallo aqui nunca tumbe la build.
-      - name: Commit Trivy report
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        continue-on-error: true
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if ! git diff --quiet -- security/trivy-report.txt; then
-            git add security/trivy-report.txt
-            git commit -m "chore(security): actualizar reporte de Trivy [skip ci]"
-            git push
-          fi

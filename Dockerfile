@@ -76,6 +76,10 @@ RUN apk add --no-cache \
 # Configuracion de opcache orientada a produccion.
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
+# El binario de composer se incluye para que en desarrollo sea posible
+# correr 'docker compose exec app composer install' sin PHP/Composer locales.
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 # Usuario no-root que ejecutara php-fpm.
 RUN addgroup -g "${GID}" dulceria \
     && adduser -u "${UID}" -G dulceria -D -H dulceria
