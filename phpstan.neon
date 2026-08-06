@@ -1,0 +1,19 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 1
+
+    paths:
+        - app
+
+    # Rutas generadas/artefactos que no aportan al analisis.
+    excludePaths:
+        - bootstrap/cache
+
+    ignoreErrors:
+        # Los metodos de relacion Eloquent existen en los modelos, pero no
+        # declaran tipo de retorno (HasMany/BelongsTo), asi que larastan no
+        # puede confirmarlos estaticamente y los reporta como inexistentes.
+        # Son falsos positivos; se ignoran hasta que se tipen las relaciones.
+        - identifier: larastan.relationExistence
