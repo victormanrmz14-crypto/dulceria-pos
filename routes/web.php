@@ -14,8 +14,10 @@ use App\Http\Controllers\VentaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('dashboard');
-});
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : view('landing');
+})->name('landing');
 
 Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
