@@ -36,15 +36,17 @@ jobs:
       - name: Migraciones y caches
         # -T desactiva la asignacion de TTY; sin el, 'exec' falla en entornos
         # no interactivos como este runner.
+        # sleep 20: da tiempo a que php-fpm y mysql terminen de iniciar tras
+        # 'up -d'; sin espera, migrate puede fallar por conexion rechazada.
         run: |
           cd /var/www/dulceria-pos
+          sleep 20
           docker compose -f docker-compose.yml exec -T app php artisan migrate --force
           docker compose -f docker-compose.yml exec -T app php artisan config:cache
           docker compose -f docker-compose.yml exec -T app php artisan route:cache
           docker compose -f docker-compose.yml exec -T app php artisan view:cache
 
       - name: Verificar que la app responde
-        # -f hace fallar el step si el HTTP status es >= 400; -sS mantiene el
-        # output limpio pero muestra errores. Asi un sitio caido rompe el
-        # deploy en vez de reportar exito.
-        run: curl -fsS http://localhost:${APP_PORT:-80} > /dev/null
+        # --retry 5 con --retry-delay 5 tolera que nginx tarde unos segundos en
+        # estar listo. -f falla con status >= 400; -sS mantiene el output limpio.
+        run: curl --retry 5 --retry-delay 5 -fsS http://localhost:${APP_PORT:-80} > /dev/null
