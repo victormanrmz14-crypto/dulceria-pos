@@ -4,6 +4,7 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '../Layouts/AppLayout.vue';
 import StatCard from '../Components/StatCard.vue';
 import Grafica from '../Components/Grafica.vue';
+import WelcomeModal from '../Components/WelcomeModal.vue';
 import { moneda, numero } from '../utils';
 
 const props = defineProps({
@@ -26,6 +27,7 @@ const props = defineProps({
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const esAdmin = computed(() => user.value?.rol === 'admin');
+const mostrarBienvenida = computed(() => !!page.props.flash?.bienvenida);
 
 const datosGrafica = computed(() => ({
     labels: props.ultimos7Dias.map((d) => d.fecha),
@@ -44,6 +46,8 @@ const datosGrafica = computed(() => ({
 <template>
     <AppLayout>
         <Head title="Inicio" />
+
+        <WelcomeModal v-if="mostrarBienvenida" />
 
         <div class="mb-4">
             <h2 class="text-primary fs-3 mb-1">Bienvenido, {{ user?.nombre }} 👋</h2>
