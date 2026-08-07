@@ -10,17 +10,25 @@ use App\Http\Requests\UpdateUsuarioRequest;
 
 class UsuarioController extends Controller
 {
+    private function tenantId(): int
+    {
+        return auth()->user()->tenant_id;
+    }
+
     public function index()
     {
-        $usuarios = User::orderBy('nombre')->get()->map(fn ($u) => [
-            'id'       => $u->id,
-            'nombre'   => $u->nombre,
-            'apellido' => $u->apellido,
-            'username' => $u->username,
-            'email'    => $u->email,
-            'rol'      => $u->rol,
-            'activo'   => (bool) $u->activo,
-        ])->values();
+        $usuarios = User::where('tenant_id', $this->tenantId())
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn ($u) => [
+                'id'       => $u->id,
+                'nombre'   => $u->nombre,
+                'apellido' => $u->apellido,
+                'username' => $u->username,
+                'email'    => $u->email,
+                'rol'      => $u->rol,
+                'activo'   => (bool) $u->activo,
+            ])->values();
 
         return \Inertia\Inertia::render('Usuarios/Index', ['usuarios' => $usuarios]);
     }
@@ -33,13 +41,14 @@ class UsuarioController extends Controller
     public function store(StoreUsuarioRequest $request)
     {
         User::create([
-            'nombre'   => $request->nombre,
-            'apellido' => $request->apellido,
-            'username' => $request->username,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'rol'      => $request->rol,
-            'activo'   => true,
+            'tenant_id' => $this->tenantId(),
+            'nombre'    => $request->nombre,
+            'apellido'  => $request->apellido,
+            'username'  => $request->username,
+            'email'     => $request->email,
+            'password'  => Hash::make($request->password),
+            'rol'       => $request->rol,
+            'activo'    => true,
         ]);
 
         return redirect()->route('usuarios.index')
@@ -48,6 +57,8 @@ class UsuarioController extends Controller
 
     public function edit(User $usuario)
     {
+        abort_unless($usuario->tenant_id === $this->tenantId(), 403);
+
         return \Inertia\Inertia::render('Usuarios/Edit', [
             'usuario' => [
                 'id'       => $usuario->id,
@@ -62,8 +73,8 @@ class UsuarioController extends Controller
 
     public function update(UpdateUsuarioRequest $request, User $usuario)
     {
-        // No permitir que un admin se quite su propio rol (podría dejar
-        // el sistema sin administradores)
+        abort_unless($usuario->tenant_id === $this->tenantId(), 403);
+
         if ($usuario->id === auth()->id() && $request->rol !== 'admin') {
             return back()->withInput()
                 ->with('error', 'No puedes quitarte tu propio rol de administrador.');
@@ -77,7 +88,6 @@ class UsuarioController extends Controller
             'rol'      => $request->rol,
         ];
 
-        // Solo actualizar contraseña si se proporcionó
         if ($request->filled('password')) {
             $datos['password'] = Hash::make($request->password);
         }
@@ -90,7 +100,8 @@ class UsuarioController extends Controller
 
     public function destroy(User $usuario)
     {
-        // No permitir desactivarse a sí mismo
+        abort_unless($usuario->tenant_id === $this->tenantId(), 403);
+
         if ($usuario->id === auth()->id()) {
             return redirect()->route('usuarios.index')
                 ->with('error', 'No puedes desactivar tu propia cuenta.');
@@ -100,7 +111,6 @@ class UsuarioController extends Controller
 
         $mensaje = $usuario->activo ? 'Usuario activado.' : 'Usuario desactivado.';
 
-        return redirect()->route('usuarios.index')
-            ->with('success', $mensaje);
+        return redirect()->route('usuarios.index')->with('success', $mensaje);
     }
 }

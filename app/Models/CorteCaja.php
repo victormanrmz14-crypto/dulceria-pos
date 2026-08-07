@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class CorteCaja extends Model
 {
+    use HasTenant;
+
     protected $table = 'cortes_caja';
 
     protected $fillable = [
+        'tenant_id',
         'user_id',
         'fecha_inicio',
         'fecha_corte',
