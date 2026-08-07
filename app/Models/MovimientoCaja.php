@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class MovimientoCaja extends Model
 {
+    use HasTenant;
+
     protected $table = 'movimientos_caja';
 
     protected $fillable = [
+        'tenant_id',
         'user_id',
         'tipo',
         'monto',

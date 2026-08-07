@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class DetalleVenta extends Model
 {
+    use HasTenant;
+
     protected $table = 'detalle_ventas';
 
     protected $fillable = [
+        'tenant_id',
         'venta_id',
         'producto_id',
         'cantidad',

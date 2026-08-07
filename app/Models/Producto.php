@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
 {
+    use HasTenant;
+
     protected $table = 'productos';
 
     protected $fillable = [
+        'tenant_id',
         'categoria_id',
         'marca_id',
         'proveedor_id',
