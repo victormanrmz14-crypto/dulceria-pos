@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,6 +37,8 @@ if (!auth()->user()->activo) {
 
     $request->session()->regenerate();
 
+    AuditLogger::log('login', 'Inicio de sesión', auth()->user()->tenant_id);
+
     $destino = auth()->user()->es_super_admin
         ? route('superadmin.dashboard', absolute: false)
         : route('dashboard', absolute: false);
@@ -47,6 +50,8 @@ if (!auth()->user()->activo) {
      */
     public function destroy(Request $request): RedirectResponse
     {
+        AuditLogger::log('logout', 'Cierre de sesión', auth()->user()?->tenant_id);
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

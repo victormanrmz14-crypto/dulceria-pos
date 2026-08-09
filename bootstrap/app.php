@@ -2,6 +2,7 @@
 
 use App\Console\Commands\CreatePlatformAdmin;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SoloAdmin;
 use App\Http\Middleware\SoloSuperAdmin;
 use App\Http\Middleware\UsuarioActivo;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             HandleInertiaRequests::class,
+            SecurityHeaders::class,
         ]);
 
         $middleware->alias([

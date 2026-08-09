@@ -9,6 +9,10 @@ services:
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
+
+  db:
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "1"
     volumes:
       # Los cambios en .php se reflejan sin rebuild.
       # (Requiere vendor/ instalado en el host: composer install.)

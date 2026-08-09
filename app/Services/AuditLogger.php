@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use Illuminate\Support\Facades\Log;
 
 class AuditLogger
 {
@@ -13,6 +14,14 @@ class AuditLogger
             'tenant_id'   => $tenantId,
             'accion'      => $accion,
             'descripcion' => $descripcion,
+            'ip'          => request()->ip(),
+            'meta'        => $meta ?: null,
+        ]);
+
+        Log::channel('audit')->info($accion, [
+            'descripcion' => $descripcion,
+            'user_id'     => auth()->id(),
+            'tenant_id'   => $tenantId,
             'ip'          => request()->ip(),
             'meta'        => $meta ?: null,
         ]);
