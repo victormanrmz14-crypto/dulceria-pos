@@ -13,6 +13,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Productos — recurso RESTful completo (GET, POST, PUT, PATCH, DELETE)
-    Route::apiResource('productos', ProductoApiController::class);
+    // Prefijo 'api.' en los nombres para evitar conflicto con Route::resource de web.php
+    Route::apiResource('productos', ProductoApiController::class)->names('api.productos');
 
 });
