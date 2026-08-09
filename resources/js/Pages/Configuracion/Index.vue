@@ -1,14 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, useForm, usePage, Link } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 
 const props = defineProps({
     configuracion: Object,
-    usuarios:      Array,
 });
 
-const page = usePage();
 const tab  = ref('apariencia');
 
 // ── Paletas predefinidas ──────────────────────────────────────────────────────
@@ -109,27 +107,6 @@ const ticketForm = useForm({
     mostrar_rfc:  tkt.mostrar_rfc ?? true,
 });
 
-// ── Formulario contraseña ─────────────────────────────────────────────────────
-const passForm = useForm({
-    password_actual:       '',
-    password:              '',
-    password_confirmation: '',
-});
-
-// ── Usuarios (submodulo) ──────────────────────────────────────────────────────
-const busqueda = ref('');
-const usuariosFiltrados = computed(() => {
-    if (!busqueda.value.trim()) return props.usuarios;
-    const q = busqueda.value.toLowerCase();
-    return props.usuarios.filter(u =>
-        u.nombre.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        u.username.toLowerCase().includes(q)
-    );
-});
-
-const rolLabel = (u) => u.rol === 'admin' ? 'Admin' : 'Cajero';
-const rolClase = (u) => u.rol === 'admin' ? 'ubadge--admin' : 'ubadge--cajero';
 </script>
 
 <template>
@@ -151,8 +128,6 @@ const rolClase = (u) => u.rol === 'admin' ? 'ubadge--admin' : 'ubadge--cajero';
                     ['apariencia','🎨','Apariencia'],
                     ['negocio','🏪','Mi Negocio'],
                     ['tickets','🧾','Recibos'],
-                    ['usuarios','👥','Usuarios'],
-                    ['seguridad','🔒','Seguridad'],
                 ]"
                     :key="k"
                     class="cfg-tab"
@@ -387,84 +362,6 @@ const rolClase = (u) => u.rol === 'admin' ? 'ubadge--admin' : 'ubadge--cajero';
                 </div>
             </div>
 
-            <!-- ══════════════════════════════════════════════════════════ -->
-            <!-- TAB: USUARIOS                                             -->
-            <!-- ══════════════════════════════════════════════════════════ -->
-            <div v-if="tab === 'usuarios'" class="cfg-panel">
-                <div class="cfg-section">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                        <div>
-                            <div class="cfg-section-title mb-0">Usuarios de tu dulcería</div>
-                            <p class="cfg-section-desc mb-0">{{ usuarios.length }} usuario{{ usuarios.length !== 1 ? 's' : '' }} registrado{{ usuarios.length !== 1 ? 's' : '' }}</p>
-                        </div>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <input v-model="busqueda" type="text" class="cfg-input cfg-search" placeholder="🔍 Buscar..." />
-                            <Link href="/usuarios/create" class="btn-nuevo">+ Nuevo usuario</Link>
-                        </div>
-                    </div>
-
-                    <div v-if="usuariosFiltrados.length === 0" class="cfg-empty">
-                        Sin usuarios que coincidan con la búsqueda.
-                    </div>
-                    <div v-else class="usuarios-grid">
-                        <div v-for="u in usuariosFiltrados" :key="u.id" class="ucard" :class="!u.activo ? 'ucard--inact' : ''">
-                            <div class="ucard-av" :class="u.rol === 'admin' ? 'ucard-av--admin' : 'ucard-av--cajero'">
-                                {{ u.nombre.charAt(0).toUpperCase() }}
-                            </div>
-                            <div class="ucard-body">
-                                <div class="ucard-nombre">{{ u.nombre }}</div>
-                                <div class="ucard-email">{{ u.email }}</div>
-                                <div class="ucard-meta">
-                                    <span class="ubadge" :class="rolClase(u)">{{ rolLabel(u) }}</span>
-                                    <span class="ubadge" :class="u.activo ? 'ubadge--ok' : 'ubadge--err'">
-                                        {{ u.activo ? 'Activo' : 'Inactivo' }}
-                                    </span>
-                                    <span class="ucard-desde">desde {{ u.desde }}</span>
-                                </div>
-                            </div>
-                            <Link :href="`/usuarios/${u.id}/edit`" class="ucard-edit">✏️</Link>
-                        </div>
-                    </div>
-
-                    <div class="cfg-footer">
-                        <Link href="/usuarios" class="btn-secondary">Ver gestión completa →</Link>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ══════════════════════════════════════════════════════════ -->
-            <!-- TAB: SEGURIDAD                                            -->
-            <!-- ══════════════════════════════════════════════════════════ -->
-            <div v-if="tab === 'seguridad'" class="cfg-panel">
-                <div class="cfg-section">
-                    <div class="cfg-section-title">Cambiar contraseña</div>
-                    <p class="cfg-section-desc">Actualiza tu contraseña de acceso al sistema.</p>
-
-                    <form class="cfg-form" style="max-width: 440px;" @submit.prevent="passForm.post('/configuracion/password', { onSuccess: () => passForm.reset() })">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="cfg-label">Contraseña actual</label>
-                                <input v-model="passForm.password_actual" type="password" class="cfg-input" placeholder="Tu contraseña actual" autocomplete="current-password" />
-                                <span v-if="passForm.errors.password_actual" class="cfg-error-msg">{{ passForm.errors.password_actual }}</span>
-                            </div>
-                            <div class="col-12">
-                                <label class="cfg-label">Nueva contraseña</label>
-                                <input v-model="passForm.password" type="password" class="cfg-input" placeholder="Mínimo 8 caracteres" autocomplete="new-password" minlength="8" />
-                                <span v-if="passForm.errors.password" class="cfg-error-msg">{{ passForm.errors.password }}</span>
-                            </div>
-                            <div class="col-12">
-                                <label class="cfg-label">Confirmar nueva contraseña</label>
-                                <input v-model="passForm.password_confirmation" type="password" class="cfg-input" placeholder="Repite la nueva contraseña" autocomplete="new-password" />
-                            </div>
-                        </div>
-                        <div class="cfg-footer">
-                            <button type="submit" class="btn-guardar" :disabled="passForm.processing">
-                                {{ passForm.processing ? 'Guardando...' : '🔒 Cambiar contraseña' }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </div>
     </AppLayout>
 </template>
@@ -544,11 +441,9 @@ const rolClase = (u) => u.rol === 'admin' ? 'ubadge--admin' : 'ubadge--cajero';
 }
 .cfg-input:focus { border-color: var(--dulce-rojo, #8B0000); background: #fff; }
 .cfg-textarea { resize: vertical; min-height: 72px; }
-.cfg-search { max-width: 200px; }
 .cfg-hint { font-size: .7rem; color: #94a3b8; margin-top: .25rem; display: block; }
 .cfg-error-msg { font-size: .72rem; color: #dc2626; margin-top: .25rem; display: block; }
 .cfg-errors { background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px; padding: .75rem 1rem; font-size: .8rem; color: #dc2626; margin-top: .75rem; }
-.cfg-empty { text-align: center; padding: 3rem 1rem; color: #94a3b8; font-size: .88rem; }
 
 /* ── Botones ───────────────────────────────────────────────────────────────── */
 .btn-guardar {
@@ -564,31 +459,6 @@ const rolClase = (u) => u.rol === 'admin' ? 'ubadge--admin' : 'ubadge--cajero';
 }
 .btn-guardar:hover:not(:disabled) { opacity: .88; }
 .btn-guardar:disabled { opacity: .55; cursor: not-allowed; }
-
-.btn-nuevo {
-    background: var(--dulce-rojo, #8B0000);
-    color: #fff;
-    border-radius: 8px;
-    padding: .45rem 1rem;
-    font-size: .82rem;
-    font-weight: 700;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: opacity .15s;
-}
-.btn-nuevo:hover { opacity: .88; color: #fff; }
-
-.btn-secondary {
-    background: #f1f5f9;
-    color: #475569;
-    border-radius: 8px;
-    padding: .5rem 1.1rem;
-    font-size: .82rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background .15s;
-}
-.btn-secondary:hover { background: #e2e8f0; color: #1e293b; }
 
 /* ── Paletas ───────────────────────────────────────────────────────────────── */
 .paletas-grid {
@@ -740,33 +610,6 @@ const rolClase = (u) => u.rol === 'admin' ? 'ubadge--admin' : 'ubadge--cajero';
 .tp-total { display: flex; justify-content: space-between; font-weight: 700; font-size: .82rem; }
 .tp-pie { text-align: center; color: #475569; font-size: .67rem; white-space: pre-line; }
 .tp-footer { text-align: center; color: #94a3b8; font-size: .62rem; margin-top: .25rem; }
-
-/* ── Usuarios grid ─────────────────────────────────────────────────────────── */
-.usuarios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .75rem; }
-.ucard {
-    display: flex; align-items: center; gap: .85rem;
-    padding: .9rem 1rem; border: 1px solid #f1f5f9;
-    border-radius: 10px; background: #fafafa;
-    transition: box-shadow .15s;
-}
-.ucard:hover { box-shadow: 0 2px 8px rgba(0,0,0,.07); background: #fff; }
-.ucard--inact { opacity: .55; }
-.ucard-av { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .95rem; flex-shrink: 0; }
-.ucard-av--admin  { background: #eff6ff; color: #2563eb; }
-.ucard-av--cajero { background: #f8fafc; color: #64748b; }
-.ucard-body { flex: 1; min-width: 0; }
-.ucard-nombre { font-size: .83rem; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ucard-email  { font-size: .72rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ucard-meta   { display: flex; align-items: center; gap: .35rem; margin-top: .3rem; flex-wrap: wrap; }
-.ucard-desde  { font-size: .65rem; color: #94a3b8; }
-.ucard-edit   { color: #94a3b8; text-decoration: none; font-size: .85rem; flex-shrink: 0; padding: .3rem; border-radius: 6px; transition: background .15s; }
-.ucard-edit:hover { background: #f1f5f9; color: #1e293b; }
-
-.ubadge { display: inline-flex; padding: .12rem .5rem; border-radius: 5px; font-size: .62rem; font-weight: 700; }
-.ubadge--admin  { background: #eff6ff; color: #2563eb; }
-.ubadge--cajero { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
-.ubadge--ok  { background: #f0fdf4; color: #15803d; }
-.ubadge--err { background: #fff5f5; color: #dc2626; }
 
 /* ── Utilities ─────────────────────────────────────────────────────────────── */
 .d-none { display: none; }

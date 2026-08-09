@@ -58,11 +58,10 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
         // Configuración de la dulcería
         Route::prefix('configuracion')->name('configuracion.')->group(function () {
-            Route::get('/',             [ConfiguracionController::class, 'index'])->name('index');
-            Route::post('/apariencia',  [ConfiguracionController::class, 'guardarApariencia'])->name('apariencia');
-            Route::post('/negocio',     [ConfiguracionController::class, 'guardarNegocio'])->name('negocio');
-            Route::post('/tickets',     [ConfiguracionController::class, 'guardarTickets'])->name('tickets');
-            Route::post('/password',    [ConfiguracionController::class, 'cambiarPassword'])->name('password');
+            Route::get('/',            [ConfiguracionController::class, 'index'])->name('index');
+            Route::post('/apariencia', [ConfiguracionController::class, 'guardarApariencia'])->name('apariencia');
+            Route::post('/negocio',    [ConfiguracionController::class, 'guardarNegocio'])->name('negocio');
+            Route::post('/tickets',    [ConfiguracionController::class, 'guardarTickets'])->name('tickets');
         });
     });
 });

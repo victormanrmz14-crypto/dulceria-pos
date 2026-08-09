@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Services\AuditLogger;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -16,26 +15,8 @@ class ConfiguracionController extends Controller
         $tenant = $user->tenant;
         $config = $tenant?->configuracion ?? [];
 
-        $usuarios = $tenant
-            ? $tenant->users()
-                ->select(['id', 'nombre', 'apellido', 'email', 'username', 'rol', 'activo', 'created_at'])
-                ->orderBy('rol')
-                ->orderBy('nombre')
-                ->get()
-                ->map(fn ($u) => [
-                    'id'       => $u->id,
-                    'nombre'   => trim("{$u->nombre} {$u->apellido}"),
-                    'email'    => $u->email,
-                    'username' => $u->username,
-                    'rol'      => $u->rol,
-                    'activo'   => (bool) $u->activo,
-                    'desde'    => $u->created_at->diffForHumans(),
-                ])
-            : [];
-
         return Inertia::render('Configuracion/Index', [
             'configuracion' => $config,
-            'usuarios'      => $usuarios,
         ]);
     }
 
@@ -125,22 +106,4 @@ class ConfiguracionController extends Controller
         return back()->with('success', 'Configuración de recibos guardada.');
     }
 
-    public function cambiarPassword(Request $request)
-    {
-        $request->validate([
-            'password_actual'       => 'required|string',
-            'password'              => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = auth()->user();
-
-        if (!Hash::check($request->password_actual, $user->password)) {
-            return back()->withErrors(['password_actual' => 'La contraseña actual no es correcta.']);
-        }
-
-        $user->update(['password' => Hash::make($request->password)]);
-        AuditLogger::log('config.password', 'Contraseña cambiada por el usuario', $user->tenant_id);
-
-        return back()->with('success', 'Contraseña actualizada correctamente.');
-    }
 }
