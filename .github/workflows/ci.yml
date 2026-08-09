@@ -43,6 +43,8 @@ jobs:
           cp .env.example .env
           touch database/database.sqlite
           php artisan key:generate
+          php artisan config:clear
+          php artisan route:clear
 
       # Los audits corren en modo informativo (continue-on-error) porque los
       # unicos hallazgos son CVEs en dependencias transitivas SIN parche

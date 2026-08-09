@@ -18,7 +18,9 @@ jobs:
       - name: Actualizar codigo
         run: |
           cd /var/www/dulceria-pos
-          git pull origin main
+          git fetch origin
+          git reset --hard origin/main
+          git clean -fd
 
       - name: Construir imagenes
         # El -f explicito es obligatorio: sin el, Docker tambien carga
