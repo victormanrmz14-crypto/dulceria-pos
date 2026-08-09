@@ -36,7 +36,11 @@ if (!auth()->user()->activo) {
 
     $request->session()->regenerate();
 
-    return redirect()->intended(route('dashboard', absolute: false));
+    $destino = auth()->user()->es_super_admin
+        ? route('superadmin.dashboard', absolute: false)
+        : route('dashboard', absolute: false);
+
+    return redirect()->intended($destino);
 }
     /**
      * Destroy an authenticated session.

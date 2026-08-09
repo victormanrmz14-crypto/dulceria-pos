@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Anuncio;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -48,7 +50,34 @@ class HandleInertiaRequests extends Middleware
                 'bienvenida' => (bool) $request->session()->get('bienvenida'),
             ],
 
+            'impersonando' => $request->session()->has('superadmin_original_id'),
+
+            'anuncios' => $request->user()
+                ? Anuncio::vigentes()->latest()->get()->map(fn ($a) => [
+                    'id'    => $a->id,
+                    'titulo'=> $a->titulo,
+                    'cuerpo'=> $a->cuerpo,
+                    'tipo'  => $a->tipo,
+                ])->values()
+                : [],
+
             'csrf' => csrf_token(),
+
+            'tenantConfig' => function () use ($request) {
+                $user = $request->user();
+                if (!$user || $user->es_super_admin) return null;
+                $tenant = $user->tenant;
+                if (!$tenant) return null;
+                $config = $tenant->configuracion ?? [];
+                return [
+                    'colores'       => $config['colores'] ?? null,
+                    'logo'          => !empty($config['logo'])
+                        ? Storage::disk('public')->url($config['logo'])
+                        : null,
+                    'nombre_mostrar'=> $config['negocio']['nombre_mostrar'] ?? null,
+                    'ticket'        => $config['ticket'] ?? null,
+                ];
+            },
         ];
     }
 }
