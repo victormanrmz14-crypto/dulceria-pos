@@ -6,6 +6,9 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 const esAdmin = computed(() => user.value?.rol === 'admin');
 const csrf = computed(() => page.props.csrf);
+const tenantConfig = computed(() => page.props.tenantConfig ?? null);
+const logoUrl = computed(() => tenantConfig.value?.logo ?? null);
+const nombreMostrar = computed(() => tenantConfig.value?.nombre_mostrar || '🍬 Dulcería POS');
 
 const activo = (prefijo) => page.url.startsWith(prefijo);
 
@@ -15,7 +18,8 @@ const catalogosAbiertos = ref(activo('/catalogos'));
 
 <template>
     <div class="marca">
-        <h1 class="titulo-marca">🍬 Dulcería POS</h1>
+        <img v-if="logoUrl" :src="logoUrl" :alt="nombreMostrar" class="sidebar-logo" />
+        <h1 class="titulo-marca" :class="{ 'titulo-con-logo': logoUrl }">{{ nombreMostrar }}</h1>
         <span>{{ user?.nombre ?? 'Usuario' }}</span>
     </div>
 
@@ -86,6 +90,11 @@ const catalogosAbiertos = ref(activo('/catalogos'));
             </div>
         </template>
     </nav>
+
+    <!-- Configuración (solo admins) -->
+    <Link v-if="esAdmin" href="/configuracion" class="nav-item-pos nav-item-config" :class="{ activo: activo('/configuracion') }">
+        ⚙️ Configuración
+    </Link>
 
     <!-- Logout: form clásico (no XHR) para aterrizar en la página Blade de login -->
     <form method="POST" action="/logout">

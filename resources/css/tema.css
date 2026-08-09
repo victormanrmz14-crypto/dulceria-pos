@@ -86,7 +86,10 @@ h1, h2, h3, .titulo-marca {
 }
 
 .sidebar .marca h1 { color: #fff; font-size: 1.4rem; margin: 0; }
+.sidebar .marca h1.titulo-con-logo { font-size: 1rem; }
 .sidebar .marca span { color: var(--dulce-texto-suave); font-size: 0.82rem; }
+.sidebar-logo { max-height: 52px; max-width: 140px; object-fit: contain; border-radius: 8px; margin-bottom: .4rem; display: block; margin-left: auto; margin-right: auto; }
+.nav-item-config { border-top: 1px solid rgba(255,255,255,.08); margin-top: .25rem; }
 
 .sidebar .nav-item-pos {
     display: flex;
@@ -149,6 +152,7 @@ h1, h2, h3, .titulo-marca {
     background: rgba(255, 255, 255, 0.1);
     color: #fff;
 }
+
 
 .sidebar .btn-salir {
     background: var(--dulce-rojo-oscuro);
