@@ -358,8 +358,8 @@
           Cree su cuenta y cargue sus productos en unos minutos. Si ya tiene cuenta, entre directo al mostrador.
         </p>
         <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-          <a href="{{ route('register') }}" class="lp-btn"   style="background:#ff7043;color:#fff;text-decoration:none;padding:16px 30px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Crear mi cuenta</a>
-          <a href="{{ route('login') }}"    class="lp-ghost" style="border:1.5px solid rgba(255,255,255,0.35);color:#fff;text-decoration:none;padding:16px 30px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Iniciar sesión</a>
+          <a href="{{ route('register') }}" class="lp-btn"   style="background:#ff7043;color:#fff;text-decoration:none;padding:16px 30px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Registrarse gratis</a>
+          <a href="{{ route('login') }}"    class="lp-ghost" style="border:1.5px solid rgba(255,255,255,0.35);color:#fff;text-decoration:none;padding:16px 30px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Ya tengo cuenta</a>
         </div>
       </div>
     </div>
