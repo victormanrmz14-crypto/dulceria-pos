@@ -24,9 +24,12 @@ use App\Http\Controllers\VentaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->route('dashboard')
-        : view('landing');
+    if (auth()->check()) {
+        return auth()->user()->es_super_admin
+            ? redirect()->route('superadmin.dashboard')
+            : redirect()->route('dashboard');
+    }
+    return view('landing');
 })->name('landing');
 
 Route::middleware(['auth', 'usuario.activo'])->group(function () {

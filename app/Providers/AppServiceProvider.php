@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Carbon\Carbon;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Pagination\Paginator;
@@ -25,6 +26,14 @@ class AppServiceProvider extends ServiceProvider
     {
         Carbon::setLocale('es');
         Paginator::defaultView('vendor.pagination.tailwind');
+
+        RedirectIfAuthenticated::redirectUsing(function () {
+            $user = auth()->user();
+
+            return ($user && $user->es_super_admin)
+                ? route('superadmin.dashboard')
+                : route('dashboard');
+        });
 
         ResetPassword::toMailUsing(function (object $notifiable, string $token) {
             $url = url(route('password.reset', [
