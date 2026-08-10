@@ -94,7 +94,7 @@ jobs:
           push: false
 
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.31.0
         with:
           image-ref: dulceria-pos:ci
           format: table
