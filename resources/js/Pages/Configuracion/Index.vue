@@ -5,6 +5,7 @@ import AppLayout from '../../Layouts/AppLayout.vue';
 
 const props = defineProps({
     configuracion: Object,
+    logoUrl: String,
 });
 
 const tab  = ref('apariencia');
@@ -30,33 +31,15 @@ const paletaGuardada = computed(() => {
 });
 
 const paletaSeleccionada = ref({ ...paletaGuardada.value });
-const customHex = ref('');
-const mostrarCustom = ref(false);
 
 const seleccionarPaleta = (p) => {
     paletaSeleccionada.value = { ...p };
-    mostrarCustom.value = false;
-};
-
-const aplicarCustomHex = () => {
-    const hex = customHex.value.trim();
-    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
-    paletaSeleccionada.value = {
-        nombre: 'Personalizado',
-        primario: hex,
-        medio:    hex,
-        oscuro:   hex,
-        hover:    hex,
-        acento:   '#ff7043',
-        texto:    '#ffcccc',
-        fondo:    '#fff5f5',
-    };
 };
 
 // ── Formulario apariencia ─────────────────────────────────────────────────────
 const aparienciaForm = useForm({ paleta: null, logo: null, eliminar_logo: false });
 const logoInput     = ref(null);
-const previewLogo   = ref(props.configuracion?.logo ?? null);
+const previewLogo   = ref(props.logoUrl ?? null);
 
 const onLogoChange = (e) => {
     const file = e.target.files[0];
@@ -163,25 +146,6 @@ const ticketForm = useForm({
                             <span class="paleta-nombre">{{ p.nombre }}</span>
                             <span v-if="paletaSeleccionada.primario === p.primario" class="paleta-check">✓</span>
                         </button>
-                    </div>
-
-                    <!-- Color personalizado -->
-                    <div class="custom-color-wrap">
-                        <button class="custom-color-toggle" @click="mostrarCustom = !mostrarCustom">
-                            🎨 Color personalizado
-                        </button>
-                        <div v-if="mostrarCustom" class="custom-color-row">
-                            <div class="custom-preview" :style="{ background: customHex || '#ccc' }"></div>
-                            <input
-                                v-model="customHex"
-                                type="text"
-                                placeholder="#3b82f6"
-                                class="custom-hex-input"
-                                maxlength="7"
-                            />
-                            <button class="btn-apply-hex" @click="aplicarCustomHex">Aplicar</button>
-                        </div>
-                        <p v-if="mostrarCustom" class="custom-note">Ingresa un color hexadecimal. Para mejores resultados usa tonos oscuros.</p>
                     </div>
 
                     <!-- Preview del sidebar -->
@@ -488,27 +452,6 @@ const ticketForm = useForm({
 .paleta-dot    { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .paleta-nombre { flex: 1; font-size: .73rem; }
 .paleta-check  { color: #10b981; font-weight: 800; font-size: .85rem; margin-left: auto; }
-
-.custom-color-wrap { margin-bottom: 1.25rem; }
-.custom-color-toggle {
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: .4rem .9rem;
-    font-size: .78rem;
-    font-weight: 600;
-    color: #475569;
-    cursor: pointer;
-    margin-bottom: .6rem;
-    transition: background .15s;
-}
-.custom-color-toggle:hover { background: #e2e8f0; }
-.custom-color-row { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
-.custom-preview { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e2e8f0; flex-shrink: 0; }
-.custom-hex-input { width: 130px; border: 1px solid #e2e8f0; border-radius: 8px; padding: .4rem .7rem; font-size: .85rem; outline: none; background: #f8fafc; font-family: monospace; }
-.custom-hex-input:focus { border-color: var(--dulce-rojo, #8B0000); }
-.btn-apply-hex { background: var(--dulce-rojo, #8B0000); color: #fff; border: none; border-radius: 8px; padding: .4rem .85rem; font-size: .78rem; font-weight: 600; cursor: pointer; }
-.custom-note { font-size: .7rem; color: #94a3b8; margin-top: .3rem; }
 
 /* ── Preview sidebar ───────────────────────────────────────────────────────── */
 .sidebar-preview {

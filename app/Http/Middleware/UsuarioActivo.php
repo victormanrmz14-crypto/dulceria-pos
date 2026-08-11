@@ -17,6 +17,17 @@ class UsuarioActivo
         $user         = auth()->user();
         $impersonando = session()->has('superadmin_original_id');
 
+        // Un super admin no opera dentro de los módulos de una dulcería (no tiene
+        // tenant): se le regresa a su panel. Para actuar como una dulcería debe
+        // impersonar — y durante la impersonación el usuario autenticado es el
+        // admin del tenant (es_super_admin = false), así que no entra aquí.
+        if ($user->es_super_admin && ! $impersonando) {
+            if ($request->header('X-Inertia')) {
+                return \Inertia\Inertia::location(route('superadmin.dashboard'));
+            }
+            return redirect()->route('superadmin.dashboard');
+        }
+
         // Tenant desactivado — bloquear acceso (excepto durante impersonación de super admin)
         if (! $impersonando && $user->tenant_id && ! $user->tenant?->activo) {
             auth()->logout();

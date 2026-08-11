@@ -5,6 +5,7 @@ import { moneda, numero } from '../../utils';
 
 defineProps({
     venta: Object,
+    config: Object,
 });
 </script>
 
@@ -17,8 +18,13 @@ defineProps({
                 <div class="card-body p-4">
                     <!-- Encabezado -->
                     <div class="text-center pb-3 mb-3" style="border-bottom: 2px dashed #eee;">
-                        <h1 class="titulo-marca text-primary fs-4 mb-1">🍬 Dulcería POS</h1>
-                        <p class="text-secondary small mb-0">{{ venta.fecha }}</p>
+                        <img v-if="config?.logo" :src="config.logo" alt="Logo" class="ticket-logo mb-2" />
+                        <h1 class="titulo-marca text-primary fs-4 mb-1">{{ config?.nombre || '🍬 Dulcería POS' }}</h1>
+                        <p v-if="config?.rfc" class="text-secondary mb-0" style="font-size: .72rem;">RFC: {{ config.rfc }}</p>
+                        <p v-if="config?.direccion" class="text-secondary mb-0" style="font-size: .72rem;">{{ config.direccion }}</p>
+                        <p v-if="config?.telefono" class="text-secondary mb-0" style="font-size: .72rem;">Tel: {{ config.telefono }}</p>
+                        <p v-if="config?.encabezado" class="text-secondary mt-1 mb-0" style="font-size: .72rem; white-space: pre-line;">{{ config.encabezado }}</p>
+                        <p class="text-secondary small mb-0 mt-1">{{ venta.fecha }}</p>
                     </div>
 
                     <!-- Info -->
@@ -53,17 +59,9 @@ defineProps({
                         </tbody>
                     </table>
 
-                    <!-- Totales -->
+                    <!-- Total -->
                     <div class="pt-3" style="border-top: 2px dashed #eee;">
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-secondary">Subtotal</span>
-                            <span class="fw-semibold">{{ moneda(venta.subtotal) }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between small mb-2">
-                            <span class="text-secondary">IVA (16%)</span>
-                            <span class="fw-semibold">{{ moneda(venta.impuestos) }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between border-top pt-2">
+                        <div class="d-flex justify-content-between">
                             <span class="fw-bold">Total</span>
                             <span class="fw-bold fs-5 text-primary">{{ moneda(venta.total) }}</span>
                         </div>
@@ -89,8 +87,9 @@ defineProps({
 
                     <!-- Pie -->
                     <div class="text-center text-secondary small mt-3 pt-3" style="border-top: 2px dashed #eee;">
-                        <p class="mb-1">¡Gracias por su compra!</p>
-                        <p class="mb-0">Dulcería POS</p>
+                        <p v-if="config?.pie" class="mb-1" style="white-space: pre-line;">{{ config.pie }}</p>
+                        <p v-else class="mb-1">¡Gracias por su compra!</p>
+                        <p class="mb-0">{{ config?.nombre || 'Dulcería POS' }}</p>
                     </div>
                 </div>
             </div>
@@ -105,3 +104,7 @@ defineProps({
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.ticket-logo { max-height: 60px; max-width: 100%; object-fit: contain; }
+</style>

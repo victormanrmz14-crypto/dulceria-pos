@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watchEffect } from 'vue';
+import { computed, ref, watch, watchEffect } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import SidebarNav from '../Components/SidebarNav.vue';
 
@@ -16,15 +16,14 @@ const empujarToast = (tipo, mensaje) => {
     setTimeout(() => { toasts.value = toasts.value.filter((t) => t.id !== id); }, 4500);
 };
 
-const procesarFlash = () => {
-    const flash = page.props.flash;
+// El layout no es persistente (se usa como <AppLayout> dentro de cada página),
+// así que se re-monta en cada navegación y `immediate` vuelve a leer el flash
+// — funciona incluso cuando el mensaje es idéntico al anterior. Mismo patrón
+// que SuperAdminLayout, donde los toasts sí funcionaban.
+watch(() => page.props.flash, (flash) => {
     if (flash?.success) empujarToast('success', flash.success);
     if (flash?.error)   empujarToast('error',   flash.error);
-};
-
-// Usar el evento de Inertia para detectar flash después de cada navegación,
-// incluyendo cuando el mensaje es igual al anterior (el watch no lo detectaría).
-router.on('navigate', procesarFlash);
+}, { immediate: true, deep: true });
 
 const erroresGlobales = computed(() => page.props.errors ?? {});
 const impersonando    = computed(() => !!page.props.impersonando);

@@ -21,6 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
         CreatePlatformAdmin::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
+        // En producción la app corre detrás de nginx (y un terminador TLS por
+        // delante, ya que APP_URL es https). Sin confiar en los proxies, Laravel
+        // no detecta HTTPS: genera URLs http://, no marca las cookies como secure
+        // y no envía HSTS. Solo el proxy de borde alcanza a la app en esta red.
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
             SecurityHeaders::class,

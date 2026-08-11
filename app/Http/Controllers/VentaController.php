@@ -82,9 +82,8 @@ class VentaController extends Controller
                     ];
                 }
 
-                $subtotal = round($subtotal, 2);
-                $iva      = round($subtotal * 0.16, 2);
-                $total    = round($subtotal + $iva, 2);
+                // Sin IVA: el precio de cada producto ya es el precio final.
+                $total = round($subtotal, 2);
 
                 // Si el total que vio el cajero ya no coincide (cambió un precio),
                 // no cobrar un monto distinto al mostrado
@@ -107,8 +106,8 @@ class VentaController extends Controller
                     'user_id'        => auth()->id(),
                     'folio'          => null,
                     'metodo_pago'    => $request->metodo_pago,
-                    'subtotal'       => $subtotal,
-                    'impuestos'      => $iva,
+                    'subtotal'       => $total,
+                    'impuestos'      => 0,
                     'total'          => $total,
                     'monto_recibido' => $montoRecibido,
                     'cambio'         => $montoRecibido !== null ? round($montoRecibido - $total, 2) : null,
@@ -176,15 +175,30 @@ class VentaController extends Controller
 
         $venta->load(['detalles.producto', 'usuario']);
 
+        // Datos de personalización del ticket (config de la dulcería)
+        $tenant  = auth()->user()->tenant;
+        $cfg     = $tenant?->configuracion ?? [];
+        $negocio = $cfg['negocio'] ?? [];
+        $tkt     = $cfg['ticket'] ?? [];
+
         return Inertia::render('Ventas/Ticket', [
+            'config' => [
+                'nombre'     => $negocio['nombre_mostrar'] ?? $tenant?->nombre ?? 'Dulcería POS',
+                'logo'       => (($tkt['mostrar_logo'] ?? true) && !empty($cfg['logo']))
+                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($cfg['logo'])
+                    : null,
+                'rfc'        => ($tkt['mostrar_rfc'] ?? true) ? ($negocio['rfc'] ?? null) : null,
+                'direccion'  => $negocio['direccion'] ?? null,
+                'telefono'   => $negocio['telefono'] ?? null,
+                'encabezado' => $tkt['encabezado'] ?? null,
+                'pie'        => $tkt['pie'] ?? null,
+            ],
             'venta' => [
                 'id'             => $venta->id,
                 'folio'          => $venta->folio,
                 'fecha'          => $venta->created_at->format('d/m/Y H:i'),
                 'cajero'         => $venta->usuario->nombre ?? '—',
                 'metodo_pago'    => $venta->metodo_pago,
-                'subtotal'       => (float) $venta->subtotal,
-                'impuestos'      => (float) $venta->impuestos,
                 'total'          => (float) $venta->total,
                 'monto_recibido' => $venta->monto_recibido !== null ? (float) $venta->monto_recibido : null,
                 'cambio'         => $venta->cambio !== null ? (float) $venta->cambio : null,

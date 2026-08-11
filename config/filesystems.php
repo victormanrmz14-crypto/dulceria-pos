@@ -41,7 +41,9 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            // URL relativo: se resuelve contra el origen actual, así funciona en
+            // local (cualquier puerto) y en producción sin depender de APP_URL.
+            'url' => '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

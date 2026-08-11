@@ -83,11 +83,10 @@ const limpiar = () => {
 };
 
 // ---- Totales ----
-const subtotal = computed(() =>
+// Sin IVA: el total es la suma de los productos (el precio ya es el final).
+const total = computed(() =>
     Math.round(carrito.value.reduce((s, i) => s + i.precio * i.cantidad, 0) * 100) / 100,
 );
-const iva = computed(() => Math.round(subtotal.value * 16) / 100);
-const total = computed(() => Math.round((subtotal.value + iva.value) * 100) / 100);
 
 // ---- Pago ----
 const metodoPago = ref('efectivo');
@@ -241,17 +240,9 @@ const procesar = () => {
 
                         <!-- Totales y cobro -->
                         <div v-if="carrito.length" class="pt-3 mt-2 border-top">
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span class="text-secondary">Subtotal</span>
-                                <span class="fw-semibold">{{ moneda(subtotal) }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between small mb-2">
-                                <span class="text-secondary">IVA (16%)</span>
-                                <span class="fw-semibold">{{ moneda(iva) }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between border-top pt-2 mb-3">
+                            <div class="d-flex justify-content-between align-items-center pb-2 mb-3">
                                 <span class="fw-bold">Total</span>
-                                <span class="fw-bold fs-5 text-primary">{{ moneda(total) }}</span>
+                                <span class="fw-bold fs-4 text-primary">{{ moneda(total) }}</span>
                             </div>
 
                             <div class="row g-2 mb-3">

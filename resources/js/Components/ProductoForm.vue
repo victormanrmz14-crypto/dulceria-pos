@@ -1,8 +1,9 @@
 <script setup>
+import { computed } from 'vue';
 import CampoForm from './CampoForm.vue';
 
 // Formulario compartido de producto (crear / editar)
-defineProps({
+const props = defineProps({
     form: Object, // useForm de Inertia
     categorias: Array,
     marcas: Array,
@@ -11,6 +12,32 @@ defineProps({
 });
 
 defineEmits(['enviar']);
+
+// Unidades de medida. Las "a granel" (peso/volumen) manejan el inventario con
+// decimales; las demás se cuentan por unidades enteras.
+const unidades = [
+    { value: 'pieza',   label: 'Pieza',          granel: false },
+    { value: 'paquete', label: 'Paquete',        granel: false },
+    { value: 'bolsa',   label: 'Bolsa',          granel: false },
+    { value: 'caja',    label: 'Caja',           granel: false },
+    { value: 'kg',      label: 'Kilogramo (kg)', granel: true  },
+    { value: 'g',       label: 'Gramo (g)',      granel: true  },
+    { value: 'litro',   label: 'Litro (L)',      granel: true  },
+    { value: 'ml',      label: 'Mililitro (ml)', granel: true  },
+];
+
+// Conserva el valor actual aunque no esté en la lista (productos antiguos).
+const opcionesUnidad = computed(() => {
+    const base = [...unidades];
+    const actual = props.form.unidad_medida;
+    if (actual && !base.some(u => u.value === actual)) {
+        base.unshift({ value: actual, label: actual, granel: false });
+    }
+    return base;
+});
+
+const esGranel     = computed(() => unidades.find(u => u.value === props.form.unidad_medida)?.granel ?? false);
+const sufijoUnidad = computed(() => esGranel.value ? props.form.unidad_medida : 'uds');
 </script>
 
 <template>
@@ -59,8 +86,9 @@ defineEmits(['enviar']);
             <div class="col-12 col-md-6">
                 <CampoForm etiqueta="Unidad de medida" :error="form.errors.unidad_medida" requerido>
                     <template #default="{ clase }">
-                        <input v-model="form.unidad_medida" type="text" maxlength="50"
-                               class="form-control" :class="clase" placeholder="pieza, kg, bolsa..." required>
+                        <select v-model="form.unidad_medida" class="form-select" :class="clase" required>
+                            <option v-for="u in opcionesUnidad" :key="u.value" :value="u.value">{{ u.label }}</option>
+                        </select>
                     </template>
                 </CampoForm>
             </div>
@@ -77,20 +105,32 @@ defineEmits(['enviar']);
                 </CampoForm>
             </div>
             <div class="col-6 col-md-4">
-                <CampoForm etiqueta="Stock" :error="form.errors.stock" requerido>
+                <CampoForm :etiqueta="esGranel ? 'Existencias' : 'Stock'" :error="form.errors.stock" requerido>
                     <template #default="{ clase }">
-                        <input v-model.number="form.stock" type="number" step="1" min="0"
-                               class="form-control text-end" :class="clase" required>
+                        <div class="input-group">
+                            <input v-model.number="form.stock" type="number" :step="esGranel ? '0.001' : '1'" min="0"
+                                   class="form-control text-end" :class="clase" required>
+                            <span class="input-group-text">{{ sufijoUnidad }}</span>
+                        </div>
                     </template>
                 </CampoForm>
             </div>
             <div class="col-6 col-md-4">
                 <CampoForm etiqueta="Stock mínimo" :error="form.errors.stock_minimo" requerido>
                     <template #default="{ clase }">
-                        <input v-model.number="form.stock_minimo" type="number" step="1" min="0"
-                               class="form-control text-end" :class="clase" required>
+                        <div class="input-group">
+                            <input v-model.number="form.stock_minimo" type="number" :step="esGranel ? '0.001' : '1'" min="0"
+                                   class="form-control text-end" :class="clase" required>
+                            <span class="input-group-text">{{ sufijoUnidad }}</span>
+                        </div>
                     </template>
                 </CampoForm>
+            </div>
+
+            <div v-if="esGranel" class="col-12">
+                <div class="alert alert-info py-2 px-3 mb-0 small">
+                    ⚖️ Producto <strong>a granel</strong>: el inventario se maneja en <strong>{{ form.unidad_medida }}</strong> y admite decimales (ej. 1.5).
+                </div>
             </div>
         </div>
 

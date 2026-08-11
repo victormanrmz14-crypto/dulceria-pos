@@ -17,6 +17,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    volumes:
+      # Archivos subidos (logos de dulcerias). Volumen compartido con nginx para
+      # que persistan entre rebuilds y nginx pueda servirlos en /storage/...
+      - storage_public:/var/www/html/storage/app/public
     networks:
       - dulceria
 
@@ -30,6 +34,11 @@ services:
       - "${APP_PORT:-80}:80"
     depends_on:
       - app
+    volumes:
+      # Mismo volumen que la app: nginx sirve /storage/... directamente desde
+      # aqui (solo lectura). Evita el symlink storage:link y sirve archivos
+      # subidos que la imagen (horneada) no contiene.
+      - storage_public:/var/www/html/public/storage:ro
     networks:
       - dulceria
 
@@ -65,6 +74,7 @@ services:
 volumes:
   dbdata:
   redisdata:
+  storage_public:
 
 networks:
   dulceria:

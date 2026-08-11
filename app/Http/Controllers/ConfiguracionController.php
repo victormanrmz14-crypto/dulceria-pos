@@ -17,6 +17,9 @@ class ConfiguracionController extends Controller
 
         return Inertia::render('Configuracion/Index', [
             'configuracion' => $config,
+            'logoUrl'       => !empty($config['logo'])
+                ? Storage::disk('public')->url($config['logo'])
+                : null,
         ]);
     }
 
