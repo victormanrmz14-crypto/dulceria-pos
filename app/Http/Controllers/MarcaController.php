@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Marca;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class MarcaController extends Controller
@@ -38,7 +39,8 @@ class MarcaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => ['required', 'string', 'max:150', 'unique:marcas,nombre'],
+            'nombre' => ['required', 'string', 'max:150',
+                Rule::unique('marcas')->where('tenant_id', auth()->user()->tenant_id)],
         ]);
 
         Marca::create(['nombre' => $request->nombre, 'activo' => true]);
@@ -50,7 +52,8 @@ class MarcaController extends Controller
     public function update(Request $request, Marca $marca)
     {
         $request->validate([
-            'nombre' => ['required', 'string', 'max:150', 'unique:marcas,nombre,' . $marca->id],
+            'nombre' => ['required', 'string', 'max:150',
+                Rule::unique('marcas')->where('tenant_id', auth()->user()->tenant_id)->ignore($marca->id)],
         ]);
 
         $marca->update(['nombre' => $request->nombre]);

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch, watchEffect } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import SidebarNav from '../Components/SidebarNav.vue';
 
@@ -15,10 +15,16 @@ const empujarToast = (tipo, mensaje) => {
     toasts.value.push({ id, tipo, mensaje });
     setTimeout(() => { toasts.value = toasts.value.filter((t) => t.id !== id); }, 4500);
 };
-watch(() => page.props.flash, (flash) => {
+
+const procesarFlash = () => {
+    const flash = page.props.flash;
     if (flash?.success) empujarToast('success', flash.success);
     if (flash?.error)   empujarToast('error',   flash.error);
-}, { immediate: true, deep: true });
+};
+
+// Usar el evento de Inertia para detectar flash después de cada navegación,
+// incluyendo cuando el mensaje es igual al anterior (el watch no lo detectaría).
+router.on('navigate', procesarFlash);
 
 const erroresGlobales = computed(() => page.props.errors ?? {});
 const impersonando    = computed(() => !!page.props.impersonando);

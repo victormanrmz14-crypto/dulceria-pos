@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Categoria;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class CategoriaController extends Controller
@@ -40,7 +41,8 @@ class CategoriaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => ['required', 'string', 'max:150', 'unique:categorias,nombre'],
+            'nombre' => ['required', 'string', 'max:150',
+                Rule::unique('categorias')->where('tenant_id', auth()->user()->tenant_id)],
         ]);
 
         Categoria::create([
@@ -56,7 +58,8 @@ class CategoriaController extends Controller
     public function update(Request $request, Categoria $categoria)
     {
         $request->validate([
-            'nombre' => ['required', 'string', 'max:150', 'unique:categorias,nombre,' . $categoria->id],
+            'nombre' => ['required', 'string', 'max:150',
+                Rule::unique('categorias')->where('tenant_id', auth()->user()->tenant_id)->ignore($categoria->id)],
         ]);
 
         $categoria->update([
