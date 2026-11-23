@@ -2,7 +2,7 @@
 
 ## Alcance y activación
 
-La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
+La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
 
 Los componentes premium usan raíces `.pos-premium` locales: sidebar, header, Bottom Navigation y overlays reciben los tokens de marca sin activar esos estilos sobre el contenido heredado. `.tenant-shell` controla exclusivamente el espacio de navegación, el offset de notificaciones y el margen de scroll; `html:has(.tenant-shell)` reserva espacio de scroll en móvil. Los overlays teletransportados llevan su propia raíz premium. No se cambian resets, variables globales de Bootstrap ni Tailwind. La carga del CSS del piloto después de navegar no debe alterar pantallas vecinas.
 
@@ -204,3 +204,41 @@ Se conserva una columna por debajo de 480 px para proteger importes completos. L
 - **Futuras fases, no implementadas:** contenido premium de POS, Productos, Caja, Usuarios, Reportes, Configuración y Catálogos; componentes de formularios; navegación de SuperAdmin. Para SuperAdmin se podría reutilizar UiBottomNav/UiOverlay con otra fuente de destinos y rol, integrándolos posteriormente en su propio layout. SuperAdminLayout permanece sin cambios.
 
 Entrega, matriz, capturas y limitaciones: [informe Fase 2.3](docs/bottom-navigation-2026-11-23.md). Vista previa de solo lectura: [localhost:8184/dashboard](http://localhost:8184/dashboard), assets de este checkout y respuestas GET del Laravel local con su sesión existente. La galería comparativa de esta fase se entrega por separado del dashboard.
+
+## Fase 2.4 · Punto de venta (implementada, pendiente de revisión y aprobación visual)
+
+La navegación aprobada de Fase 2.3 permanece intacta. El POS adopta el tema premium mediante `AppLayout premium`: DM Sans, Lucide, superficies neutras y marca configurable. No se modifican tokens compartidos, dependencias, rutas ni otros módulos. Las referencias anteriores a formularios y POS pendientes describen el alcance histórico del piloto; esta sección registra exclusivamente la extensión actual al POS.
+
+### Composición y jerarquía
+
+Encabezado con título, fecha existente y acceso secundario al historial solo para administrador. Buscador con etiqueta visible, SVG Search de Lucide, campo de 16 px y 52 px de alto, estado de carga y región de estado. Filas de catálogo con nombre completo, existencias, precio final y unidad; toda la fila agrega el producto. Los precios usan tinta neutra y cifras tabulares; el acento se reserva para acciones y selección. Los nombres se ajustan sin truncamiento.
+
+| Ancho | Catálogo y carrito | Navegación conservada |
+|---|---|---|
+| 320–359 px | Fila compacta sin iconos laterales; acceso al carrito bajo el buscador; panel modal inferior | Barra inferior |
+| 360–767 px | Fila compacta con indicador Agregar; mismo panel inferior | Barra inferior |
+| 768–991 px | Catálogo de una columna, botón de carrito y dialog centrado hasta 480 px | Drawer del header |
+| 992–1199 px | Catálogo y carrito de 320 px, separación 16 px; se omiten iconos de fila para proteger nombres y precios | Sidebar |
+| ≥1200 px | Catálogo flexible y carrito de 360 px, separación 24 px | Sidebar |
+
+El acceso móvil al carrito es sticky dentro del contenido, con total y número de productos distintos. No agrega otra barra fija. El orden de teclado móvil es buscador, acceso al carrito y filas del catálogo. El panel de escritorio es sticky a 24 px. La lista del carrito tiene scroll local cuando supera `min(360px, 42dvh)` en escritorio o `34dvh` en móvil/tablet; los métodos y total permanecen fuera de ese scroll. El dialog completo puede desplazarse cuando la altura disponible es pequeña.
+
+El panel móvil usa `100dvh`, safe area y ancho completo por debajo de 768 px; el dialog de confirmación conserva el ancho del overlay existente. Ambos reutilizan foco contenido, Escape, cierre por backdrop, fondo inerte y restauración de foco de `UiOverlay`. La visibilidad de la barra inferior sigue gestionada por el composable de Fase 2.3, sin modificaciones. No se fuerza el teclado virtual ni se bloquea el zoom.
+
+### Componentes de presentación
+
+| Componente | Responsabilidad y contrato |
+|---|---|
+| [PosCartPanel](resources/js/Components/Pos/PosCartPanel.vue) | `count`, total ya formateado y `theme`; slot con `desktop`. Posee únicamente apertura/cierre y media query de 992 px, con cleanup. Renderiza una sola instancia del checkout, inline o en `UiOverlay`; cierra al cruzar el breakpoint. |
+| [PosCheckout](resources/js/Components/Pos/PosCheckout.vue) | Props de líneas, errores, importes y estado; modelos `payment` y `received`; eventos `remove`, `quantity`, `clear`, `confirm`. Presenta cantidades, subtotales, total, métodos y cambio. No calcula totales comerciales ni registra ventas. Conserva `v-model.number` y los atributos originales de cantidad/importe. |
+| Componentes existentes reutilizados | `UiButton`, `UiEmptyState`, `UiIcon`, `UiOverlay`, `AppLayout` y su tema. No se cambia su implementación ni `ModalPos`, que mantiene sus consumidores heredados. |
+
+Métodos de pago en fieldset con legend; botones con `aria-pressed`, borde, peso e indicador Lucide para selección. Cantidad y monto tienen label asociado, `aria-invalid` y error enlazado por `aria-describedby`. Inputs de al menos 44 px y texto de 16 px; métodos y cobro de 48 px. Borde de campo `#858a94`, contraste 3.47:1 sobre blanco; foco de 2 px en tinta de marca. Los errores conservan su texto y condiciones originales, con icono y `role="alert"`.
+
+Total de 24–30 px, cifras completas y flex-wrap para importes largos. Confirmación con total dominante y método/recibido/cambio agrupados, sin emojis. Los vacíos reutilizan `UiEmptyState`; el carrito vacío presenta total cero y cobro deshabilitado. Los mensajes flash usan la variante premium existente del layout. Sin animaciones nuevas; se respeta reduced motion.
+
+### Conservación y evidencia
+
+El bloque de lógica desde `defineProps` hasta `procesar` permanece idéntico a la línea base, comprobado por comparación de texto. `Pos.vue` conserva props, búsqueda y debounce, carrito, cálculos, validaciones, selección de pagos y payload Inertia. No se corrigen problemas a granel. No se ejecutan ventas.
+
+Las ocho resoluciones solicitadas se verifican con Playwright MCP en Chromium y fixtures aisladas. Informe: [Fase 2.4 y responsiveness check](docs/responsiveness-check-2026-11-23.md). Capturas y comparativa: [.playwright-mcp/pos-premium/comparison.html](.playwright-mcp/pos-premium/comparison.html). La vista previa actual en [localhost:8184/ventas](http://localhost:8184/ventas) usa solo datos simulados y bloquea envíos; sustituye temporalmente el servidor anterior de ese puerto, que no estaba activo en este entorno. No es una sesión Laravel ni valida autenticación o persistencia. Pendientes: revisión del propietario, dispositivos físicos/teclado virtual, Safari/Firefox y lector de pantalla.

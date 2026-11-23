@@ -1,8 +1,14 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
-import ModalPos from '../../Components/ModalPos.vue';
+import PosCartPanel from '../../Components/Pos/PosCartPanel.vue';
+import PosCheckout from '../../Components/Pos/PosCheckout.vue';
+import UiButton from '../../Components/Ui/UiButton.vue';
+import UiEmptyState from '../../Components/Ui/UiEmptyState.vue';
+import UiIcon from '../../Components/Ui/UiIcon.vue';
+import UiOverlay from '../../Components/Ui/UiOverlay.vue';
+import { Search } from '@lucide/vue';
 import { moneda, numero } from '../../utils';
 
 const props = defineProps({
@@ -136,196 +142,132 @@ const procesar = () => {
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout premium v-slot="{ theme }">
         <Head title="Punto de Venta" />
 
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="p-page-heading pos-heading">
             <div>
-                <h2 class="text-primary fs-3 mb-1">🛒 Punto de Venta</h2>
-                <p class="text-secondary small mb-0">
-                    {{ new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) }}
-                </p>
+                <h1 class="p-page-title">Punto de venta</h1>
+                <p class="p-page-date">{{ new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) }}</p>
             </div>
-            <Link v-if="esAdmin" href="/ventas/historial" class="btn btn-light fw-semibold btn-sm">
-                📋 Ver historial
-            </Link>
+            <UiButton v-if="esAdmin" href="/ventas/historial" variant="secondary" class="pos-history"><UiIcon name="receipt" :size="16" />Ver historial</UiButton>
         </div>
 
-        <div class="row g-3">
-            <!-- Productos -->
-            <div class="col-12 col-lg-7 col-xl-8">
-                <div class="card mb-3">
-                    <div class="card-body py-2">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">🔍</span>
-                            <input
-                                v-model="buscar"
-                                type="text"
-                                class="form-control border-start-0"
-                                placeholder="Buscar producto por nombre..."
-                            >
-                            <span v-if="buscando" class="input-group-text bg-white">
-                                <span class="spinner-border spinner-border-sm text-primary" />
-                            </span>
-                        </div>
-                    </div>
+        <div class="pos-workbench">
+            <div class="pos-search-area">
+                <label for="pos-search" class="pos-search-label">Buscar productos</label>
+                <div class="pos-search">
+                    <Search :size="20" :stroke-width="1.75" aria-hidden="true" />
+                    <input id="pos-search" v-model="buscar" type="search" placeholder="Buscar por nombre…" autocomplete="off" enterkeyhint="search" aria-controls="pos-products">
+                    <UiIcon v-if="buscando" name="loading" class="p-spin" :size="18" />
                 </div>
-
-                <div class="card">
-                    <div class="list-group list-group-flush">
-                        <button
-                            v-for="producto in productos"
-                            :key="producto.id"
-                            type="button"
-                            class="list-group-item producto-fila d-flex justify-content-between align-items-center border-0 border-bottom"
-                            @click="agregar(producto)"
-                        >
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="bg-light rounded d-flex align-items-center justify-content-center fs-4"
-                                     style="width: 42px; height: 42px;">🍬</div>
-                                <div class="text-start">
-                                    <div class="fw-semibold small">{{ producto.nombre }}</div>
-                                    <div class="text-secondary" style="font-size: 0.78rem;">
-                                        Stock: {{ numero(producto.stock) }} {{ producto.unidad_medida }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="fw-bold text-primary">{{ moneda(producto.precio) }}</div>
-                                <div class="text-success fw-semibold" style="font-size: 0.75rem;">+ Agregar</div>
-                            </div>
-                        </button>
-                        <div v-if="!productos.length" class="text-center text-secondary py-5">
-                            <div class="fs-2">🍬</div>
-                            <div class="small mt-2">No se encontraron productos.</div>
-                        </div>
-                    </div>
-                </div>
+                <span class="pos-sr-only" role="status">{{ buscando ? 'Buscando productos…' : `${productos.length} productos en la lista` }}</span>
             </div>
 
-            <!-- Carrito -->
-            <div class="col-12 col-lg-5 col-xl-4">
-                <div class="card">
-                    <div class="card-header encabezado">🛒 Carrito</div>
-                    <div class="card-body">
-                        <div v-for="item in carrito" :key="item.id" class="py-2 border-bottom">
-                            <div class="d-flex justify-content-between align-items-start gap-2">
-                                <span class="fw-semibold small flex-grow-1">{{ item.nombre }}</span>
-                                <button type="button" class="btn btn-sm text-danger p-0" @click="quitar(item.id)">✕</button>
-                            </div>
-                            <div class="d-flex align-items-center gap-2 mt-2">
-                                <input
-                                    type="number"
-                                    class="form-control form-control-sm text-center fw-semibold"
-                                    :class="{ 'is-invalid': errores[item.id] }"
-                                    style="width: 76px;"
-                                    :value="item.cantidad"
-                                    min="1"
-                                    :max="item.stock"
-                                    @change="cambiarCantidad(item, $event.target.value)"
-                                >
-                                <span class="text-secondary small ms-auto">
-                                    {{ moneda(item.precio * item.cantidad) }}
-                                </span>
-                            </div>
-                            <div v-if="errores[item.id]" class="text-danger mt-1" style="font-size: 0.75rem;">
-                                {{ errores[item.id] }}
-                            </div>
-                        </div>
+            <PosCartPanel :count="carrito.length" :total="moneda(total)" :theme="theme" v-slot="{ desktop }">
+                <PosCheckout :items="carrito" :errors="errores" :total="total" :change="cambio" :desktop="desktop"
+                    v-model:payment="metodoPago" v-model:received="montoRecibido" :has-errors="hayErrores"
+                    @remove="quitar" @quantity="cambiarCantidad" @clear="limpiar" @confirm="confirmar" />
+            </PosCartPanel>
 
-                        <div v-if="!carrito.length" class="text-center text-secondary py-5">
-                            <div class="fs-1">🛒</div>
-                            <div class="small mt-2">Agrega productos haciendo clic</div>
-                        </div>
-
-                        <!-- Totales y cobro -->
-                        <div v-if="carrito.length" class="pt-3 mt-2 border-top">
-                            <div class="d-flex justify-content-between align-items-center pb-2 mb-3">
-                                <span class="fw-bold">Total</span>
-                                <span class="fw-bold fs-4 text-primary">{{ moneda(total) }}</span>
-                            </div>
-
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <button type="button"
-                                            class="metodo-pago w-100 py-2"
-                                            :class="{ activo: metodoPago === 'efectivo' }"
-                                            @click="metodoPago = 'efectivo'">
-                                        💵 Efectivo
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button type="button"
-                                            class="metodo-pago w-100 py-2"
-                                            :class="{ activo: metodoPago === 'tarjeta' }"
-                                            @click="metodoPago = 'tarjeta'">
-                                        💳 Tarjeta
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div v-if="metodoPago === 'efectivo'" class="mb-3">
-                                <label class="form-label small fw-semibold text-secondary mb-1">Monto recibido</label>
-                                <input
-                                    v-model.number="montoRecibido"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    class="form-control text-end"
-                                    :class="{ 'is-invalid': errores.monto }"
-                                    placeholder="0.00"
-                                    @keydown.enter.prevent="confirmar"
-                                >
-                                <div v-if="errores.monto" class="invalid-feedback d-block">{{ errores.monto }}</div>
-                                <div v-if="cambio > 0" class="text-success fw-bold text-end small mt-1">
-                                    Cambio: {{ moneda(cambio) }}
-                                </div>
-                            </div>
-
-                            <button
-                                type="button"
-                                class="btn btn-primary w-100 py-2 fw-bold"
-                                :disabled="hayErrores"
-                                @click="confirmar"
-                            >
-                                Cobrar {{ moneda(total) }}
-                            </button>
-                            <button type="button" class="btn btn-light w-100 mt-2 btn-sm fw-semibold" @click="limpiar">
-                                Limpiar carrito
-                            </button>
-                        </div>
-                    </div>
+            <section id="pos-products" class="p-panel pos-catalog" aria-labelledby="pos-products-title" :aria-busy="buscando">
+                <header class="pos-catalog-heading"><h2 id="pos-products-title">Productos</h2><span>{{ productos.length }} {{ productos.length === 1 ? 'disponible' : 'disponibles' }}</span></header>
+                <div class="pos-product-list">
+                    <button v-for="producto in productos" :key="producto.id" type="button" class="pos-product" @click="agregar(producto)">
+                        <span class="pos-product-symbol"><UiIcon name="candy" :size="20" /></span>
+                        <span class="pos-product-copy"><strong>{{ producto.nombre }}</strong><span>Existencias: {{ numero(producto.stock) }} {{ producto.unidad_medida }}</span></span>
+                        <span class="pos-product-price">{{ moneda(producto.precio) }}<span>por {{ producto.unidad_medida }}</span></span>
+                        <span class="pos-product-add"><UiIcon name="plus" :size="20" /><span class="pos-sr-only">Agregar al carrito</span></span>
+                    </button>
+                    <UiEmptyState v-if="!productos.length" icon="package" title="No se encontraron productos" description="Prueba con otro nombre en el buscador." class="pos-catalog-empty" />
                 </div>
-            </div>
+            </section>
+
         </div>
 
-        <!-- Modal confirmación -->
-        <ModalPos :abierto="mostrarConfirmacion" titulo="Confirmar venta" ancho="400px" @cerrar="mostrarConfirmacion = false">
-            <p class="text-secondary small mb-2">
-                Total: <strong class="text-primary fs-6">{{ moneda(total) }}</strong>
-            </p>
-            <p class="text-secondary small mb-2">
-                Método: {{ metodoPago === 'efectivo' ? '💵 Efectivo' : '💳 Tarjeta' }}
-            </p>
-            <p v-if="metodoPago === 'efectivo' && montoRecibido > 0" class="text-secondary small mb-2">
-                Recibido: <strong>{{ moneda(montoRecibido) }}</strong>
-            </p>
-            <p v-if="cambio > 0" class="text-success small fw-bold mb-3">
-                Cambio: {{ moneda(cambio) }}
-            </p>
-            <div class="row g-2 mt-2">
-                <div class="col-6">
-                    <button type="button" class="btn btn-light w-100 fw-semibold" @click="mostrarConfirmacion = false">
-                        Cancelar
-                    </button>
-                </div>
-                <div class="col-6">
-                    <button type="button" class="btn btn-primary w-100 fw-bold" :disabled="procesando" @click="procesar">
-                        <span v-if="procesando" class="spinner-border spinner-border-sm me-1" />
-                        ✅ Confirmar
-                    </button>
+        <UiOverlay :open="mostrarConfirmacion" title="Confirmar venta" :theme="theme" class="pos-confirmation"
+            @close="mostrarConfirmacion = false">
+            <div class="pos-confirm-body">
+                <div class="pos-confirm-total"><span>Total a cobrar</span><strong>{{ moneda(total) }}</strong></div>
+                <dl class="pos-confirm-details">
+                    <div><dt>Método de pago</dt><dd><UiIcon :name="metodoPago === 'efectivo' ? 'cash' : 'card'" :size="16" />{{ metodoPago === 'efectivo' ? 'Efectivo' : 'Tarjeta' }}</dd></div>
+                    <div v-if="metodoPago === 'efectivo' && montoRecibido > 0"><dt>Monto recibido</dt><dd>{{ moneda(montoRecibido) }}</dd></div>
+                    <div v-if="cambio > 0" class="pos-confirm-change"><dt>Cambio</dt><dd>{{ moneda(cambio) }}</dd></div>
+                </dl>
+                <div class="pos-confirm-actions">
+                    <UiButton variant="secondary" @click="mostrarConfirmacion = false">Cancelar</UiButton>
+                    <UiButton :loading="procesando" @click="procesar"><UiIcon v-if="!procesando" name="success" :size="16" />Confirmar</UiButton>
                 </div>
             </div>
-        </ModalPos>
+        </UiOverlay>
     </AppLayout>
 </template>
+
+<style scoped>
+.pos-heading { margin-bottom: 24px; }
+.pos-history { flex-shrink: 0; }
+.pos-workbench { display: grid; grid-template-columns: minmax(0, 1fr) 360px; grid-template-rows: auto 1fr; gap: 20px 24px; align-items: start; }
+.pos-search-area { grid-column: 1; min-width: 0; }
+.pos-search-label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 500; }
+.pos-search { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 16px; border: 1px solid #858a94; border-radius: var(--p-radius-control); background: var(--p-surface); color: var(--p-muted); }
+.pos-search:focus-within { border-color: var(--p-brand-ink); outline: 2px solid var(--p-brand-ink); outline-offset: 2px; }
+.pos-search > svg { flex-shrink: 0; }
+.pos-search input { width: 100%; min-width: 0; min-height: 50px; padding: 10px 0; border: 0; outline: 0; background: transparent; color: var(--p-text); font: inherit; font-size: 16px; }
+.pos-search input::placeholder { color: var(--p-muted); opacity: 1; }
+.pos-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.pos-catalog { grid-column: 1; min-width: 0; }
+.pos-catalog-heading { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 16px 20px; border-bottom: 1px solid var(--p-border); }
+.pos-catalog-heading h2 { font: inherit; font-weight: 600; margin: 0; }
+.pos-catalog-heading > span { color: var(--p-muted); font-size: 12px; }
+.pos-product { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto 32px; align-items: center; gap: 12px; width: 100%; min-height: 72px; padding: 12px 20px; border: 0; border-bottom: 1px solid var(--p-border); background: transparent; color: var(--p-text); font: inherit; text-align: left; cursor: pointer; }
+.pos-product:last-child { border-bottom: 0; border-radius: 0 0 var(--p-radius-panel) var(--p-radius-panel); }
+.pos-product:hover { background: var(--p-canvas); }
+.pos-product:active { background: var(--p-muted-surface); }
+.pos-product:focus-visible { position: relative; z-index: 1; outline-offset: -3px; }
+.pos-product-symbol { display: grid; place-items: center; width: 36px; height: 40px; border-radius: 6px; background: var(--p-canvas); color: var(--p-muted); }
+.pos-product-copy { min-width: 0; }
+.pos-product-copy > strong { display: block; font-size: 13px; font-weight: 500; overflow-wrap: anywhere; line-height: 1.5; }
+.pos-product-copy > span { display: block; color: var(--p-muted); font-size: 12px; margin-top: 4px; overflow-wrap: anywhere; }
+.pos-product-price { font-size: 15px; font-weight: 600; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+.pos-product-price > span { display: block; color: var(--p-muted); font-size: 12px; font-weight: 400; margin-top: 4px; }
+.pos-product-add { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--p-border); border-radius: 6px; color: var(--p-brand-ink); }
+.pos-product:hover .pos-product-add { border-color: var(--p-brand-ink); }
+.pos-catalog-empty { min-height: 280px; }
+.pos-workbench > :deep(.pos-cart-host) { grid-column: 2; grid-row: 1 / span 2; }
+.pos-confirm-body { padding: 24px; }
+.pos-confirm-total { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 24px; }
+.pos-confirm-total > span { font-size: 13px; color: var(--p-muted); }
+.pos-confirm-total > strong { font-size: 30px; font-weight: 600; line-height: 1.3; letter-spacing: -.8px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pos-confirm-details { margin: 0 0 24px; }
+.pos-confirm-details > div { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 8px; padding-block: 12px; border-top: 1px solid var(--p-border); font-size: 13px; }
+.pos-confirm-details dt { font-weight: 400; color: var(--p-muted); }
+.pos-confirm-details dd { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; }
+.pos-confirm-details .pos-confirm-change { color: var(--p-success); }
+.pos-confirm-change dt { color: inherit; }
+.pos-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .pos-workbench { grid-template-columns: minmax(0, 1fr) 320px; column-gap: 16px; }
+    .pos-product { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 16px; }
+    .pos-product-symbol, .pos-product-add { display: none; }
+}
+@media (max-width: 991.98px) {
+    .pos-workbench { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .pos-workbench > :deep(.pos-cart-host) { grid-column: 1; grid-row: 2; position: sticky; top: 12px; z-index: 2; }
+    .pos-catalog { grid-row: 3; }
+}
+@media (max-width: 767.98px) {
+    .pos-heading { align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+    .pos-history { min-height: 44px; padding: 8px 10px; font-size: 12px; }
+    .pos-product { grid-template-columns: minmax(0, 1fr) auto 28px; gap: 10px; padding: 14px 16px; min-height: 80px; }
+    .pos-product-symbol { display: none; }
+    .pos-product-add { width: 28px; height: 28px; }
+    .pos-product-copy > strong { font-weight: 500; }
+    .pos-catalog-heading { padding: 14px 16px; }
+    .pos-confirm-body { padding: 20px 16px; }
+}
+@media (max-width: 359.98px) {
+    .pos-heading .pos-history { padding: 8px 12px; }
+    .pos-product { grid-template-columns: minmax(0, 1fr) auto; }
+    .pos-product-add { display: none; }
+}
+</style>
