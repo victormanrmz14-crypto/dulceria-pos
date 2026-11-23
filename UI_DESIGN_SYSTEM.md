@@ -4,7 +4,7 @@
 
 ## Alcance y activación
 
-La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4; las vistas de [Productos](resources/js/Pages/Productos/Index.vue) lo activan en Fase 2.6 dentro de sus permisos existentes. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
+La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4; las vistas de [Productos](resources/js/Pages/Productos/Index.vue) lo activan en Fase 2.6 dentro de sus permisos existentes; Caja y Cortes lo activan en Fase 2.7. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
 
 Los componentes premium usan raíces `.pos-premium` locales: sidebar, header, Bottom Navigation y overlays reciben los tokens de marca sin activar esos estilos sobre el contenido heredado. `.tenant-shell` controla exclusivamente el espacio de navegación, el offset de notificaciones y el margen de scroll; `html:has(.tenant-shell)` reserva espacio de scroll en móvil. Los overlays teletransportados llevan su propia raíz premium. No se cambian resets, variables globales de Bootstrap ni Tailwind. La carga del CSS del piloto después de navegar no debe alterar pantallas vecinas.
 
@@ -302,3 +302,51 @@ Los bloques de script posteriores a imports en Index, Create, Edit y ProductoFor
 Las tres vistas se inspeccionan con Playwright MCP en las ocho anchuras solicitadas, cargando los assets desde `http://localhost`. Como la sesión disponible estaba expirada, las respuestas Inertia de revisión se simulan exclusivamente en el navegador; no se alteran rutas o permisos del servidor. Los errores y el estado processing se simulan sobre el formulario montado, sin enviar solicitudes de guardado. No se crean productos, operaciones comerciales ni cuentas.
 
 Informe y enlaces a las evidencias indispensables: [Fase 2.6](docs/products-inventory-2026-11-23.md). Las capturas y galería locales permanecen ignoradas por Git. Acceso habitual: [http://localhost/productos](http://localhost/productos). La revisión técnica y el commit no constituyen aprobación estética. Pendientes de evaluación física: teclado virtual, Safari/Firefox y lector de pantalla.
+
+## Fase 2.7 · Caja y Cortes (implementada, pendiente de aprobación estética)
+
+Caja, historial y detalle de cortes activan `AppLayout premium`. Se conservan DM Sans, Lucide, los tokens anteriores y el tema configurable del tenant. Dashboard, POS, Productos y los componentes compartidos existentes no se modifican. La dirección sigue los principios de jerarquía y adaptación del sistema; la referencia HIG requerida por la skill se consultó en [Design principles](https://developer.apple.com/design/human-interface-guidelines/design-principles).
+
+### Composición financiera
+
+Caja prioriza el efectivo esperado, con un borde superior en tinta de marca. Tarjeta, ingresos adicionales y retiros son indicadores de apoyo. Ventas en efectivo y fondo se mantienen visibles en el desglose; no se inventan estadísticas ni se recalculan importes. El último corte conserva su fecha original y la alternativa «Desde el inicio del día».
+
+En el detalle se separan información general, totales, recuento, notas y ventas. El efectivo esperado consume `total_efectivo`; el total general consume `total_general`. El recuento conserva las condiciones originales para efectivo contado, diferencia y dinero en caja. Diferencia cero muestra «Cuadra exacto»; positiva «Sobran»; negativa «Faltan», con icono y texto. Recuento nulo muestra «— / No capturado». Las notas conservan saltos de línea y ajustan textos largos.
+
+| Componente nuevo | Contrato exclusivamente visual |
+|---|---|
+| [FinanceWorkspace](resources/js/Components/Finanzas/FinanceWorkspace.vue) | Slot de contenido; vocabulario financiero local de secciones, pares etiqueta/valor, tablas, tarjetas y paginación. No controla datos, permisos ni navegación. |
+| [FinancialMetric](resources/js/Components/Finanzas/FinancialMetric.vue) | `label`, `value` ya formateado, `icon`, `description?`, `prominent?`. Sin cálculos. Protege importes con composición diferenciada para valores largos. |
+| [CashMovementList](resources/js/Components/Finanzas/CashMovementList.vue) | `movements`: id, tipo, monto, motivo y fecha existentes. Lista con tipo explícito, signo, icono, importe, motivo y fecha; vacío compartido. No filtra ni ordena. |
+| [CashDialog](resources/js/Components/Finanzas/CashDialog.vue) | `open`, `title`, `theme?`, `wide?`, slot y evento `close`. Reutiliza UiOverlay; presenta formularios, contexto monetario y acciones. No posee formularios comerciales ni envía solicitudes. |
+
+Se reutilizan sin cambios `UiButton`, `UiIcon`, `UiEmptyState`, `UiFormField`, `UiOverlay`, `Paginacion premium`, `AppLayout` y su tema. Los cuatro componentes nuevos usan Composition API y contratos TypeScript; las páginas mantienen sus scripts JavaScript existentes.
+
+### Importes, movimientos y consulta
+
+Importes con `moneda()` original, cifras tabulares y `white-space: nowrap`, sin truncamiento ni división de moneda/céntimos. Las métricas usan contenedores para ajustar la fuente entre 22–30 px, o 18–28 px cuando el valor supera 12 caracteres. En móvil un valor largo ocupa su propia línea completa. Los pares etiqueta/valor y los movimientos permiten reflujo de grupos completos para conservar el importe.
+
+Las filas de movimientos separan tipo e importe del motivo, que puede ocupar varias líneas. Ingreso usa ArrowDownLeft, texto «Ingreso» y signo +; retiro usa ArrowUpRight, «Retiro» y signo −. El color semántico de apoyo no es la única señal. Se presenta exactamente el arreglo recibido del servidor.
+
+Historial y ventas usan tablas semánticas en escritorio, con caption accesible, encabezados de columna, importes alineados a la derecha y enlaces con nombre contextual. En móvil/tablet se muestran tarjetas con todos los campos y destinos originales. Ambas presentaciones recorren los mismos datos. No se ocultan columnas mediante truncamiento ni se requiere scroll horizontal para consultar valores. Paginación conserva URL, labels, condición de visibilidad y `preserve-scroll` del componente existente.
+
+| Ancho CSS | Indicadores | Historial y ventas | Caja / recuento |
+|---|---|---|---|
+| 320–599 px | Una columna; secundarios compactos, valores largos en línea propia | Tarjetas de una columna | Secciones apiladas; acciones de Caja a ancho completo |
+| 600–767 px | Dos columnas | Tarjetas de una columna | Secciones apiladas |
+| 768–1199 px | Dos columnas | Tarjetas de dos columnas | Secciones apiladas; navegación existente cambia a sidebar en 992 px |
+| ≥1200 px | Cuatro en Caja, tres en detalle | Tablas completas | Desglose/movimientos y recuento/notas en dos columnas |
+
+La información general del corte usa dos columnas en móvil y cuatro en escritorio. Los campos del diálogo de corte pasan a dos columnas desde 520 px. Los diálogos conservan máximo de 480 px, o 520 px para corte, y pueden desplazarse verticalmente con poca altura. No se añade ninguna barra flotante; AppLayout reserva la navegación inferior y su composable la oculta mientras un dialog está abierto.
+
+### Formularios y estados
+
+Labels visibles con id único, `aria-invalid`, `aria-describedby` y errores con `role="alert"` mediante UiFormField. Se conservan todos los modelos, modificadores `.number`, required, min, step, maxlength y textos de validación. Los errores del servidor y las advertencias en vivo del corte se presentan juntos cuando coinciden. Inputs numéricos con `inputmode="decimal"`, texto de 16 px y altura mínima de 46 px. Foco visible de 2 px; botones y enlaces de al menos 44 px.
+
+Ingresar y retirar se distinguen por verbo e icono; retiro usa además `--p-danger`. Loading consume únicamente `form.processing`: spinner, texto de progreso, `aria-busy` y disabled. La condición `corteInvalido` sigue intacta. No se añaden confirmaciones, requisitos, validaciones ni pasos. Los diálogos reutilizan contención y restauración de foco, Escape, backdrop e inercia nativa del overlay existente.
+
+Los botones principales de estas vistas y diálogos añaden borde local `--p-brand-ink`, excepto el retiro semántico, para conservar el contorno con marcas claras. No se modifica UiButton ni los tokens globales. Vacíos de movimientos, cortes y ventas reutilizan UiEmptyState con icono y explicación contextual.
+
+### Evidencia y conservación
+
+Informe: [Fase 2.7 y comprobación responsive](docs/cash-cuts-2026-11-23.md). Playwright MCP, Chromium, las ocho anchuras solicitadas y simulaciones exclusivamente en navegador porque la sesión estaba expirada. Los assets se sirven desde localhost; no se realizan operaciones comerciales. Se conservan capturas y galería ignoradas por Git. Las comprobaciones visuales no certifican permisos, validación de servidor ni persistencia; el commit técnico queda pendiente de aprobación estética.
