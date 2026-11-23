@@ -1,7 +1,9 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import ProductoForm from '../../Components/ProductoForm.vue';
+import ProductEditorFrame from '../../Components/Productos/ProductEditorFrame.vue';
+import UiButton from '../../Components/Ui/UiButton.vue';
 
 defineProps({
     categorias: Array,
@@ -24,27 +26,14 @@ const enviar = () => form.post('/productos');
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout premium>
         <Head title="Nuevo producto" />
-
-        <div class="mx-auto" style="max-width: 720px;">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-                <h2 class="text-primary fs-3 mb-0">🍬 Nuevo producto</h2>
-                <Link href="/productos" class="btn btn-light btn-sm fw-semibold">← Volver</Link>
-            </div>
-
-            <div class="card">
-                <div class="card-body p-4">
-                    <ProductoForm
-                        :form="form"
-                        :categorias="categorias"
-                        :marcas="marcas"
-                        :proveedores="proveedores"
-                        texto-boton="Crear producto"
-                        @enviar="enviar"
-                    />
-                </div>
-            </div>
-        </div>
+        <ProductEditorFrame title="Nuevo producto"
+            description="Agrega la información, el precio y las existencias del producto.">
+            <ProductoForm :form="form" :categorias="categorias" :marcas="marcas" :proveedores="proveedores"
+                texto-boton="Crear producto" @enviar="enviar">
+                <template #acciones><UiButton href="/productos" variant="secondary">Cancelar</UiButton></template>
+            </ProductoForm>
+        </ProductEditorFrame>
     </AppLayout>
 </template>

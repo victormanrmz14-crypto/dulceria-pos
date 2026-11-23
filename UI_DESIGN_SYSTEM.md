@@ -4,7 +4,7 @@
 
 ## Alcance y activación
 
-La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
+La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4; las vistas de [Productos](resources/js/Pages/Productos/Index.vue) lo activan en Fase 2.6 dentro de sus permisos existentes. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
 
 Los componentes premium usan raíces `.pos-premium` locales: sidebar, header, Bottom Navigation y overlays reciben los tokens de marca sin activar esos estilos sobre el contenido heredado. `.tenant-shell` controla exclusivamente el espacio de navegación, el offset de notificaciones y el margen de scroll; `html:has(.tenant-shell)` reserva espacio de scroll en móvil. Los overlays teletransportados llevan su propia raíz premium. No se cambian resets, variables globales de Bootstrap ni Tailwind. La carga del CSS del piloto después de navegar no debe alterar pantallas vecinas.
 
@@ -254,3 +254,51 @@ Se retiraron las evidencias y servidores temporales tras inventariarlos. Se cons
 El acceso habitual vuelve a ser [http://localhost](http://localhost), con los servicios Docker existentes y las imágenes de `app` y `nginx` actualizadas. Se utiliza `docker compose -f docker-compose.yml` para conservar el modo de ejecución existente; no se levanta Vite de este proyecto ni se ocupa el 5173 de otro proyecto. Los volúmenes de base de datos, Redis y archivos subidos permanecen intactos.
 
 Detalles operativos, commits, inventario y puertos: [informe Fase 2.5](docs/environment-consolidation-2026-11-23.md).
+
+## Fase 2.6 · Productos e inventario (implementada, pendiente de aprobación estética)
+
+Se activan las superficies premium de listado, creación y edición de Productos. No se modifican navegación, tokens compartidos, dependencias, backend, permisos ni contenido de otros módulos. La composición conserva el propósito administrativo: consultar y mantener productos, precios y existencias.
+
+### Listado y responsive
+
+Encabezado con título, descripción y una acción principal de Nuevo producto. Filtros con etiquetas visibles, controles de 16 px y altura mínima de 46 px; el filtro Stock bajo tiene un label completo de al menos 44 px de alto como objetivo táctil. La búsqueda conserva su debounce de 350 ms, los filtros mantienen sus valores y la paginación sus URL y `preserve-scroll`.
+
+| Ancho CSS | Presentación del inventario | Formularios |
+|---|---|---|
+| 320–479 px | Tarjetas de una columna; búsqueda, categoría y stock bajo en filas propias | Campos en una columna |
+| 480–599 px | Tarjetas de una columna; categoría y stock bajo comparten fila | Campos en una columna |
+| 600–767 px | Tarjetas de una columna | Campos en dos columnas |
+| 768–1199 px | Tarjetas en dos columnas, también cuando el sidebar reduce el espacio a 1024 px | Secciones con introducción superior; campos en dos columnas |
+| ≥1200 px | Tabla de siete columnas con precios y cantidades alineados a la derecha | Introducción de sección a la izquierda y campos a la derecha |
+
+El breakpoint de tabla responde al espacio necesario para siete columnas y hasta tres acciones, no al cambio de navegación en 992 px. Tabla y tarjetas recorren exactamente `productos.data`; comparten `ProductStock` y `ProductActions`. Se mantienen nombre, categoría, marca, precio, stock/unidad, mínimo cuando hay alerta, estado, editar, activar/desactivar y notificar proveedor en su condición original. No se calcula de nuevo el stock bajo: se consume `stock_bajo` del servidor.
+
+Estados Activo/Inactivo con texto y punto de apoyo, sin reducir opacidad a toda la fila. Stock bajo con icono, texto y mínimo; existencias normales en tinta neutra. Cifras tabulares y precios sin saltos de línea. Nombres y clasificaciones se ajustan sin truncamiento. La tabla usa layout automático para reservar el ancho de importes largos. Las tarjetas ajustan sus grupos de valores si el contenido necesita otra línea.
+
+### Formularios
+
+Marco compartido de máximo 1040 px, con título, descripción y Volver. Un solo panel contiene dos secciones: Información del producto y Precio e inventario. Se conserva el orden nombre/categoría/marca/proveedor/unidad/precio/stock/mínimo, los ocho controles, sus opciones, valores iniciales, required/min/maxlength y modificadores `v-model.number`.
+
+Campos con label asociado por id único, error con icono/texto y `role="alert"`, `aria-invalid` y `aria-describedby`. Controles de 16 px y al menos 46 px; borde `#858a94` (3.47:1 sobre blanco). Foco de 2 px en tinta de marca, incluido el grupo de moneda/unidad mediante `focus-within`. El texto de error usa `--p-danger`. Se conserva el aviso de granel, con Lucide en lugar de emoji.
+
+El pie Guardar/Cancelar permanece en el flujo y deja libre el espacio de la navegación inferior. Cancelar y Volver llevan al índice existente. Loading/disabled consumen exclusivamente `form.processing` mediante `UiButton`. No se agregan validaciones ni guardas de navegación.
+
+### Componentes
+
+| Componente | Contrato de presentación |
+|---|---|
+| [UiFormField](resources/js/Components/Ui/UiFormField.vue) | `etiqueta`, `error`, `requerido`; slot `control` con id y atributos ARIA. Presenta label, estado y error; no modifica valores ni valida. `CampoForm` queda intacto para otros módulos. |
+| [ProductEditorFrame](resources/js/Components/Productos/ProductEditorFrame.vue) | `title`, `description` y slot de formulario; compone marco, cabecera y Volver para Create/Edit. |
+| [ProductActions](resources/js/Components/Productos/ProductActions.vue) | `producto`, `labels`; edición al destino existente y eventos `toggle`/`notify` con el mismo objeto. La condición de proveedor es idéntica a la original; no ejecuta llamadas HTTP propias. |
+| [ProductStock](resources/js/Components/Productos/ProductStock.vue) | `stock`, `minimum`, `unit`, `low`; formato existente, unidad, alerta y mínimo. Sin cálculo de umbral. |
+| [Paginacion](resources/js/Components/Paginacion.vue) | Variante optativa `premium=false` por defecto. Mantiene links, condición `links.length > 3`, labels y `preserve-scroll`; añade targets de 44 px y `aria-current` solo a la variante premium. Los consumidores heredados conservan su plantilla. |
+
+Los iconos Search, ArrowLeft, Pencil, Mail y Power provienen de la dependencia Lucide ya instalada. No se cambia el mapa compartido de iconos ni se añaden dependencias. Estilos scoped en los componentes; no hay una migración global de CSS.
+
+### Conservación y evidencia
+
+Los bloques de script posteriores a imports en Index, Create, Edit y ProductoForm permanecen idénticos a `ee01b43`, comprobado por comparación textual. La venta fraccionaria y el descuento de inventario siguen fuera del alcance. Se mantienen las ocho unidades y el paso de inventario `0.001` para kg/g/litro/ml; unidades antiguas conservan su opción existente.
+
+Las tres vistas se inspeccionan con Playwright MCP en las ocho anchuras solicitadas, cargando los assets desde `http://localhost`. Como la sesión disponible estaba expirada, las respuestas Inertia de revisión se simulan exclusivamente en el navegador; no se alteran rutas o permisos del servidor. Los errores y el estado processing se simulan sobre el formulario montado, sin enviar solicitudes de guardado. No se crean productos, operaciones comerciales ni cuentas.
+
+Informe y enlaces a las evidencias indispensables: [Fase 2.6](docs/products-inventory-2026-11-23.md). Las capturas y galería locales permanecen ignoradas por Git. Acceso habitual: [http://localhost/productos](http://localhost/productos). La revisión técnica y el commit no constituyen aprobación estética. Pendientes de evaluación física: teclado virtual, Safari/Firefox y lector de pantalla.
