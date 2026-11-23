@@ -1,4 +1,4 @@
-/* Opt-in tenant dashboard. No Bootstrap variables or global element rules. */
+/* Scoped tenant navigation and opt-in dashboard. No Bootstrap variable resets. */
 .pos-premium {
     --p-canvas: #f7f8fa;
     --p-surface: #fff;
@@ -51,7 +51,7 @@
     background: var(--p-text); color: #fff; border-radius: 6px; transform: translateY(-160%);
 }
 .pos-premium .p-skip:focus { transform: translateY(0); }
-.pos-premium .p-sidebar.sidebar {
+.pos-premium.p-sidebar.sidebar {
     width: 232px; background: var(--p-sidebar-surface); border-right: 1px solid var(--p-border);
     padding: 0 12px; min-height: 100dvh;
 }
@@ -96,7 +96,7 @@
 .pos-premium .p-nav__logout { color: var(--p-muted); font-size: 12px; }
 .pos-premium .p-avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #edf0f4; color: #4f535d; font-size: 11px; font-weight: 700; flex-shrink: 0; }
 .pos-premium .p-workspace { background: var(--p-canvas); }
-.pos-premium .p-header { min-height: 56px; flex-shrink: 0; border-bottom: 1px solid var(--p-border); background: var(--p-surface); }
+.pos-premium.p-header { min-height: 56px; flex-shrink: 0; border-bottom: 1px solid var(--p-border); background: var(--p-surface); }
 .pos-premium .p-header__inner { display: flex; align-items: center; gap: 12px; min-height: 55px; max-width: 1440px; margin-inline: auto; padding: 5px 32px; }
 .pos-premium .p-header__breadcrumb { display: flex; align-items: center; gap: 12px; min-width: 0; font-size: 12px; color: var(--p-muted); }
 .pos-premium .p-header__breadcrumb > span:first-child { overflow-wrap: anywhere; max-width: 240px; line-height: 1.3; }
@@ -262,4 +262,51 @@
 }
 @media (prefers-reduced-motion: reduce) {
     .pos-premium *, .pos-premium.p-overlay[open] { animation: none !important; transition: none !important; }
+}
+
+/* Shared tenant navigation: content styling remains opt-in per module. */
+.tenant-shell { --p-bottom-nav-height: 68px; --p-bottom-nav-space: 0px; }
+.pos-premium.p-bottom-nav { display: none; }
+.pos-premium.p-overlay--drawer { padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (max-width: 767.98px) {
+    .tenant-shell { --p-bottom-nav-space: calc(var(--p-bottom-nav-height) + env(safe-area-inset-bottom, 0px)); padding-bottom: var(--p-bottom-nav-space); }
+    html:has(.tenant-shell) { scroll-padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 16px); }
+    .tenant-shell :where(input, textarea, select, button, a) { scroll-margin-bottom: calc(var(--p-bottom-nav-space) + 16px); }
+    .tenant-shell > .toast-container-pos { top: auto; bottom: calc(var(--p-bottom-nav-space) + 16px); max-width: calc(100vw - 32px); }
+    .pos-premium.p-bottom-nav {
+        display: flex; align-items: stretch; gap: 2px; position: fixed;
+        inset: auto 0 0; z-index: 1020; height: calc(68px + env(safe-area-inset-bottom, 0px));
+        padding: 5px max(6px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px));
+        background: var(--p-surface); border-top: 1px solid var(--p-border);
+    }
+    .pos-premium.p-bottom-nav.is-suppressed { visibility: hidden; pointer-events: none; }
+    .pos-premium .p-bottom-nav__item {
+        flex: 1 1 0; min-width: 0; min-height: 44px; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 2px; position: relative;
+        padding: 2px 0; border: 0; border-radius: var(--p-radius-control); background: transparent;
+        color: var(--p-muted); font: inherit; font-size: 12px; font-weight: 500; line-height: 18px;
+        text-decoration: none; white-space: nowrap; cursor: pointer;
+        transition: background-color 120ms ease, color 120ms ease;
+    }
+    .pos-premium .p-bottom-nav__icon { display: grid; place-items: center; width: 40px; height: 28px; border-radius: 8px; }
+    .pos-premium .p-bottom-nav__item.is-active { color: var(--p-brand-ink); font-weight: 700; }
+    .pos-premium .p-bottom-nav__item.is-active::before { content: ''; position: absolute; top: -6px; width: 24px; height: 3px; border-radius: 0 0 3px 3px; background: var(--p-brand-ink); }
+    .pos-premium .p-bottom-nav__item.is-active .p-bottom-nav__icon { background: var(--p-muted-surface); }
+    .pos-premium .p-bottom-nav__item--sell .p-bottom-nav__icon,
+    .pos-premium .p-bottom-nav__item--sell.is-active .p-bottom-nav__icon { background: var(--p-brand); color: var(--p-on-brand); border: 1px solid var(--p-brand-ink); }
+    .pos-premium .p-bottom-nav__item:active { background: var(--p-muted-surface); box-shadow: inset 0 1px 2px #20212620; }
+    .pos-premium .p-bottom-nav__item:focus-visible { outline-offset: -2px; }
+    .pos-premium.p-header .p-header__inner { padding-inline: 16px; }
+    /* Compact rows preserve every label, caption and indivisible amount. */
+    .pos-premium .p-metrics { gap: 8px; }
+}
+@media (hover: hover) {
+    .pos-premium .p-bottom-nav__item:hover { background: var(--p-muted-surface); color: var(--p-text); }
+}
+@media (max-width: 479.98px) {
+    .pos-premium .p-metric { min-height: 76px; padding-block: 12px; }
+}
+@media print {
+    .pos-premium.p-bottom-nav { display: none; }
+    .tenant-shell { padding-bottom: 0; }
 }
