@@ -1,5 +1,7 @@
 # Dulcería POS · Design System
 
+> Archivo de referencia: las capturas, resultados de diagnóstico y vistas previas temporales se retiraron en la Fase 2.5. La aplicación actual se consulta en [http://localhost](http://localhost). Se conservan aquí los patrones, resultados históricos y limitaciones.
+
 ## Alcance y activación
 
 La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
@@ -84,11 +86,11 @@ Dependencia adicional única: `@lucide/vue@1.77.0`, fijada en package y lockfile
 
 ## Historial · Validación y evidencias de la primera iteración
 
-Comparativas: [.playwright-mcp/premium-pilot/comparison.html](.playwright-mcp/premium-pilot/comparison.html). Capturas reales antes y después a 320, 375, 768, 1024, 1366 y 1920 px, altura de viewport 900 px y captura de página completa. Las capturas iniciales son del 22 de noviembre y las finales del 23; la fecha visible y la ventana móvil de siete días cambian naturalmente.
+Comparativas: .playwright-mcp/premium-pilot/comparison.html (evidencia temporal retirada). Capturas reales antes y después a 320, 375, 768, 1024, 1366 y 1920 px, altura de viewport 900 px y captura de página completa. Las capturas iniciales son del 22 de noviembre y las finales del 23; la fecha visible y la ventana móvil de siete días cambian naturalmente.
 
 El tenant de auditoría no tiene operaciones comerciales. Las pruebas adicionales con tabla, ranking, gráfica, último corte, bienvenida y paletas se realizan sustituyendo respuestas únicamente en el navegador, sin escribir registros. Sus capturas se identifican como `simulated-*`; no prueban una venta ni la emisión real de un ticket.
 
-Se usa una vista previa temporal de solo lectura en `http://localhost:8181/dashboard`: sirve los assets compilados del checkout y reenvía GET al Laravel local existente, usando la sesión normal. No altera configuración ni imágenes Docker, base de datos o volúmenes; bloquea POST. La aplicación original de `http://localhost` sigue sirviendo la imagen anterior hasta una futura actualización de assets/imagen. La vista previa requiere una sesión de localhost en ese navegador y no es un mecanismo de autenticación alternativo.
+Se usa una vista previa temporal de solo lectura en `http://localhost:8181/dashboard`: sirve los assets compilados del checkout y reenvía GET al Laravel local existente, usando la sesión normal. No altera configuración ni imágenes Docker, base de datos o volúmenes; bloquea POST. En esa validación, la aplicación original de `http://localhost` todavía servía la imagen anterior. La Fase 2.5 actualiza las imágenes locales. La vista previa requiere una sesión de localhost en ese navegador y no es un mecanismo de autenticación alternativo.
 
 Compilación con `npm run build`. No hay script configurado de lint ni pruebas unitarias frontend, y PHPUnit no está instalado en host ni en el contenedor de producción local. Se validan compilación Vue/Vite, diagnósticos del editor y comportamiento mediante Playwright. Browserslist advierte que su catálogo está desactualizado; no se actualizan dependencias fuera de la autorizada.
 
@@ -120,7 +122,7 @@ El contenido del piloto queda pendiente de revisión visual. La navegación comp
 
 La segunda iteración conserva el alcance optativo del dashboard administrador y todos sus contratos funcionales. No añade dependencias. Las reglas actuales de composición, tipografía, navegación y estados se describen arriba y sirven como referencia del piloto, pendientes de aprobación visual antes de extenderlas.
 
-Entrega y pruebas: [informe de refinamiento](docs/premium-dashboard-refinement-2026-11-23.md). Comparativas entre primera y segunda iteración: [galería local](http://localhost:8183/comparison.html) y [archivo guardado](.playwright-mcp/premium-refinement/comparison.html). La vista previa del dashboard sigue en [localhost:8181](http://localhost:8181/dashboard), con datos reales y sin interceptaciones del navegador al cierre.
+Entrega y pruebas: [informe de refinamiento](docs/premium-dashboard-refinement-2026-11-23.md). Comparativas entre primera y segunda iteración: galería local (vista previa temporal retirada) y archivo guardado (evidencia temporal retirada). La vista previa del dashboard sigue en localhost:8181 (vista previa temporal retirada), con datos reales y sin interceptaciones del navegador al cierre.
 
 Se probaron 320, 375, 768, 1024, 1366 y 1920 px con datos vacíos y simulados; límites de breakpoints; navegación real; teclado, foco, drawer y reduced motion; nueve paletas con 72 pares de contraste; nombres largos, logo e importes de nueve cifras. El informe distingue estos resultados de pruebas aún pendientes en dispositivos físicos, otros motores y lector de pantalla.
 
@@ -203,7 +205,7 @@ Se conserva una columna por debajo de 480 px para proteger importes completos. L
 - **Pendientes:** comprobación en dispositivos físicos, Safari/Firefox y lector de pantalla; sesión real de cajero y ticket real cuando existan datos autorizados.
 - **Futuras fases, no implementadas:** contenido premium de POS, Productos, Caja, Usuarios, Reportes, Configuración y Catálogos; componentes de formularios; navegación de SuperAdmin. Para SuperAdmin se podría reutilizar UiBottomNav/UiOverlay con otra fuente de destinos y rol, integrándolos posteriormente en su propio layout. SuperAdminLayout permanece sin cambios.
 
-Entrega, matriz, capturas y limitaciones: [informe Fase 2.3](docs/bottom-navigation-2026-11-23.md). Vista previa de solo lectura: [localhost:8184/dashboard](http://localhost:8184/dashboard), assets de este checkout y respuestas GET del Laravel local con su sesión existente. La galería comparativa de esta fase se entrega por separado del dashboard.
+Entrega, matriz, capturas y limitaciones: [informe Fase 2.3](docs/bottom-navigation-2026-11-23.md). Vista previa de solo lectura: localhost:8184/dashboard (vista previa temporal retirada), assets de este checkout y respuestas GET del Laravel local con su sesión existente. La galería comparativa de esta fase se entrega por separado del dashboard.
 
 ## Fase 2.4 · Punto de venta (implementada, pendiente de revisión y aprobación visual)
 
@@ -241,4 +243,14 @@ Total de 24–30 px, cifras completas y flex-wrap para importes largos. Confirma
 
 El bloque de lógica desde `defineProps` hasta `procesar` permanece idéntico a la línea base, comprobado por comparación de texto. `Pos.vue` conserva props, búsqueda y debounce, carrito, cálculos, validaciones, selección de pagos y payload Inertia. No se corrigen problemas a granel. No se ejecutan ventas.
 
-Las ocho resoluciones solicitadas se verifican con Playwright MCP en Chromium y fixtures aisladas. Informe: [Fase 2.4 y responsiveness check](docs/responsiveness-check-2026-11-23.md). Capturas y comparativa: [.playwright-mcp/pos-premium/comparison.html](.playwright-mcp/pos-premium/comparison.html). La vista previa actual en [localhost:8184/ventas](http://localhost:8184/ventas) usa solo datos simulados y bloquea envíos; sustituye temporalmente el servidor anterior de ese puerto, que no estaba activo en este entorno. No es una sesión Laravel ni valida autenticación o persistencia. Pendientes: revisión del propietario, dispositivos físicos/teclado virtual, Safari/Firefox y lector de pantalla.
+Las ocho resoluciones solicitadas se verifican con Playwright MCP en Chromium y fixtures aisladas. Informe: [Fase 2.4 y responsiveness check](docs/responsiveness-check-2026-11-23.md). Capturas y comparativa: .playwright-mcp/pos-premium/comparison.html (evidencia temporal retirada). La vista previa actual en localhost:8184/ventas (vista previa temporal retirada) usa solo datos simulados y bloquea envíos; sustituye temporalmente el servidor anterior de ese puerto, que no estaba activo en este entorno. No es una sesión Laravel ni valida autenticación o persistencia. Pendientes: revisión del propietario, dispositivos físicos/teclado virtual, Safari/Firefox y lector de pantalla.
+
+## Fase 2.5 · Consolidación del entorno
+
+Las fases visuales quedan versionadas en `refactor/premium-ui`, sin cambios adicionales de diseño. La fundación y el refinamiento del dashboard (2.1–2.2) se consolidan juntos; navegación (2.3) y POS (2.4) tienen commits separados. La revisión personal del POS sigue siendo necesaria; consolidar Git no constituye aprobación visual.
+
+Se retiraron las evidencias y servidores temporales tras inventariarlos. Se conservan este documento, los informes históricos resumidos en contexto, el código, las skills y su lockfile. La configuración MCP local sigue disponible en `.vscode/mcp.json` y permanece ignorada por Git. Los artefactos futuros de `.playwright-mcp/` y los caches Python se ignoran.
+
+El acceso habitual vuelve a ser [http://localhost](http://localhost), con los servicios Docker existentes y las imágenes de `app` y `nginx` actualizadas. Se utiliza `docker compose -f docker-compose.yml` para conservar el modo de ejecución existente; no se levanta Vite de este proyecto ni se ocupa el 5173 de otro proyecto. Los volúmenes de base de datos, Redis y archivos subidos permanecen intactos.
+
+Detalles operativos, commits, inventario y puertos: [informe Fase 2.5](docs/environment-consolidation-2026-11-23.md).

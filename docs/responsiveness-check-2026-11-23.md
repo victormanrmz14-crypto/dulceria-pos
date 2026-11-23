@@ -1,13 +1,15 @@
 # Fase 2.4 · Refactor visual del Punto de Venta
 
+> Archivo de referencia: las capturas, resultados de diagnóstico y vistas previas temporales se retiraron en la Fase 2.5. La aplicación actual se consulta en [http://localhost](http://localhost). Se conservan aquí los patrones, resultados históricos y limitaciones.
+
 **Estado:** implementado; pendiente de revisión y aprobación visual del propietario. La Fase 2.3 se conserva como base aprobada.
 
 **Fecha:** 23 de noviembre de 2026, America/Mexico_City. **Rama:** `refactor/premium-ui`. Sin commits.
 
 ## Resultado y revisión
 
-- [Vista previa del POS con datos simulados](http://localhost:8184/ventas).
-- [Comparativa antes/después](http://localhost:8184/.playwright-mcp/pos-premium/comparison.html), también disponible como [archivo local](../.playwright-mcp/pos-premium/comparison.html).
+- Vista previa del POS con datos simulados (vista previa temporal retirada).
+- Comparativa antes/después (evidencia temporal retirada), también disponible como archivo local (evidencia temporal retirada).
 - [Patrones implementados en UI_DESIGN_SYSTEM.md](../UI_DESIGN_SYSTEM.md#fase-24--punto-de-venta-implementada-pendiente-de-revisión-y-aprobación-visual).
 
 El catálogo separa nombre, existencias, precio y unidad en columnas de lectura estable. El buscador tiene etiqueta y jerarquía propia. El carrito se distingue como región de cobro: cantidades con label, subtotales tabulares, total dominante, selección de método por borde/icono/texto y confirmación con resumen. Se eliminan emojis funcionales en el POS y se reutilizan botones, vacíos, iconos y overlays premium.
@@ -28,14 +30,14 @@ En cada anchura: catálogo vacío; carrito vacío; catálogo con diez productos;
 
 | Ancho | Estado visual | Composición | Overflow horizontal | Capturas |
 |---|---|---|---|---|
-| 320 | Correcto | Compacta + panel inferior | Ninguno | [Catálogo](../.playwright-mcp/pos-premium/after-catalog-320.png), [efectivo](../.playwright-mcp/pos-premium/after-cash-320.png), [confirmación](../.playwright-mcp/pos-premium/after-confirm-320.png) |
-| 375 | Correcto | Compacta + panel inferior | Ninguno | [Catálogo](../.playwright-mcp/pos-premium/after-catalog-375.png), [efectivo](../.playwright-mcp/pos-premium/after-cash-375.png), [confirmación](../.playwright-mcp/pos-premium/after-confirm-375.png) |
-| 390 | Correcto | Compacta + panel inferior | Ninguno | [Catálogo](../.playwright-mcp/pos-premium/after-catalog-390.png), [efectivo](../.playwright-mcp/pos-premium/after-cash-390.png), [confirmación](../.playwright-mcp/pos-premium/after-confirm-390.png) |
-| 430 | Correcto | Compacta + panel inferior | Ninguno | [Catálogo](../.playwright-mcp/pos-premium/after-catalog-430.png), [efectivo](../.playwright-mcp/pos-premium/after-cash-430.png), [confirmación](../.playwright-mcp/pos-premium/after-confirm-430.png) |
-| 768 | Correcto | Una columna + dialog de carrito | Ninguno | [Catálogo](../.playwright-mcp/pos-premium/after-catalog-768.png), [efectivo](../.playwright-mcp/pos-premium/after-cash-768.png), [confirmación](../.playwright-mcp/pos-premium/after-confirm-768.png) |
-| 1024 | Correcto | Catálogo + carrito de 320 px | Ninguno | [Catálogo](../.playwright-mcp/pos-premium/after-catalog-1024.png), [efectivo](../.playwright-mcp/pos-premium/after-cash-1024.png), [confirmación](../.playwright-mcp/pos-premium/after-confirm-1024.png) |
-| 1366 | Correcto | Catálogo + carrito de 360 px | Ninguno | [Catálogo](../.playwright-mcp/pos-premium/after-catalog-1366.png), [efectivo](../.playwright-mcp/pos-premium/after-cash-1366.png), [confirmación](../.playwright-mcp/pos-premium/after-confirm-1366.png) |
-| 1920 | Correcto | Contenido limitado a 1440 px + carrito | Ninguno | [Catálogo](../.playwright-mcp/pos-premium/after-catalog-1920.png), [efectivo](../.playwright-mcp/pos-premium/after-cash-1920.png), [confirmación](../.playwright-mcp/pos-premium/after-confirm-1920.png) |
+| 320 | Correcto | Compacta + panel inferior | Ninguno | Catálogo (evidencia temporal retirada), efectivo (evidencia temporal retirada), confirmación (evidencia temporal retirada) |
+| 375 | Correcto | Compacta + panel inferior | Ninguno | Catálogo (evidencia temporal retirada), efectivo (evidencia temporal retirada), confirmación (evidencia temporal retirada) |
+| 390 | Correcto | Compacta + panel inferior | Ninguno | Catálogo (evidencia temporal retirada), efectivo (evidencia temporal retirada), confirmación (evidencia temporal retirada) |
+| 430 | Correcto | Compacta + panel inferior | Ninguno | Catálogo (evidencia temporal retirada), efectivo (evidencia temporal retirada), confirmación (evidencia temporal retirada) |
+| 768 | Correcto | Una columna + dialog de carrito | Ninguno | Catálogo (evidencia temporal retirada), efectivo (evidencia temporal retirada), confirmación (evidencia temporal retirada) |
+| 1024 | Correcto | Catálogo + carrito de 320 px | Ninguno | Catálogo (evidencia temporal retirada), efectivo (evidencia temporal retirada), confirmación (evidencia temporal retirada) |
+| 1366 | Correcto | Catálogo + carrito de 360 px | Ninguno | Catálogo (evidencia temporal retirada), efectivo (evidencia temporal retirada), confirmación (evidencia temporal retirada) |
+| 1920 | Correcto | Contenido limitado a 1440 px + carrito | Ninguno | Catálogo (evidencia temporal retirada), efectivo (evidencia temporal retirada), confirmación (evidencia temporal retirada) |
 
 El ancho del documento coincide con el viewport en las ocho resoluciones; el contenido interno de los dialogs tampoco desborda horizontalmente. Con dos productos, total, métodos y cobro están dentro del viewport de 900 px en las ocho anchuras. No se detectaron controles del POS menores de 44 × 44 px; el icono Agregar pertenece a la fila completa, no es un botón separado.
 
@@ -51,16 +53,16 @@ El ancho del documento coincide con el viewport en las ocho resoluciones; el con
 ## Evidencia adicional
 
 - Tab y Shift+Tab permanecen dentro del carrito y de confirmación. Escape cierra y devuelve foco a Cobrar o Ver carrito. El drawer conserva el retorno a Menú. Recorrido móvil buscador → carrito → primer producto y foco visible de 2 px comprobados.
-- Nombre extenso, stock de nueve cifras e importe `$987,654,321.99` a 320 px: textos completos, cifras sin partir y sin overflow del documento ni del dialog. [Catálogo](../.playwright-mcp/pos-premium/after-long-catalog-320.png), [carrito](../.playwright-mcp/pos-premium/after-long-cart-320.png).
-- Diez líneas: scroll local del carrito de 306 px con contenido de 1474 px; total y métodos fuera de ese scroll. [Captura](../.playwright-mcp/pos-premium/after-many-items-320.png).
-- Altura reducida 390 × 500 con campo enfocado: dialog limitado al viewport, desplazamiento interno y sin overflow horizontal. El botón de cobro requiere scroll en esa altura. Esto aproxima espacio disponible; **no** prueba un teclado físico/virtual real. [Captura](../.playwright-mcp/pos-premium/after-short-viewport-390.png).
-- Paletas granate, azul, amarilla y blanca, sin guardar configuración: 24 pares de contraste calculados sobre estilos renderizados. Textos de acción ≥6.70:1; texto secundario 5.48:1; borde de input 3.47:1. [Pares](../.playwright-mcp/pos-premium/contrast-pairs.json), [resultado](../.playwright-mcp/pos-premium/contrast-results.txt).
-- Cambio en efectivo y resumen recibido/cambio capturados sin confirmar venta. [Cambio](../.playwright-mcp/pos-premium/after-change-320.png), [confirmación](../.playwright-mcp/pos-premium/after-confirm-cash-320.png).
-- Mensajes flash de éxito/error simulados y rol cajero simulado sin enlace administrativo al historial. [Mensajes](../.playwright-mcp/pos-premium/after-feedback-390.png), [cajero](../.playwright-mcp/pos-premium/after-cashier-390.png). No constituyen pruebas de autenticación o autorización.
+- Nombre extenso, stock de nueve cifras e importe `$987,654,321.99` a 320 px: textos completos, cifras sin partir y sin overflow del documento ni del dialog. Catálogo (evidencia temporal retirada), carrito (evidencia temporal retirada).
+- Diez líneas: scroll local del carrito de 306 px con contenido de 1474 px; total y métodos fuera de ese scroll. Captura (evidencia temporal retirada).
+- Altura reducida 390 × 500 con campo enfocado: dialog limitado al viewport, desplazamiento interno y sin overflow horizontal. El botón de cobro requiere scroll en esa altura. Esto aproxima espacio disponible; **no** prueba un teclado físico/virtual real. Captura (evidencia temporal retirada).
+- Paletas granate, azul, amarilla y blanca, sin guardar configuración: 24 pares de contraste calculados sobre estilos renderizados. Textos de acción ≥6.70:1; texto secundario 5.48:1; borde de input 3.47:1. Pares (evidencia temporal retirada), resultado (evidencia temporal retirada).
+- Cambio en efectivo y resumen recibido/cambio capturados sin confirmar venta. Cambio (evidencia temporal retirada), confirmación (evidencia temporal retirada).
+- Mensajes flash de éxito/error simulados y rol cajero simulado sin enlace administrativo al historial. Mensajes (evidencia temporal retirada), cajero (evidencia temporal retirada). No constituyen pruebas de autenticación o autorización.
 - Dashboard vacío a 390 y 1366 px: capturas antes/después **idénticas byte a byte**, incluida navegación. Se mantiene la fuente compartida de destinos y selección de Vender.
 - Compilación `npm run build` correcta; `git diff --check` correcto. Advertencia existente de Browserslist desactualizado; no se actualizan dependencias. Sin excepciones JavaScript durante la matriz y sin solicitudes de escritura registradas. No se ejecutaron ventas, pruebas funcionales de negocio, auditorías de seguridad ni tareas de animación.
 
-Resultados medidos: [matriz JSON](../.playwright-mcp/pos-premium/viewport-results.json), [presentación y teclado](../.playwright-mcp/pos-premium/presentation-results.json).
+Resultados medidos: matriz JSON (evidencia temporal retirada), presentación y teclado (evidencia temporal retirada).
 
 ## Archivos de esta fase
 

@@ -1,12 +1,14 @@
 # Fase 2.2 · Refinamiento visual del dashboard premium
 
+> Archivo de referencia: las capturas, resultados de diagnóstico y vistas previas temporales se retiraron en la Fase 2.5. La aplicación actual se consulta en [http://localhost](http://localhost). Se conservan aquí los patrones, resultados históricos y limitaciones.
+
 Implementado sobre `refactor/premium-ui`, con la primera iteración existente como punto de partida. La aplicación conserva sus datos, cuatro indicadores, permisos, rutas y cálculos. Esta fase modifica cinco archivos de interfaz y actualiza la documentación del piloto; no incorpora dependencias.
 
 ## Revisión visual
 
-- [Dashboard en vivo](http://localhost:8181/dashboard), con los datos reales del tenant y la sesión existente. Se mantiene la vista previa local de solo lectura del piloto anterior.
-- [Galería comparativa](http://localhost:8183/comparison.html), con los seis anchos y dos estados seleccionables.
-- [Galería guardada](../.playwright-mcp/premium-refinement/comparison.html), [capturas y resultados](../.playwright-mcp/premium-refinement/).
+- Dashboard en vivo (vista previa temporal retirada), con los datos reales del tenant y la sesión existente. Se mantiene la vista previa local de solo lectura del piloto anterior.
+- Galería comparativa (vista previa temporal retirada), con los seis anchos y dos estados seleccionables.
+- Galería guardada (evidencia temporal retirada), capturas y resultados (evidencia temporal retirada).
 
 Las capturas se tomaron con Playwright MCP el 23 de noviembre de 2026, a 320, 375, 768, 1024, 1366 y 1920 px, siempre con viewport de 900 px de alto y página completa. Se comparan la misma fecha, contenido y configuración. Los casos poblados sustituyen respuestas únicamente en el navegador: 38 ventas, $123,456.78, 284 productos, 7 alertas, siete puntos, cinco productos y tres filas. No son operaciones comerciales reales. Al finalizar se retiró la interceptación y se restauró el dashboard real.
 
@@ -33,10 +35,10 @@ La estructura y los propietarios de estado se conservaron: el dashboard compone 
 
 | Estado y ancho | Primera iteración | Segunda iteración |
 |---|---|---|
-| Con datos · 375 px | [Antes](../.playwright-mcp/premium-refinement/before-data-375.png) | [Después](../.playwright-mcp/premium-refinement/after-data-375.png) |
-| Sin operaciones · 1366 px | [Antes](../.playwright-mcp/premium-refinement/before-empty-1366.png) | [Después](../.playwright-mcp/premium-refinement/after-empty-1366.png) |
-| Sin operaciones · 768 px | [Antes](../.playwright-mcp/premium-refinement/before-empty-768.png) | [Después](../.playwright-mcp/premium-refinement/after-empty-768.png) |
-| Con datos · 320 px | [Antes, original](../.playwright-mcp/premium-refinement/before-data-320.png) | [Después](../.playwright-mcp/premium-refinement/after-data-320.png) |
+| Con datos · 375 px | Antes (evidencia temporal retirada) | Después (evidencia temporal retirada) |
+| Sin operaciones · 1366 px | Antes (evidencia temporal retirada) | Después (evidencia temporal retirada) |
+| Sin operaciones · 768 px | Antes (evidencia temporal retirada) | Después (evidencia temporal retirada) |
+| Con datos · 320 px | Antes, original (evidencia temporal retirada) | Después (evidencia temporal retirada) |
 
 La captura inicial con datos a 320 px conserva un margen exterior causado por el desbordamiento transitorio del canvas. La galería encuadra el área del viewport y enlaza el original completo; no se modificó esa evidencia. La captura final ya tiene 320 px de ancho. Las demás comparativas están disponibles mediante los selectores de la galería.
 
@@ -57,12 +59,12 @@ Se comprobaron también los límites 479/480, 767/768, 991/992 y 1199/1200 px. L
 
 ## Pruebas de interacción, identidad y conservación
 
-- 18 comprobaciones de interacción aprobadas: foco inicial del drawer, Enter/Espacio en disclosures, `aria-controls`, foco visible, Tab/Shift+Tab contenidos, Escape, devolución del foco, backdrop, cierre al pasar a escritorio, ids únicos, salto al contenido, detalle de gráfica, scroll de tabla y reduced motion. [Resultados](../.playwright-mcp/premium-refinement/interaction-results.json).
-- Navegación real mediante Inertia hacia historial, Caja, POS, Productos, Usuarios y Configuración; también desde el drawer a Productos. En todos los destinos hay cero raíces premium y el scroll del documento queda liberado. [Resultados](../.playwright-mcp/premium-refinement/additional-results.json).
-- Nueve primarios de tenant probados en el navegador: rojo, azul, verde, violeta, naranja, amarillo, gris claro, blanco y negro. 72 pares de texto/fondo calculados desde colores renderizados pasan el comprobador de contraste de la skill. Mínimo observado: 4.57:1 en navegación activa verde; botón primario mínimo: 5.02:1. [Pares medidos](../.playwright-mcp/premium-refinement/contrast-pairs.json).
-- Nombre comercial largo, nombre de usuario largo, logo rectangular e importe `$123,456,789.90` probados en los seis anchos. Sin pérdida de cifras ni overflow; el ranking desplaza importes largos debajo del producto en móvil. [Captura a 320 px](../.playwright-mcp/premium-refinement/after-long-content-320.png).
-- Caso de una sola venta, un producto y siete puntos con seis ceros: gráfica, tabla y ranking visibles; cero stock bajo no genera alerta. [Captura](../.playwright-mcp/premium-refinement/after-one-sale-375.png).
-- Tooltip monetario completo inspeccionado visualmente; siete valores completos accesibles mediante el disclosure de datos. [Captura del tooltip](../.playwright-mcp/premium-refinement/after-chart-tooltip-1366.png).
+- 18 comprobaciones de interacción aprobadas: foco inicial del drawer, Enter/Espacio en disclosures, `aria-controls`, foco visible, Tab/Shift+Tab contenidos, Escape, devolución del foco, backdrop, cierre al pasar a escritorio, ids únicos, salto al contenido, detalle de gráfica, scroll de tabla y reduced motion. Resultados (evidencia temporal retirada).
+- Navegación real mediante Inertia hacia historial, Caja, POS, Productos, Usuarios y Configuración; también desde el drawer a Productos. En todos los destinos hay cero raíces premium y el scroll del documento queda liberado. Resultados (evidencia temporal retirada).
+- Nueve primarios de tenant probados en el navegador: rojo, azul, verde, violeta, naranja, amarillo, gris claro, blanco y negro. 72 pares de texto/fondo calculados desde colores renderizados pasan el comprobador de contraste de la skill. Mínimo observado: 4.57:1 en navegación activa verde; botón primario mínimo: 5.02:1. Pares medidos (evidencia temporal retirada).
+- Nombre comercial largo, nombre de usuario largo, logo rectangular e importe `$123,456,789.90` probados en los seis anchos. Sin pérdida de cifras ni overflow; el ranking desplaza importes largos debajo del producto en móvil. Captura a 320 px (evidencia temporal retirada).
+- Caso de una sola venta, un producto y siete puntos con seis ceros: gráfica, tabla y ranking visibles; cero stock bajo no genera alerta. Captura (evidencia temporal retirada).
+- Tooltip monetario completo inspeccionado visualmente; siete valores completos accesibles mediante el disclosure de datos. Captura del tooltip (evidencia temporal retirada).
 - `npm run build` aprobado. Diagnósticos del editor sin errores en los cinco archivos de interfaz. `git diff --check` aprobado. Sin errores de consola en el recorrido final. Persiste el aviso previo de catálogo Browserslist desactualizado; no se actualizaron dependencias.
 - Las ramas heredadas de sidebar, tarjeta y dashboard de cajero se compararon con la copia inicial: son idénticas. Los archivos de backend y el layout compartido no se modificaron durante esta fase.
 
@@ -76,7 +78,7 @@ Se comprobaron también los límites 479/480, 767/768, 991/992 y 1199/1200 px. L
 | [SidebarNav.vue](../resources/js/Components/SidebarNav.vue) | Estados premium, disclosures accesibles y transiciones |
 | [UiEmptyState.vue](../resources/js/Components/Ui/UiEmptyState.vue) | Agrupación semántica del texto y escala de icono |
 | [UI_DESIGN_SYSTEM.md](../UI_DESIGN_SYSTEM.md) | Reglas actuales y enlace a esta entrega |
-| Este informe y [galería/evidencias](../.playwright-mcp/premium-refinement/) | Comparativas y resultados para aprobación visual |
+| Este informe y galería/evidencias (evidencia temporal retirada) | Comparativas y resultados para aprobación visual |
 
 El checkout ya contenía la primera iteración sin commit, cambios en package/lockfile y otros archivos del piloto. Se preservaron; no corresponden a nuevas modificaciones de esta fase.
 

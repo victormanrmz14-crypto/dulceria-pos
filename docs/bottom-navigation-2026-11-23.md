@@ -1,13 +1,15 @@
 # Fase 2.3 · Bottom Navigation e integración con el Design System
 
+> Archivo de referencia: las capturas, resultados de diagnóstico y vistas previas temporales se retiraron en la Fase 2.5. La aplicación actual se consulta en [http://localhost](http://localhost). Se conservan aquí los patrones, resultados históricos y limitaciones.
+
 Implementada sobre `refactor/premium-ui`, conservando el checkout de la Fase 2.2 sin crear commits. La navegación premium ya pertenece a `AppLayout` y está disponible al entrar directamente o navegar mediante Inertia a cualquiera de los módulos del tenant. El contenido de esos módulos mantiene Bootstrap; el dashboard conserva sus componentes refinados.
 
 ## Revisión visual
 
-- [Vista previa actualizada](http://localhost:8184/dashboard).
-- [Galería antes/después](http://localhost:8185/comparison.html) · [archivo guardado](../.playwright-mcp/bottom-navigation/comparison.html).
-- Capturas: [móvil 320](../.playwright-mcp/bottom-navigation/after-dashboard-320.png), [375](../.playwright-mcp/bottom-navigation/after-dashboard-375.png), [390](../.playwright-mcp/bottom-navigation/after-dashboard-390.png), [430](../.playwright-mcp/bottom-navigation/after-dashboard-430.png), [767](../.playwright-mcp/bottom-navigation/after-dashboard-767.png).
-- [Drawer móvil](../.playwright-mcp/bottom-navigation/drawer-390.png), [tablet 768](../.playwright-mcp/bottom-navigation/after-dashboard-768.png), [escritorio 992](../.playwright-mcp/bottom-navigation/after-dashboard-992.png), [1366](../.playwright-mcp/bottom-navigation/after-dashboard-1366.png) y [1920](../.playwright-mcp/bottom-navigation/after-dashboard-1920.png).
+- Vista previa actualizada (vista previa temporal retirada).
+- Galería antes/después (vista previa temporal retirada) · archivo guardado (evidencia temporal retirada).
+- Capturas: móvil 320 (evidencia temporal retirada), 375 (evidencia temporal retirada), 390 (evidencia temporal retirada), 430 (evidencia temporal retirada), 767 (evidencia temporal retirada).
+- Drawer móvil (evidencia temporal retirada), tablet 768 (evidencia temporal retirada), escritorio 992 (evidencia temporal retirada), 1366 (evidencia temporal retirada) y 1920 (evidencia temporal retirada).
 
 La vista previa es un proxy local de solo lectura: sirve los assets compilados del checkout y reenvía GET al Laravel local existente. Comparte la sesión de `localhost`; bloquea POST y no sustituye la autenticación. El proxy temporal de 8184 refleja también `viewport-fit=cover` del Blade local. No se modificaron imágenes Docker, configuración de producción ni base de datos. Los servidores 8181/8182/8183 de las fases anteriores se conservaron.
 
@@ -44,19 +46,19 @@ Cada resolución se probó en las **13 rutas** siguientes: `/dashboard`, `/venta
 
 Se comprobaron navegación y destino activo, un único control de Menú visible, etiqueta completa, tamaño de cada celda, sidebar, separación del final de main respecto de la barra y ausencia de overflow del documento. A 320 px las cinco celdas miden 60×56 px. Al final del scroll, el contenido de main queda antes de la barra en todos los casos móviles. Los formularios largos de creación fueron accesibles hasta el final. El contenido premium permanece limitado al dashboard de administrador.
 
-Transiciones comprobadas en los límites 767→768 y 991→992. Orientación adicional 667×375: barra; 844×390: drawer de tablet, según ancho disponible. Barra fija comprobada durante scroll. [Resultados de la matriz](../.playwright-mcp/bottom-navigation/viewport-results.json).
+Transiciones comprobadas en los límites 767→768 y 991→992. Orientación adicional 667×375: barra; 844×390: drawer de tablet, según ancho disponible. Barra fija comprobada durante scroll. Resultados de la matriz (evidencia temporal retirada).
 
-La primera pasada detectó que la etiqueta activa Productos excedía ligeramente su celda a 320 px. Se amplió su reparto horizontal y la matriz completa pasó después. [Resultado inicial conservado](../.playwright-mcp/bottom-navigation/viewport-results-initial.json).
+La primera pasada detectó que la etiqueta activa Productos excedía ligeramente su celda a 320 px. Se amplió su reparto horizontal y la matriz completa pasó después. Resultado inicial conservado (evidencia temporal retirada).
 
 ## Navegación y accesibilidad básica
 
-35 comprobaciones de interacción aprobadas: apertura con Enter/Espacio, foco inicial en Cerrar, `aria-controls` correcto, ciclos Tab/Shift+Tab, fondo inerte, Escape, botón, backdrop, restauración de foco, cierre y foco al cambiar de breakpoint, liberación de scroll, navegación Inertia real, selección de destinos, cierre al elegir rutas secundarias, modal de Caja, reduced motion, orientación, foco visible, barra fija e impresión. [Resultados](../.playwright-mcp/bottom-navigation/interaction-results.json).
+35 comprobaciones de interacción aprobadas: apertura con Enter/Espacio, foco inicial en Cerrar, `aria-controls` correcto, ciclos Tab/Shift+Tab, fondo inerte, Escape, botón, backdrop, restauración de foco, cierre y foco al cambiar de breakpoint, liberación de scroll, navegación Inertia real, selección de destinos, cierre al elegir rutas secundarias, modal de Caja, reduced motion, orientación, foco visible, barra fija e impresión. Resultados (evidencia temporal retirada).
 
-Las visitas reales mediante Inertia incluyen Inicio, Productos, POS, historial, Caja, Usuarios, Reportes, Configuración y los tres catálogos. Un marcador en window confirmó continuidad de la visita sin recarga completa. El drawer se cierra y el scroll queda liberado al entrar en cada módulo. [Foco visible en Menú](../.playwright-mcp/bottom-navigation/focus-menu-320.png).
+Las visitas reales mediante Inertia incluyen Inicio, Productos, POS, historial, Caja, Usuarios, Reportes, Configuración y los tres catálogos. Un marcador en window confirmó continuidad de la visita sin recarga completa. El drawer se cierra y el scroll queda liberado al entrar en cada módulo. Foco visible en Menú (evidencia temporal retirada).
 
-El modal existente de Ingresar efectivo se abrió y cerró sin enviar formularios: [captura](../.playwright-mcp/bottom-navigation/modal-caja-390.png). La barra queda oculta e inerte durante el modal y vuelve al cerrarlo. Esto valida convivencia con la navegación; no certifica la accesibilidad de todos los modales heredados.
+El modal existente de Ingresar efectivo se abrió y cerró sin enviar formularios: captura (evidencia temporal retirada). La barra queda oculta e inerte durante el modal y vuelve al cerrarlo. Esto valida convivencia con la navegación; no certifica la accesibilidad de todos los modales heredados.
 
-Se midieron **60 pares de contraste** sobre estilos calculados: las nueve paletas existentes y blanco, negro y amarillo adicionales. Texto activo/inactivo: umbral 4.5:1; iconos y contorno de Vender: 3:1. Mínimo de etiquetas activas: 5.02:1; texto inactivo: 5.48:1; mínimo del icono activo sobre superficie neutra: 4.44:1. Todos pasan su umbral. [Pares](../.playwright-mcp/bottom-navigation/contrast-pairs.json) y [resultado del comprobador de contraste](../.playwright-mcp/bottom-navigation/contrast-results.txt). La selección incluye forma y peso, además del color.
+Se midieron **60 pares de contraste** sobre estilos calculados: las nueve paletas existentes y blanco, negro y amarillo adicionales. Texto activo/inactivo: umbral 4.5:1; iconos y contorno de Vender: 3:1. Mínimo de etiquetas activas: 5.02:1; texto inactivo: 5.48:1; mínimo del icono activo sobre superficie neutra: 4.44:1. Todos pasan su umbral. Pares (evidencia temporal retirada) y resultado del comprobador de contraste (evidencia temporal retirada). La selección incluye forma y peso, además del color.
 
 También se ejecutaron 20 casos de coincidencia de rutas y filtrado por rol, incluyendo query, slash final, rutas con prefijos similares, creación, edición y ticket. Las rutas de edición se verificaron mediante esa lógica; no había productos existentes para abrir una edición real.
 
@@ -64,13 +66,13 @@ También se ejecutaron 20 casos de coincidencia de rutas y filtrado por rol, inc
 
 Las siguientes muestras sustituyen respuestas GET exclusivamente en el navegador, retirando las interceptaciones al terminar. No escriben datos ni prueban autorizaciones Laravel con otra sesión.
 
-- **Cajero:** no hay cuentas con ese rol en el entorno; se sustituyó el prop de rol en una respuesta Inertia. La barra muestra cuatro destinos y el drawer solo Inicio, Vender, Ventas, Caja actual y salir. [Barra simulada](../.playwright-mcp/bottom-navigation/simulated-cashier-320.png), [drawer simulado](../.playwright-mcp/bottom-navigation/simulated-cashier-drawer-320.png).
-- **Ticket:** no existen ventas reales. Una respuesta Inertia simulada de `/ventas/999/ticket` selecciona Ventas sin `aria-current` en el enlace al historial. [Captura simulada](../.playwright-mcp/bottom-navigation/simulated-ticket-320.png).
-- **POS:** un producto simulado se añadió al carrito local para comprobar que Cobrar y Limpiar quedan alcanzables al final del scroll. No se pulsó Cobrar ni se abrió una confirmación comercial. [Carrito simulado](../.playwright-mcp/bottom-navigation/simulated-pos-cart-320.png).
-- **Importes, tabla, banners y avisos:** importe `$123,456,789.90` sin clipping, tabla desplazable con flechas de teclado, banners de impersonación/anuncio en su flujo y toast situado encima de la barra. [Banners simulados](../.playwright-mcp/bottom-navigation/simulated-banners-money-320.png), [importe simulado](../.playwright-mcp/bottom-navigation/simulated-money-320.png).
+- **Cajero:** no hay cuentas con ese rol en el entorno; se sustituyó el prop de rol en una respuesta Inertia. La barra muestra cuatro destinos y el drawer solo Inicio, Vender, Ventas, Caja actual y salir. Barra simulada (evidencia temporal retirada), drawer simulado (evidencia temporal retirada).
+- **Ticket:** no existen ventas reales. Una respuesta Inertia simulada de `/ventas/999/ticket` selecciona Ventas sin `aria-current` en el enlace al historial. Captura simulada (evidencia temporal retirada).
+- **POS:** un producto simulado se añadió al carrito local para comprobar que Cobrar y Limpiar quedan alcanzables al final del scroll. No se pulsó Cobrar ni se abrió una confirmación comercial. Carrito simulado (evidencia temporal retirada).
+- **Importes, tabla, banners y avisos:** importe `$123,456,789.90` sin clipping, tabla desplazable con flechas de teclado, banners de impersonación/anuncio en su flujo y toast situado encima de la barra. Banners simulados (evidencia temporal retirada), importe simulado (evidencia temporal retirada).
 - **Teclado virtual:** una reducción artificial de VisualViewport con el buscador enfocado oculta/inactiva la barra; al restaurarla reaparece. Es comprobación del mecanismo, no una reproducción fiel del teclado de iOS/Android.
 
-[11 comprobaciones con fixtures](../.playwright-mcp/bottom-navigation/simulated-results.json), sin errores JavaScript. La matriz real tampoco produjo errores JavaScript ni solicitudes distintas de GET.
+11 comprobaciones con fixtures (evidencia temporal retirada), sin errores JavaScript. La matriz real tampoco produjo errores JavaScript ni solicitudes distintas de GET.
 
 Pendientes: dispositivo físico con safe areas, teclados virtuales y barras del navegador; Safari/Firefox, lector de pantalla y zoom real del navegador; sesión real de cajero y tickets reales cuando estén disponibles. No se declara certificación integral de accesibilidad. Las tablas y controles heredados mantienen su diseño; su rediseño está fuera de esta fase.
 
@@ -88,7 +90,7 @@ Pendientes: dispositivo físico con safe areas, teclados virtuales y barras del 
 | [premium.css](../resources/css/premium.css) | Barra, integración de navegación, safe areas, scroll, notificaciones y ajuste acotado de densidad móvil |
 | [app.blade.php](../resources/views/app.blade.php) | `viewport-fit=cover` sin limitar zoom |
 | [UI_DESIGN_SYSTEM.md](../UI_DESIGN_SYSTEM.md) | Alcance actual, arquitectura responsive, API, roles, tokens/estados, capas, overlays/teclado y estado implementado/futuro |
-| Este informe y [evidencias](../.playwright-mcp/bottom-navigation/) | Capturas, galería antes/después, matriz y guiones/resultados de Playwright MCP |
+| Este informe y evidencias (evidencia temporal retirada) | Capturas, galería antes/después, matriz y guiones/resultados de Playwright MCP |
 
 El checkout ya contenía cambios sin commit de fases anteriores, package/lockfile, skills y evidencias. Se preservaron. No se añadieron dependencias ni se modificaron Dashboard.vue, StatCard, WelcomeModal, theme.js, SuperAdminLayout, rutas, controladores, modelos, contratos de Inertia o cálculos comerciales durante esta fase.
 
