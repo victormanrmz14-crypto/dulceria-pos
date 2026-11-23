@@ -1,6 +1,11 @@
 <script setup>
 import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
+import UiOverlay from './Ui/UiOverlay.vue';
+import UiIcon from './Ui/UiIcon.vue';
+import UiButton from './Ui/UiButton.vue';
+
+defineProps({ premium: { type: Boolean, default: false }, theme: { type: Object, default: () => ({}) } });
 
 const visible = ref(true);
 
@@ -10,7 +15,20 @@ function cerrar() {
 </script>
 
 <template>
-    <Transition name="modal-fade">
+    <UiOverlay v-if="premium" :open="visible" title="Todo listo para gestionar tu negocio" :theme="theme" @close="cerrar">
+        <div class="p-welcome">
+            <span class="p-welcome__symbol"><UiIcon name="candy" :size="32" /></span>
+            <p>Explora los módulos que tienes disponibles desde hoy.</p>
+            <ul class="p-welcome__features">
+                <li><UiIcon name="package" />Gestiona tu inventario</li>
+                <li><UiIcon name="cart" />Vende fácilmente</li>
+                <li><UiIcon name="cash" />Controla tu caja</li>
+                <li><UiIcon name="chart" />Consulta tus reportes</li>
+            </ul>
+            <UiButton @click="cerrar">Comenzar<UiIcon name="arrow" /></UiButton>
+        </div>
+    </UiOverlay>
+    <Transition v-else name="modal-fade">
         <div v-if="visible" class="wm-backdrop" @click.self="cerrar">
             <div class="wm-card" role="dialog" aria-modal="true" aria-labelledby="wm-title">
 
