@@ -1,25 +1,14 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+<x-auth.layout title="Recuperar contraseña">
+    <div class="auth-heading-icon"><x-auth.icon name="mail" /></div>
+    <div class="auth-intro">
+        <h1>Recupera tu acceso</h1>
+        <p>Ingresa el correo de tu cuenta. Te enviaremos un enlace para restablecer tu contraseña.</p>
     </div>
-
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
-
-    <form method="POST" action="{{ route('password.email') }}">
+    <x-auth.feedback />
+    <form method="POST" action="{{ route('password.email') }}" class="auth-form" data-auth-form>
         @csrf
-
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
-        </div>
+        <x-auth.field name="email" label="Correo electrónico" type="email" :value="old('email')" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" required />
+        <x-auth.submit loading="Enviando enlace…">Enviar enlace de recuperación</x-auth.submit>
     </form>
-</x-guest-layout>
+    <a href="{{ route('login') }}" class="auth-back"><x-auth.icon name="arrow-left" /> Volver al inicio de sesión</a>
+</x-auth.layout>

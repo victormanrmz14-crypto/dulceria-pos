@@ -1,5 +1,39 @@
 # Dulcería POS · Design System
 
+## Identidad de plataforma · Fase 2.13 (pendiente de revisión estética)
+
+La marca **Dulcería POS** identifica la plataforma. Nunca sustituye `tenantConfig`, el logotipo de una dulcería ni su paleta. La propuesta seleccionada es la **D de envoltura**: inicial geométrica con contraforma amplia y dos pliegues laterales originales. Se evaluaron también una bolsa modular y un monograma DP; sus bocetos y criterios están en [la lámina de identidad](public/brand/identity.html).
+
+Assets maestros: [principal horizontal](public/brand/logo-horizontal.svg), [símbolo](public/brand/symbol.svg), [monocromático](public/brand/logo-mono.svg) y [blanco para fondo oscuro](public/brand/logo-dark.svg). Los SVG contienen trazados y viewBox, sin fuentes externas, scripts ni recursos enlazados. La palabra se trazó desde DM Sans 700; los pliegues y la D son geometría propia. [Generador](scripts/generate-brand.py), con fontTools como herramienta opcional de generación, sin dependencia de runtime.
+
+| Rol de plataforma | Valor |
+|---|---|
+| Cereza / hover borgoña | `#8B243A` / `#6F1D30` |
+| Tinte / canvas / superficie | `#F8EFF1` / `#F7F8FA` / `#FFFFFF` |
+| Texto / secundario / borde | `#202126` / `#666973` / `#DEE0E5` |
+| Contorno de campos | `#858892` |
+| Error / éxito | `#B42318` / `#166534` |
+
+[tokens.css](public/brand/tokens.css) limita las variables a `.platform-brand` y a la capa CSS `brand`. Los tokens dinámicos `--p-*` de los tenants permanecen intactos. DM Sans variable se sirve localmente; se incluye su [licencia SIL OFL 1.1](public/brand/fonts/OFL.txt), sin fuente comercial ni petición a Google Fonts en autenticación o landing.
+
+Uso mínimo recomendado: símbolo de 24 px y horizontal de 144 px; reserva exterior de 8 unidades respecto al viewBox del símbolo de 64 unidades. Mantener proporciones, orientación y colores; usar blanco sobre fondo oscuro, monocromático en reproducción de una tinta. El favicon tiene composición propia para 16/32/48 px, con SVG y fallback ICO. No usar el símbolo aislado sobre colores de contraste insuficiente.
+
+Android futuro: [icono cuadrado](public/brand/app-icon.svg), PNG de 192/512 px y [primer plano independiente](public/brand/android-foreground.svg). El SVG de 108 unidades conserva el símbolo dentro del círculo seguro central de 66 unidades; fondo `#8B243A`. Son originales para exportación, no un APK, VectorDrawable ni configuración Android compilada. No se implementó una app ni una splash screen.
+
+### Familia de autenticación Blade
+
+[auth/layout](resources/views/components/auth/layout.blade.php) compone identidad, formulario y pie. [auth/field](resources/views/components/auth/field.blade.php) es propietario de label, control, ayuda, error asociado y revelado de contraseña; `auth/feedback` presenta estados del servidor y resumen; `auth/submit` informa envío nativo. [auth.css](resources/css/auth.css) usa la capa `auth`, posterior a `brand`; [auth.js](resources/js/auth.js) añade únicamente revelado, espera, restauración de botón en `pageshow`, foco de error y compatibilidad del marcador histórico `#forgot`. Sin migración a Vue ni carga del bundle Inertia en estas vistas.
+
+Composición dividida desde 992 px, proporción 46/54 y ancho total máximo 1680 px. Panel de identidad neutro `#F3F2F5`, ilustración conceptual propia sin estadísticas y formulario blanco de 400 px (460 en registro). Bajo 992 px el panel desaparece y se muestra la marca encima del formulario. Registro: dos fieldsets, negocio/nombre opcionales y contraseñas en dos columnas desde 600 px, una columna entre 992–1199 y dos desde 1200. Main y pie se desplazan con el documento; no hay tarjeta con scroll interno ni altura fija de formulario.
+
+Títulos de 30 px (28 móvil), texto de ayuda de 12–14, inputs de 16 px y altura 48 px; acción principal renderizada de 50 px, controles secundarios ≥44 px y radio de control 6 px. Foco de 2 px con offset 3; errores con texto «Error», `aria-invalid`, ayudas mediante `aria-describedby` y foco inicial en primer inválido. Estado de éxito con `role=status`; envío con texto, disabled y `aria-busy`. Reduced motion detiene el único indicador de espera. Sin efectos 3D o movimiento decorativo.
+
+CSRF, nombres de campos, old input, autocompletado, sesión y redirecciones se conservan. `GET /forgot-password` presenta la vista existente mediante su controlador; POST y tokens no cambian. Confirmación y verificación de correo usan la misma familia sin activar infraestructura nueva. Landing integra marca, tipografía y acciones; sus afirmaciones comerciales quedan registradas en el informe, sin rediseño de marketing.
+
+WebView: `viewport-fit=cover`, safe areas laterales/superior/inferior, `min-height:100svh` con fallback, scroll natural, teclado de email solo donde corresponde y `interactive-widget=resizes-content`. No se desactiva el zoom. Teclado Android físico, `adjustResize` nativo y splash screen quedan para integración futura.
+
+Verificación y límites: [informe Fase 2.13](docs/auth-branding-phase-2-13.md), [galería local antes/después](.playwright-mcp/auth-branding-2-13/comparison.html). Cuatro pantallas × ocho anchuras, altura corta, teclado, zoom CSS 200 %, contexto táctil Android emulado, 16 pares de contraste y 20 pruebas Laravel / 69 aserciones en SQLite aislado. No equivale a revisión estética aprobada, certificación de accesibilidad ni prueba en WebView físico.
+
 > Archivo de referencia: las capturas, resultados de diagnóstico y vistas previas temporales se retiraron en la Fase 2.5. La aplicación actual se consulta en [http://localhost](http://localhost). Se conservan aquí los patrones, resultados históricos y limitaciones.
 
 ## Alcance y activación

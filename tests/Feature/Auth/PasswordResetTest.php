@@ -16,7 +16,7 @@ class PasswordResetTest extends TestCase
     {
         $response = $this->get('/forgot-password');
 
-        $response->assertRedirect(route('login').'#forgot');
+        $response->assertOk()->assertSee('Recupera tu acceso');
     }
 
     public function test_reset_password_link_can_be_requested(): void

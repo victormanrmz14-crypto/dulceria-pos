@@ -2,22 +2,23 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#8b243a">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('brand/favicon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('brand/apple-touch-icon.png') }}">
+    <link rel="stylesheet" href="{{ asset('brand/tokens.css') }}">
     <title>Dulcería POS — Punto de venta para dulcerías y abarrotes</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body { margin: 0; background: #f4f4f5; font-family: 'DM Sans', system-ui, sans-serif; }
         img, svg { display: block; max-width: 100%; }
-        a { color: #8B0000; }
-        a:hover { color: #6d0000; }
+        a { color: #8b243a; }
+        a:hover { color: #6f1d30; }
 
         /* ---- hovers ---- */
         .lp-nav:hover  { color: #fff !important; }
-        .lp-nav2:hover { color: #ffcccc !important; }
-        .lp-btn:hover  { background: #ff8a63 !important; }
+        .lp-nav2:hover { color: #eed8de !important; }
+        .lp-btn:hover  { background: #f8eff1 !important; color: #6f1d30 !important; }
         .lp-ghost:hover { background: rgba(255,255,255,0.12) !important; }
 
         /* ---- animación hero ---- */
@@ -96,31 +97,37 @@
         @media (max-width: 400px) {
             .lp-hero-h1 { font-size: 28px !important; }
         }
+        .lp-header .lp-auth-register { background: #fff !important; color: #8b243a !important; border: 1px solid #fff; }
+        .lp-header .lp-auth-register:hover { background: #f8eff1 !important; }
+        .platform-brand a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+        .lp-header a { display: inline-flex; align-items: center; min-height: 44px; }
+        @media (max-width: 600px) {
+            .lp-header-inner { flex-wrap: wrap; padding: 12px 20px !important; gap: 8px !important; }
+            .lp-header nav { gap: 12px !important; }
+            .lp-header .platform-logo img { width: 184px; }
+        }
     </style>
 </head>
-<body>
+<body class="platform-brand">
 <div style="font-family:'DM Sans',system-ui,sans-serif;color:#2b2b2b;background:#f4f4f5;overflow-x:hidden">
 
   {{-- ================================================================ HEADER --}}
-  <header style="position:sticky;top:0;z-index:50;background:#8B0000;color:#fff">
-    <div style="max-width:1180px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px">
-      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-        <span style="font-size:24px">🍬</span>
-        <span style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;white-space:nowrap">Dulcería POS</span>
-      </div>
+  <header class="lp-header" style="position:sticky;top:0;z-index:50;background:#8b243a;color:#fff">
+    <div class="lp-header-inner" style="max-width:1180px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <x-platform-logo :dark="true" />
       <nav style="display:flex;align-items:center;gap:20px;font-size:14px;font-weight:500;flex-wrap:wrap;justify-content:flex-end">
-        <a href="#modulos"        class="lp-nav lp-nav-links" style="color:#ffcccc;text-decoration:none;white-space:nowrap">Módulos</a>
-        <a href="#punto-de-venta" class="lp-nav lp-nav-links" style="color:#ffcccc;text-decoration:none;white-space:nowrap">Punto de venta</a>
-        <a href="#roles"          class="lp-nav lp-nav-links" style="color:#ffcccc;text-decoration:none;white-space:nowrap">Roles</a>
-        <a href="{{ route('login') }}"    class="lp-nav2" style="color:#fff;text-decoration:none;padding:10px 6px;font-weight:600;white-space:nowrap">Iniciar sesión</a>
-        <a href="{{ route('register') }}" class="lp-btn"  style="background:#ff7043;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:600;white-space:nowrap">Registrarse</a>
+        <a href="#modulos"        class="lp-nav lp-nav-links" style="color:#eed8de;text-decoration:none;white-space:nowrap">Módulos</a>
+        <a href="#punto-de-venta" class="lp-nav lp-nav-links" style="color:#eed8de;text-decoration:none;white-space:nowrap">Punto de venta</a>
+        <a href="#roles"          class="lp-nav lp-nav-links" style="color:#eed8de;text-decoration:none;white-space:nowrap">Roles</a>
+        <a href="{{ route('login') }}"    class="lp-nav2 lp-auth-login" style="color:#fff;text-decoration:none;padding:10px 6px;font-weight:600;white-space:nowrap">Iniciar sesión</a>
+        <a href="{{ route('register') }}" class="lp-btn lp-auth-register"  style="background:#fff;color:#8b243a;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:600;white-space:nowrap">Registrarse</a>
       </nav>
     </div>
   </header>
 
   {{-- ================================================================ HERO --}}
-  <section style="background:#8B0000;color:#fff;position:relative;overflow:hidden">
-    {{-- decoración de círculos (mismo recurso que login.blade.php) --}}
+  <section style="background:#8b243a;color:#fff;position:relative;overflow:hidden">
+    {{-- Decoración heredada de la landing; composición de marketing conservada. --}}
     <div style="position:absolute;width:500px;height:500px;border-radius:50%;border:50px solid rgba(255,255,255,0.06);top:-180px;left:-160px;pointer-events:none"></div>
     <div style="position:absolute;width:400px;height:400px;border-radius:50%;border:50px solid rgba(255,255,255,0.06);bottom:-160px;right:-120px;pointer-events:none"></div>
 
@@ -128,20 +135,20 @@
 
       {{-- Columna texto --}}
       <div data-reveal="1">
-        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border-radius:999px;padding:7px 15px;font-size:13px;font-weight:500;color:#ffcccc;margin-bottom:22px">
+        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border-radius:999px;padding:7px 15px;font-size:13px;font-weight:500;color:#eed8de;margin-bottom:22px">
           Hecho en México 🇲🇽 para negocios de barrio
         </div>
-        <h1 class="lp-hero-h1" style="font-family:'Playfair Display',serif;font-size:56px;line-height:1.08;margin:0 0 20px;text-wrap:pretty">
+        <h1 class="lp-hero-h1" style="font-family:'DM Sans',sans-serif;font-size:56px;line-height:1.08;margin:0 0 20px;text-wrap:pretty">
           Tu dulcería, cuadrada al centavo, todos los días.
         </h1>
-        <p class="lp-hero-p" style="font-size:19px;line-height:1.6;color:#ffcccc;margin:0 0 32px;max-width:30em">
+        <p class="lp-hero-p" style="font-size:19px;line-height:1.6;color:#eed8de;margin:0 0 32px;max-width:30em">
           Cobra rápido, controla tu inventario y cierra el turno sin sacar la calculadora. Un sistema de punto de venta pensado para dulcerías y tiendas de abarrotes.
         </p>
         <div class="lp-hero-buttons" style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:34px">
-          <a href="{{ route('register') }}" class="lp-btn"   style="background:#ff7043;color:#fff;text-decoration:none;padding:15px 28px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Registrarse gratis</a>
+          <a href="{{ route('register') }}" class="lp-btn"   style="background:#fff;color:#8b243a;text-decoration:none;padding:15px 28px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Registrarse gratis</a>
           <a href="{{ route('login') }}"    class="lp-ghost" style="border:1.5px solid rgba(255,255,255,0.35);color:#fff;text-decoration:none;padding:15px 28px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Iniciar sesión</a>
         </div>
-        <div class="lp-hero-bullets" style="display:flex;gap:34px;flex-wrap:wrap;font-size:14px;color:#ffcccc">
+        <div class="lp-hero-bullets" style="display:flex;gap:34px;flex-wrap:wrap;font-size:14px;color:#eed8de">
           <div style="display:flex;align-items:center;gap:8px">✅ Ventas en efectivo y tarjeta</div>
           <div style="display:flex;align-items:center;gap:8px">✅ Cortes de turno automáticos</div>
         </div>
@@ -159,15 +166,15 @@
   <section style="background:#fff;border-bottom:1px solid #ececec">
     <div class="lp-grid-3 lp-benefits-grid" style="max-width:1180px;margin:0 auto;padding:44px 28px;display:grid;grid-template-columns:repeat(3,1fr);gap:40px">
       <div data-reveal="1">
-        <div style="font-family:'Playfair Display',serif;font-size:19px;color:#8B0000;margin-bottom:6px">Sin sobreventas</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:19px;color:#8b243a;margin-bottom:6px">Sin sobreventas</div>
         <div style="font-size:14.5px;line-height:1.6;color:#6c757d">El stock se descuenta al momento de cobrar, aunque dos cajas vendan el mismo producto a la vez.</div>
       </div>
       <div data-reveal="1">
-        <div style="font-family:'Playfair Display',serif;font-size:19px;color:#8B0000;margin-bottom:6px">Cambio calculado solo</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:19px;color:#8b243a;margin-bottom:6px">Cambio calculado solo</div>
         <div style="font-size:14.5px;line-height:1.6;color:#6c757d">Capturas el monto recibido y el sistema te dice el cambio exacto. Menos errores en el mostrador.</div>
       </div>
       <div data-reveal="1">
-        <div style="font-family:'Playfair Display',serif;font-size:19px;color:#8B0000;margin-bottom:6px">Cierre de turno en un clic</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:19px;color:#8b243a;margin-bottom:6px">Cierre de turno en un clic</div>
         <div style="font-size:14.5px;line-height:1.6;color:#6c757d">Efectivo, tarjeta, ingresos y retiros sumados por turno, con el monto real contado.</div>
       </div>
     </div>
@@ -176,7 +183,7 @@
   {{-- ================================================================ MÓDULOS --}}
   <section id="modulos" class="lp-section-pad" style="max-width:1180px;margin:0 auto;padding:86px 28px">
     <div data-reveal="1" style="max-width:620px;margin-bottom:44px">
-      <h2 class="lp-h2" style="font-family:'Playfair Display',serif;font-size:40px;color:#8B0000;margin:0 0 14px;line-height:1.15">
+      <h2 class="lp-h2" style="font-family:'DM Sans',sans-serif;font-size:40px;color:#8b243a;margin:0 0 14px;line-height:1.15">
         Todo lo que hace tu negocio, en un solo lugar
       </h2>
       <p style="font-size:17px;line-height:1.65;color:#6c757d;margin:0">
@@ -193,9 +200,9 @@
         ['📊','Reportes','Gráficas de ventas por día, semana o mes, con tabla detallada por fecha y método de pago.'],
         ['🏷️','Catálogos y usuarios','Categorías, marcas y proveedores. Alta, edición y desactivación de cajeros por el administrador.'],
       ] as [$icon, $titulo, $texto])
-      <div class="lp-modulo-card" data-reveal="1" style="background:#fff;border-radius:14px;padding:28px 26px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid #8B0000">
+      <div class="lp-modulo-card" data-reveal="1" style="background:#fff;border-radius:14px;padding:28px 26px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid #8b243a">
         <div style="font-size:26px;margin-bottom:12px">{{ $icon }}</div>
-        <div style="font-family:'Playfair Display',serif;font-size:20px;color:#8B0000;font-weight:700;margin-bottom:8px">{{ $titulo }}</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:20px;color:#8b243a;font-weight:700;margin-bottom:8px">{{ $titulo }}</div>
         <div style="font-size:14.5px;line-height:1.65;color:#6c757d">{{ $texto }}</div>
       </div>
       @endforeach
@@ -207,7 +214,7 @@
     <div class="lp-pos-grid lp-section-pad" style="max-width:1180px;margin:0 auto;padding:86px 28px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:56px;align-items:center">
       <div data-reveal="1">
         <div style="font-size:13px;font-weight:600;letter-spacing:0.4px;text-transform:uppercase;color:#ff7043;margin-bottom:14px">Punto de venta</div>
-        <h2 class="lp-h2" style="font-family:'Playfair Display',serif;font-size:38px;color:#8B0000;margin:0 0 18px;line-height:1.15">
+        <h2 class="lp-h2" style="font-family:'DM Sans',sans-serif;font-size:38px;color:#8b243a;margin:0 0 18px;line-height:1.15">
           Cobrar es escribir el nombre y dar clic
         </h2>
         <p style="font-size:17px;line-height:1.65;color:#6c757d;margin:0 0 26px">
@@ -228,7 +235,7 @@
   {{-- ================================================================ ROLES --}}
   <section id="roles" class="lp-section-pad" style="max-width:1180px;margin:0 auto;padding:86px 28px">
     <div data-reveal="1" style="max-width:620px;margin-bottom:44px">
-      <h2 class="lp-h2" style="font-family:'Playfair Display',serif;font-size:40px;color:#8B0000;margin:0 0 14px;line-height:1.15">
+      <h2 class="lp-h2" style="font-family:'DM Sans',sans-serif;font-size:40px;color:#8b243a;margin:0 0 14px;line-height:1.15">
         Cada quien ve lo que le toca
       </h2>
       <p style="font-size:17px;line-height:1.65;color:#6c757d;margin:0">
@@ -236,10 +243,10 @@
       </p>
     </div>
     <div class="lp-grid-2 lp-roles-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-      <div class="lp-rol-card" data-reveal="1" style="background:#8B0000;color:#fff;border-radius:16px;padding:36px 34px">
+      <div class="lp-rol-card" data-reveal="1" style="background:#8b243a;color:#fff;border-radius:16px;padding:36px 34px">
         <div style="font-size:28px;margin-bottom:12px">👑</div>
-        <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;margin-bottom:8px">Administrador</div>
-        <p style="font-size:15px;line-height:1.6;color:#ffcccc;margin:0 0 22px">Acceso total al sistema y a la información del negocio.</p>
+        <div style="font-family:'DM Sans',sans-serif;font-size:24px;font-weight:700;margin-bottom:8px">Administrador</div>
+        <p style="font-size:15px;line-height:1.6;color:#eed8de;margin:0 0 22px">Acceso total al sistema y a la información del negocio.</p>
         <div style="display:flex;flex-direction:column;gap:11px;font-size:15px">
           <div style="display:flex;gap:10px">🍬 <span>Productos, precios y stock mínimo</span></div>
           <div style="display:flex;gap:10px">📊 <span>Reportes y gráficas por día, semana o mes</span></div>
@@ -248,9 +255,9 @@
           <div style="display:flex;gap:10px">📝 <span>Categorías, marcas y proveedores</span></div>
         </div>
       </div>
-      <div class="lp-rol-card" data-reveal="1" style="background:#fff;border:2px solid #8B0000;border-radius:16px;padding:36px 34px">
+      <div class="lp-rol-card" data-reveal="1" style="background:#fff;border:2px solid #8b243a;border-radius:16px;padding:36px 34px">
         <div style="font-size:28px;margin-bottom:12px">🧑‍💼</div>
-        <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#8B0000;margin-bottom:8px">Cajero</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:24px;font-weight:700;color:#8b243a;margin-bottom:8px">Cajero</div>
         <p style="font-size:15px;line-height:1.6;color:#6c757d;margin:0 0 22px">Solo lo necesario para atender al cliente y cuadrar su turno.</p>
         <div style="display:flex;flex-direction:column;gap:11px;font-size:15px;color:#3d3d3d">
           <div style="display:flex;gap:10px">🛒 <span>Punto de venta y cobro</span></div>
@@ -266,7 +273,7 @@
   <section style="background:#fff;border-top:1px solid #ececec">
     <div class="lp-section-pad" style="max-width:1180px;margin:0 auto;padding:86px 28px">
       <div data-reveal="1" style="max-width:620px;margin-bottom:40px">
-        <h2 class="lp-h2" style="font-family:'Playfair Display',serif;font-size:40px;color:#8B0000;margin:0 0 14px;line-height:1.15">
+        <h2 class="lp-h2" style="font-family:'DM Sans',sans-serif;font-size:40px;color:#8b243a;margin:0 0 14px;line-height:1.15">
           Así se ve por dentro
         </h2>
         <p style="font-size:17px;line-height:1.65;color:#6c757d;margin:0">
@@ -280,9 +287,9 @@
       </div>
 
       {{-- Fallback para móvil: texto descriptivo en lugar de la maqueta --}}
-      <div class="lp-mock-fallback" style="display:none;margin-bottom:24px;padding:28px;background:#fff8f8;border-radius:14px;border-left:4px solid #8B0000;text-align:center">
+      <div class="lp-mock-fallback" style="display:none;margin-bottom:24px;padding:28px;background:#fff8f8;border-radius:14px;border-left:4px solid #8b243a;text-align:center">
         <div style="font-size:32px;margin-bottom:10px">📊</div>
-        <div style="font-family:'Playfair Display',serif;font-size:20px;color:#8B0000;margin-bottom:8px">Panel de control completo</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:20px;color:#8b243a;margin-bottom:8px">Panel de control completo</div>
         <div style="font-size:15px;color:#6c757d;line-height:1.6">Tablero con ventas del día, productos más vendidos, gráfica semanal y últimas transacciones — todo en una sola pantalla.</div>
       </div>
 
@@ -291,7 +298,7 @@
         {{-- Caja del turno --}}
         <div data-reveal="1" style="border-radius:16px;overflow:hidden;box-shadow:0 12px 34px rgba(0,0,0,0.1);background:#f4f4f5;padding:22px">
           <div style="background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden">
-            <div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;font-family:'Playfair Display',serif;color:#8B0000;font-size:16.8px;font-weight:700">💵 Caja del turno</div>
+            <div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;font-family:'DM Sans',sans-serif;color:#8b243a;font-size:16.8px;font-weight:700">💵 Caja del turno</div>
             <div style="padding:18px">
               <div class="lp-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
                 <div style="border-left:4px solid #28a745;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);padding:12px 14px">
@@ -304,8 +311,8 @@
                 </div>
               </div>
               <div style="display:flex;gap:10px">
-                <div style="flex:1;background:#8B0000;color:#fff;border-radius:10px;padding:11px;text-align:center;font-weight:600;font-size:14.4px">＋ Registrar ingreso</div>
-                <div style="flex:1;border:1.5px solid #8B0000;color:#8B0000;border-radius:10px;padding:11px;text-align:center;font-weight:600;font-size:14.4px">－ Retiro de efectivo</div>
+                <div style="flex:1;background:#8b243a;color:#fff;border-radius:10px;padding:11px;text-align:center;font-weight:600;font-size:14.4px">＋ Registrar ingreso</div>
+                <div style="flex:1;border:1.5px solid #8b243a;color:#8b243a;border-radius:10px;padding:11px;text-align:center;font-weight:600;font-size:14.4px">－ Retiro de efectivo</div>
               </div>
             </div>
           </div>
@@ -314,7 +321,7 @@
         {{-- Corte de turno --}}
         <div data-reveal="1" style="border-radius:16px;overflow:hidden;box-shadow:0 12px 34px rgba(0,0,0,0.1);background:#f4f4f5;padding:22px">
           <div style="background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden">
-            <div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;font-family:'Playfair Display',serif;color:#8B0000;font-size:16.8px;font-weight:700">🧾 Corte de turno</div>
+            <div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;font-family:'DM Sans',sans-serif;color:#8b243a;font-size:16.8px;font-weight:700">🧾 Corte de turno</div>
             <table style="width:100%;border-collapse:collapse">
               <thead>
                 <tr>
@@ -335,8 +342,8 @@
                 </tr>
                 @endforeach
                 <tr>
-                  <td style="padding:12px 18px;font-size:15px;font-weight:700;color:#8B0000">Total del turno</td>
-                  <td style="padding:12px 18px;font-size:18px;font-weight:700;text-align:right;color:#8B0000">$4,600.50</td>
+                  <td style="padding:12px 18px;font-size:15px;font-weight:700;color:#8b243a">Total del turno</td>
+                  <td style="padding:12px 18px;font-size:18px;font-weight:700;text-align:right;color:#8b243a">$4,600.50</td>
                 </tr>
               </tbody>
             </table>
@@ -347,18 +354,18 @@
   </section>
 
   {{-- ================================================================ CTA FINAL --}}
-  <section id="acceso" style="background:#8B0000;color:#fff;position:relative;overflow:hidden">
+  <section id="acceso" style="background:#8b243a;color:#fff;position:relative;overflow:hidden">
     <div style="position:absolute;width:400px;height:400px;border-radius:50%;border:50px solid rgba(255,255,255,0.06);bottom:-180px;left:-100px;pointer-events:none"></div>
     <div style="max-width:760px;margin:0 auto;padding:88px 28px;text-align:center;position:relative">
       <div data-reveal="1">
-        <h2 class="lp-cta-h2" style="font-family:'Playfair Display',serif;font-size:42px;margin:0 0 16px;line-height:1.12">
+        <h2 class="lp-cta-h2" style="font-family:'DM Sans',sans-serif;font-size:42px;margin:0 0 16px;line-height:1.12">
           Empiece a cobrar hoy mismo
         </h2>
-        <p style="font-size:18px;line-height:1.6;color:#ffcccc;margin:0 auto 32px;max-width:30em">
+        <p style="font-size:18px;line-height:1.6;color:#eed8de;margin:0 auto 32px;max-width:30em">
           Cree su cuenta y cargue sus productos en unos minutos. Si ya tiene cuenta, entre directo al mostrador.
         </p>
         <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-          <a href="{{ route('register') }}" class="lp-btn"   style="background:#ff7043;color:#fff;text-decoration:none;padding:16px 30px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Registrarse gratis</a>
+          <a href="{{ route('register') }}" class="lp-btn"   style="background:#fff;color:#8b243a;text-decoration:none;padding:16px 30px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Registrarse gratis</a>
           <a href="{{ route('login') }}"    class="lp-ghost" style="border:1.5px solid rgba(255,255,255,0.35);color:#fff;text-decoration:none;padding:16px 30px;border-radius:12px;font-weight:600;font-size:16px;white-space:nowrap">Ya tengo cuenta</a>
         </div>
       </div>
@@ -366,12 +373,9 @@
   </section>
 
   {{-- ================================================================ FOOTER --}}
-  <footer style="background:#580000;color:#ffcccc">
+  <footer style="background:#551c2a;color:#eed8de">
     <div class="lp-footer-inner" style="max-width:1180px;margin:0 auto;padding:28px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-size:14px">
-      <div style="display:flex;align-items:center;gap:9px">
-        <span style="font-size:18px">🍬</span>
-        <span style="font-family:'Playfair Display',serif;color:#fff;font-size:17px">Dulcería POS</span>
-      </div>
+      <x-platform-logo :dark="true" />
       <div>Hecho con ❤️ en México 🇲🇽 · Victor Ramirez Mendoza</div>
     </div>
   </footer>

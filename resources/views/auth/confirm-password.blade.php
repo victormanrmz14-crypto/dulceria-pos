@@ -1,27 +1,14 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
+<x-auth.layout title="Confirmar contraseña">
+    <div class="auth-heading-icon"><x-auth.icon name="lock" /></div>
+    <div class="auth-intro">
+        <h1>Confirma tu contraseña</h1>
+        <p>Para continuar en esta área, confirma la contraseña de tu cuenta.</p>
     </div>
-
-    <form method="POST" action="{{ route('password.confirm') }}">
+    <x-auth.feedback />
+    <form method="POST" action="{{ route('password.confirm') }}" class="auth-form" data-auth-form>
         @csrf
-
-        <!-- Password -->
-        <div>
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <div class="flex justify-end mt-4">
-            <x-primary-button>
-                {{ __('Confirm') }}
-            </x-primary-button>
-        </div>
+        <x-auth.field name="password" label="Contraseña" type="password" autocomplete="current-password" required />
+        <x-auth.submit loading="Confirmando…">Confirmar contraseña</x-auth.submit>
     </form>
-</x-guest-layout>
+    <a href="{{ route('login') }}" class="auth-back"><x-auth.icon name="arrow-left" /> Volver al inicio de sesión</a>
+</x-auth.layout>
