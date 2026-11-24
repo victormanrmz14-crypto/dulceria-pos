@@ -3,7 +3,7 @@ import {
     House, CirclePlus, Menu, LayoutDashboard, ShoppingCart, Banknote, ReceiptText, Package, Users,
     ChartNoAxesCombined, Tags, Truck, Settings, LogOut, PanelLeft,
     ChevronDown, ArrowUpRight, ArrowRight, X, CircleCheck, TriangleAlert,
-    Info, ShieldCheck, Store, CreditCard, LoaderCircle, Candy, Inbox, CalendarDays,
+    Info, ShieldCheck, Store, CreditCard, LoaderCircle, Candy, Inbox, CalendarDays, Printer,
 } from '@lucide/vue';
 
 defineOptions({ inheritAttrs: false });
@@ -17,7 +17,7 @@ const icons = {
     chevron: ChevronDown, external: ArrowUpRight, arrow: ArrowRight, close: X,
     success: CircleCheck, warning: TriangleAlert, info: Info, shield: ShieldCheck,
     store: Store, card: CreditCard, loading: LoaderCircle, candy: Candy,
-    inbox: Inbox, calendar: CalendarDays,
+    inbox: Inbox, calendar: CalendarDays, printer: Printer,
 };
 </script>
 
