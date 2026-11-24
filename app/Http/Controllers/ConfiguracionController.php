@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Tenant;
 use App\Services\AuditLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Throwable;
 
 class ConfiguracionController extends Controller
 {
@@ -25,38 +30,88 @@ class ConfiguracionController extends Controller
 
     public function guardarApariencia(Request $request)
     {
+        // PHP can reject the upload before Laravel's image/max rules run.
+        $upload = $request->file('logo');
+        if ($upload && ! $upload->isValid()) {
+            $message = match ($upload->getError()) {
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'El logotipo debe pesar como máximo 2 MB.',
+                UPLOAD_ERR_PARTIAL => 'La carga del logotipo se interrumpió. Selecciona el archivo e inténtalo de nuevo.',
+                default => 'El servidor no pudo recibir el logotipo. Inténtalo de nuevo.',
+            };
+            throw ValidationException::withMessages(['logo' => $message]);
+        }
+
         $request->validate([
             'paleta'        => 'nullable|array',
             'logo'          => 'nullable|image|max:2048',
             'eliminar_logo' => 'nullable|boolean',
+        ], [
+            'logo.uploaded' => 'El servidor no pudo recibir el logotipo. Usa una imagen de hasta 2 MB e inténtalo de nuevo.',
+            'logo.image' => 'Selecciona una imagen JPG, PNG, WebP, GIF o BMP válida.',
+            'logo.max' => 'El logotipo debe pesar como máximo 2 MB.',
         ]);
 
         $tenant = auth()->user()->tenant;
-        $config = $tenant->configuracion ?? [];
-
-        if ($request->has('paleta') && is_array($request->paleta)) {
-            $config['colores'] = array_intersect_key(
-                $request->paleta,
-                array_flip(['primario', 'medio', 'oscuro', 'hover', 'acento', 'texto', 'fondo'])
-            );
-        }
-
-        if ($request->boolean('eliminar_logo') && !empty($config['logo'])) {
-            Storage::disk('public')->delete($config['logo']);
-            $config['logo'] = null;
-        }
-
+        $path = null;
         if ($request->hasFile('logo')) {
-            if (!empty($config['logo'])) {
-                Storage::disk('public')->delete($config['logo']);
+            try {
+                $path = $request->file('logo')->store("logos/{$tenant->id}", 'public');
+            } catch (Throwable $exception) {
+                report($exception);
+                throw ValidationException::withMessages(['logo' => 'No se pudo guardar el logotipo. El anterior se conserva. Inténtalo de nuevo.']);
             }
-            $config['logo'] = $request->file('logo')->store("logos/{$tenant->id}", 'public');
+            if ($path === false) {
+                throw ValidationException::withMessages(['logo' => 'No se pudo guardar el logotipo. El anterior se conserva. Inténtalo de nuevo.']);
+            }
         }
 
-        $tenant->update(['configuracion' => $config]);
+        try {
+            $previous = DB::transaction(function () use ($request, $tenant, $path) {
+                $current = Tenant::query()->lockForUpdate()->findOrFail($tenant->id);
+                $config = $current->configuracion ?? [];
+                $previous = $config['logo'] ?? null;
+                if ($request->has('paleta') && is_array($request->paleta)) {
+                    $config['colores'] = array_intersect_key($request->paleta,
+                        array_flip(['primario', 'medio', 'oscuro', 'hover', 'acento', 'texto', 'fondo']));
+                }
+                if ($path !== null || $request->boolean('eliminar_logo')) {
+                    $config['logo'] = $path;
+                }
+                $current->update(['configuracion' => $config]);
+
+                return $previous;
+            });
+        } catch (Throwable $exception) {
+            $this->deleteLogoFile($tenant->id, $path);
+            report($exception);
+            throw ValidationException::withMessages([
+                $path !== null || $request->boolean('eliminar_logo') ? 'logo' : 'paleta' =>
+                    'No se pudo guardar la apariencia. Los cambios anteriores se conservan. Inténtalo de nuevo.',
+            ]);
+        }
+
+        // Only retire the previous file after its replacement/removal is persisted.
+        if ($path !== null || $request->boolean('eliminar_logo')) {
+            $this->deleteLogoFile($tenant->id, $previous);
+        }
         AuditLogger::log('config.apariencia', 'Apariencia actualizada', $tenant->id);
 
-        return back()->with('success', 'Apariencia guardada correctamente.');
+        return back()->with('success', $path !== null ? 'Apariencia y logotipo guardados correctamente.'
+            : ($request->boolean('eliminar_logo') ? 'Logotipo eliminado correctamente.' : 'Apariencia guardada correctamente.'));
+    }
+
+    private function deleteLogoFile(int $tenantId, ?string $path): void
+    {
+        if (! $path || ! str_starts_with($path, "logos/{$tenantId}/") || str_contains($path, '..')) {
+            return;
+        }
+        try {
+            if (! Storage::disk('public')->delete($path)) {
+                Log::warning('No se pudo retirar un logotipo anterior.', ['tenant_id' => $tenantId]);
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 
     public function guardarNegocio(Request $request)

@@ -50,6 +50,7 @@ const seleccionarPaleta = (p) => {
 const aparienciaForm = useForm({ paleta: null, logo: null, eliminar_logo: false });
 const logoInput     = ref(null);
 const previewLogo = ref(props.logoUrl ?? null);
+const invalidLogoSelection = ref(false);
 let localLogoUrl;
 const releaseLogoPreview = () => { if (localLogoUrl) URL.revokeObjectURL(localLogoUrl); localLogoUrl = null; };
 onBeforeUnmount(releaseLogoPreview);
@@ -57,6 +58,18 @@ onBeforeUnmount(releaseLogoPreview);
 const onLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+        aparienciaForm.clearErrors('logo');
+        aparienciaForm.recentlySuccessful = false;
+        aparienciaForm.eliminar_logo = false;
+        invalidLogoSelection.value = false;
+        if (file.size > 2 * 1024 * 1024 || (file.type && !['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/x-ms-bmp'].includes(file.type))) {
+            descartarLogo();
+            invalidLogoSelection.value = true;
+            aparienciaForm.setError('logo', file.size > 2 * 1024 * 1024
+                ? 'El logotipo debe pesar como máximo 2 MB. El logotipo guardado se conserva.'
+                : 'Selecciona una imagen JPG, PNG, WebP, GIF o BMP válida.');
+            return;
+        }
         aparienciaForm.logo = file;
         releaseLogoPreview();
         localLogoUrl = URL.createObjectURL(file);
@@ -64,7 +77,19 @@ const onLogoChange = (e) => {
     }
 };
 
+const descartarLogo = () => {
+    aparienciaForm.logo = null;
+    aparienciaForm.eliminar_logo = false;
+    aparienciaForm.clearErrors('logo');
+    aparienciaForm.recentlySuccessful = false;
+    invalidLogoSelection.value = false;
+    if (logoInput.value) logoInput.value.value = '';
+    releaseLogoPreview();
+    previewLogo.value = props.logoUrl ?? null;
+};
+
 const guardarApariencia = () => {
+    if (invalidLogoSelection.value) { focusError(); return; }
     aparienciaForm.paleta = paletaSeleccionada.value;
     aparienciaForm.post('/configuracion/apariencia', {
         forceFormData: true,
@@ -81,12 +106,14 @@ const guardarApariencia = () => {
 
 const eliminarLogo = () => {
     if (!confirm('¿Eliminar el logo actual?')) return;
+    descartarLogo();
+    aparienciaForm.paleta = null;
     aparienciaForm.eliminar_logo = true;
     aparienciaForm.logo          = null;
     previewLogo.value            = null;
     aparienciaForm.post('/configuracion/apariencia', { forceFormData: true,
-        onSuccess: () => { aparienciaForm.eliminar_logo = false; releaseLogoPreview(); },
-        onError: () => { previewLogo.value = props.logoUrl ?? null; focusError(); }
+        onSuccess: () => { aparienciaForm.eliminar_logo = false; previewLogo.value = props.logoUrl ?? null; releaseLogoPreview(); },
+        onError: () => { aparienciaForm.eliminar_logo = false; previewLogo.value = props.logoUrl ?? null; focusError(); }
     });
 };
 
@@ -111,7 +138,7 @@ const ticketForm = useForm({
 
 
 const previewTheme = computed(() => createPremiumTheme(paletaSeleccionada.value));
-const appearanceDirty = computed(() => !!aparienciaForm.logo || paletaSeleccionada.value.primario !== paletaGuardada.value.primario);
+const appearanceDirty = computed(() => invalidLogoSelection.value || !!aparienciaForm.logo || paletaSeleccionada.value.primario !== paletaGuardada.value.primario);
 const businessFields = [
     { key: 'nombre_mostrar', label: 'Nombre comercial', max: 100, type: 'text', placeholder: 'Nombre de tu dulcería' },
     { key: 'rfc', label: 'RFC', max: 20, type: 'text', placeholder: 'RFC del negocio' },
@@ -135,8 +162,8 @@ const businessFields = [
                         </fieldset>
                         <figure class="appearance-preview" :style="previewTheme"><figcaption>Vista previa local</figcaption><div class="brand-preview"><div class="brand-preview__brand"><img v-if="previewLogo" :src="previewLogo" alt="" width="32" height="32" /><span v-else class="brand-preview__symbol"><UiIcon name="candy" :size="20" /></span><strong>{{ negocioForm.nombre_mostrar || 'Dulcería POS' }}</strong></div><div class="brand-preview__nav"><span><UiIcon name="house" :size="16" />Inicio</span><span><UiIcon name="plus" :size="16" />Vender</span><span><UiIcon name="package" :size="16" />Productos</span><span class="brand-preview__active"><UiIcon name="settings" :size="16" />Configuración</span></div></div><p>Los cambios se aplicarán al guardar.</p></figure>
                     </div>
-                    <div class="settings-panel__body logo-section"><div class="logo-preview"><img v-if="previewLogo" :src="previewLogo" alt="Vista previa del logotipo del negocio" width="88" height="88" /><template v-else><UiIcon name="store" :size="28" /><span>Sin logotipo</span></template></div><div class="logo-controls"><label for="logoInput" class="settings-title">Logotipo del negocio</label><p id="logo-help" class="settings-help">Aparece en la navegación y en los tickets, si lo habilitas.</p><input id="logoInput" ref="logoInput" type="file" accept="image/*" class="settings-file" :disabled="aparienciaForm.processing" :aria-invalid="aparienciaForm.errors.logo ? 'true' : undefined" :aria-describedby="`logo-help logo-format${aparienciaForm.errors.logo ? ' logo-error' : ''}`" @change="onLogoChange" /><p id="logo-format" class="settings-help logo-format">PNG, JPG o WebP · Máximo 2 MB</p><p v-if="aparienciaForm.logo" class="settings-help">Imagen seleccionada sin guardar.</p><p v-if="aparienciaForm.errors.logo" id="logo-error" class="settings-error" role="alert"><UiIcon name="warning" :size="16" />{{ aparienciaForm.errors.logo }}</p><button v-if="previewLogo" type="button" class="settings-text-action" :disabled="aparienciaForm.processing" @click="eliminarLogo">Eliminar logotipo</button></div></div>
-                    <footer class="settings-footer"><p class="settings-status" :class="{ 'settings-status--success': !appearanceDirty && aparienciaForm.recentlySuccessful }" role="status"><UiIcon :name="!appearanceDirty && aparienciaForm.recentlySuccessful ? 'success' : 'info'" :size="16" />{{ appearanceDirty ? 'Hay cambios sin guardar' : aparienciaForm.recentlySuccessful ? 'Apariencia guardada' : 'Apariencia actual del negocio' }}</p><UiButton type="submit" :loading="aparienciaForm.processing">{{ aparienciaForm.processing ? 'Guardando…' : 'Guardar apariencia' }}</UiButton></footer>
+                    <div class="settings-panel__body logo-section"><div class="logo-preview"><img v-if="previewLogo" :src="previewLogo" alt="Vista previa del logotipo del negocio" width="88" height="88" /><template v-else><UiIcon name="store" :size="28" /><span>Sin logotipo</span></template></div><div class="logo-controls"><label for="logoInput" class="settings-title">Logotipo del negocio</label><p id="logo-help" class="settings-help">Aparece en la navegación y en los tickets, si lo habilitas.</p><input id="logoInput" ref="logoInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,.bmp" name="logo" class="settings-file" :disabled="aparienciaForm.processing" :aria-invalid="aparienciaForm.errors.logo ? 'true' : undefined" :aria-describedby="`logo-help logo-format${aparienciaForm.errors.logo ? ' logo-error' : ''}`" @change="onLogoChange" /><p id="logo-format" class="settings-help logo-format">JPG, PNG, WebP, GIF o BMP · Máximo 2 MB</p><p class="settings-help logo-state" role="status">{{ aparienciaForm.logo ? `Imagen seleccionada: ${aparienciaForm.logo.name}. Sin guardar.` : props.logoUrl ? 'Logotipo guardado.' : 'No hay un logotipo guardado.' }}</p><p v-if="aparienciaForm.errors.logo" class="settings-help">No se guardó una imagen nueva. El logotipo guardado se conserva.</p><button v-if="aparienciaForm.logo || invalidLogoSelection" type="button" class="settings-text-action" :disabled="aparienciaForm.processing" @click="descartarLogo">Descartar selección</button><p v-if="aparienciaForm.errors.logo" id="logo-error" class="settings-error" role="alert"><UiIcon name="warning" :size="16" />{{ aparienciaForm.errors.logo }}</p><button v-if="props.logoUrl" type="button" class="settings-text-action" :disabled="aparienciaForm.processing" @click="eliminarLogo">Eliminar logotipo</button></div></div>
+                    <footer class="settings-footer"><p class="settings-status" :class="{ 'settings-status--success': !appearanceDirty && aparienciaForm.recentlySuccessful }" role="status"><UiIcon :name="!appearanceDirty && aparienciaForm.recentlySuccessful ? 'success' : 'info'" :size="16" />{{ aparienciaForm.errors.logo || aparienciaForm.errors.paleta ? 'No se guardaron los cambios' : appearanceDirty ? 'Hay cambios sin guardar' : aparienciaForm.recentlySuccessful ? 'Apariencia guardada' : 'Apariencia actual del negocio' }}</p><UiButton type="submit" :loading="aparienciaForm.processing">{{ aparienciaForm.processing ? 'Guardando…' : 'Guardar apariencia' }}</UiButton></footer>
                 </form>
             </section>
 
@@ -154,6 +181,7 @@ const businessFields = [
 </template>
 
 <style scoped>
+.logo-state { overflow-wrap: anywhere; }
 .palette-fieldset, .ticket-options { min-width: 0; padding: 0; margin: 0; border: 0; }
 .palette-fieldset legend, .ticket-options legend { float: none; width: auto; }
 .appearance-grid { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 28px; align-items: start; }
