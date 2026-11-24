@@ -82,6 +82,7 @@ Route::middleware(['auth', 'solo.superadmin'])->prefix('superadmin')->name('supe
 
     // Panel general
     Route::get('/dashboard', [SuperAdminDashboard::class, 'index'])->name('dashboard');
+    Route::get('/atencion', [\App\Http\Controllers\SuperAdmin\AtencionController::class, 'index'])->name('atencion');
 
     // Monitoreo
     Route::get('/monitoreo', [MonitoreoController::class, 'index'])->name('monitoreo');

@@ -19,6 +19,7 @@ const titles = {
     comunicacion: "Comunicación",
     soporte: "Soporte",
     monitoreo: "Monitoreo",
+    atencion: "Centro de atención",
 };
 const title = computed(
     () => titles[page.url.split("/")[2]?.split("?")[0]] || "Plataforma",

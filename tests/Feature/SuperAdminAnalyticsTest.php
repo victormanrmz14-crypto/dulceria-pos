@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Anuncio;
 use App\Models\AuditLog;
+use App\Models\Producto;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Venta;
@@ -80,6 +81,9 @@ class SuperAdminAnalyticsTest extends TestCase
         $expired = $this->tenant('Plan vencido', plan: 'pro');
         $this->admin($expired);
         $expired->update(['plan_expira_en' => now()]);
+        foreach ([$recent, $old, $never, $disabled, $expired] as $tenant) {
+            Producto::create(['tenant_id' => $tenant->id, 'nombre' => 'Producto registrado']);
+        }
 
         return compact('recent', 'old', 'never', 'new', 'disabled', 'expired');
     }
@@ -88,7 +92,7 @@ class SuperAdminAnalyticsTest extends TestCase
     {
         $this->get('/superadmin/dashboard')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('SuperAdmin/Dashboard')->where('kpis', ['registradas' => 0, 'habilitadas' => 0,
-                'con_ventas' => 0, 'nuevas' => 0, 'atencion' => 0, 'ventas' => 0, 'importe' => 0])
+                'con_ventas' => 0, 'sin_primera_venta' => 0, 'nuevas' => 0, 'atencion' => 0, 'ventas' => 0, 'importe' => 0])
             ->has('grafica', 30)->where('grafica.0.fecha', '2026-11-02')
             ->where('grafica.29.fecha', '2026-12-01')->where('grafica.0.ventas', 0)->has('alertas', 0));
     }

@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Producto;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\SuperAdmin\Analytics;
-use Carbon\CarbonImmutable;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,31 +18,52 @@ class TenantDetalleController extends Controller
 {
     public function show(Tenant $tenant, Analytics $analytics): Response
     {
-        $usuarios = User::where('tenant_id', $tenant->id);
-        $admin = (clone $usuarios)->where('rol', 'admin')->orderByDesc('activo')->orderBy('created_at')->first();
+        try {
+            return $this->detail($tenant, $analytics);
+        } catch (QueryException $exception) {
+            report($exception);
+
+            return Inertia::render('SuperAdmin/TenantDetalle', [
+                'tenant' => $this->identity($tenant), 'stats' => null, 'admin' => null,
+                'ultimasVentas' => null, 'grafica' => null, 'periodo' => $analytics->period(), 'operacion' => null,
+            ]);
+        }
+    }
+
+    private function identity(Tenant $tenant): array
+    {
+        return [
+            'id' => $tenant->id, 'nombre' => $tenant->nombre, 'activo' => $tenant->activo,
+            'plan' => $tenant->plan, 'plan_label' => $tenant->planLabel(),
+            'plan_expira_en' => $tenant->plan_expira_en?->isoFormat('D MMM YYYY'),
+            'notas' => $tenant->notas, 'creado_en' => $tenant->created_at?->isoFormat('D MMM YYYY'),
+            'dias_trial' => $tenant->diasRestantesTrial(),
+        ];
+    }
+
+    private function detail(Tenant $tenant, Analytics $analytics): Response
+    {
+        $operationalTenant = $analytics->tenants()->findOrFail($tenant->id);
+        $admin = $operationalTenant->users->first();
         $sales = $analytics->sales()->where('tenant_id', $tenant->id);
-        $ventasTotal = (clone $sales)->count();
-        $ultimaVenta = (clone $sales)->max('created_at');
-        $period = (clone $sales)->where('created_at', '>=', $analytics->start)->selectRaw('COUNT(*) as ventas, COALESCE(SUM(total), 0) as importe')->first();
-        $productos = Producto::where('tenant_id', $tenant->id)->count();
+        $summary = (clone $sales)->selectRaw(
+            'COUNT(*) as historicas, COALESCE(SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END), 0) as ventas_7, COALESCE(SUM(CASE WHEN created_at >= ? THEN total ELSE 0 END), 0) as importe_30',
+            [$analytics->now->subDays(config('superadmin.operations.short_activity_days') - 1)->startOfDay(), $analytics->start]
+        )->first();
         $ultimasVentas = (clone $sales)->with('usuario')->latest()->orderByDesc('id')->limit(8)->get()->map(fn ($v) => [
             'id' => $v->id, 'folio' => $v->folio, 'total' => (float) $v->total,
             'metodo_pago' => $v->metodo_pago, 'cajero' => $v->usuario?->nombre ?? '—',
             'fecha' => $v->created_at->isoFormat('D MMM YYYY, HH:mm'),
         ]);
         $grafica = $analytics->series($tenant->id);
+        $activation = $analytics->activation($operationalTenant);
 
         return Inertia::render('SuperAdmin/TenantDetalle', [
-            'tenant' => [
-                'id' => $tenant->id,
-                'nombre' => $tenant->nombre,
-                'activo' => $tenant->activo,
-                'plan' => $tenant->plan,
-                'plan_label' => $tenant->planLabel(),
-                'plan_expira_en' => $tenant->plan_expira_en?->isoFormat('D MMM YYYY'),
-                'notas' => $tenant->notas,
-                'creado_en' => $tenant->created_at->isoFormat('D MMM YYYY'),
-                'dias_trial' => $tenant->diasRestantesTrial(),
+            'tenant' => $this->identity($tenant),
+            'operacion' => [
+                'activacion' => $activation,
+                'senales' => $analytics->signals($operationalTenant),
+                'actividad' => $analytics->row($operationalTenant)['actividad'],
             ],
             'admin' => $admin ? [
                 'id' => $admin->id,
@@ -52,12 +72,15 @@ class TenantDetalleController extends Controller
                 'activo' => $admin->activo,
             ] : null,
             'stats' => [
-                'usuarios' => $usuarios->count(),
-                'productos' => $productos,
-                'ventas_30' => (int) $period->ventas,
-                'ventas_total' => $ventasTotal,
-                'importe_30' => round((float) $period->importe, 2),
-                'ultima_venta' => $ultimaVenta ? CarbonImmutable::parse($ultimaVenta)->isoFormat('D MMM YYYY, HH:mm') : null,
+                'usuarios' => (int) $operationalTenant->users_count,
+                'productos' => (int) $operationalTenant->productos_count,
+                'ventas_30' => (int) $operationalTenant->ventas_30,
+                'ventas_7' => (int) $summary->ventas_7,
+                'primera_venta' => $analytics->date($operationalTenant->primera_venta),
+                'primer_corte' => $activation[3]['evidencia'],
+                'ventas_total' => (int) $summary->historicas,
+                'importe_30' => round((float) $summary->importe_30, 2),
+                'ultima_venta' => $analytics->date($operationalTenant->ultima_venta),
             ],
             'ultimasVentas' => $ultimasVentas->values(),
             'grafica' => $grafica,

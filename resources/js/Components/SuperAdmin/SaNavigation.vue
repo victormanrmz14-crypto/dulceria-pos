@@ -21,6 +21,7 @@ const groups = [
     {
         title: "Operaciones",
         links: [
+            ["atencion", "warning", "Centro de atención"],
             ["auditoria", "shield", "Auditoría"],
             ["comunicacion", "info", "Comunicación"],
             ["soporte", "settings", "Soporte"],
