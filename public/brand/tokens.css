@@ -1,0 +1,28 @@
+@font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-variable.ttf') format('truetype');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+}
+
+@layer brand {
+/* Platform identity only: never overrides a tenant's configured theme. */
+.platform-brand {
+    --brand: #8b243a;
+    --brand-hover: #6f1d30;
+    --brand-soft: #f8eff1;
+    --canvas: #f7f8fa;
+    --surface: #ffffff;
+    --text: #202126;
+    --muted: #666973;
+    --border: #dee0e5;
+    --control-border: #858892;
+    --danger: #b42318;
+    --success: #166534;
+    font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.platform-logo { display: inline-flex; align-items: center; flex-shrink: 0; }
+.platform-logo img { display: block; width: 206px; max-width: 100%; height: auto; }
+}
