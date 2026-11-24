@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '../Layouts/AppLayout.vue';
 import StatCard from '../Components/StatCard.vue';
+import CashierDashboard from '../Components/Dashboard/CashierDashboard.vue';
 import Grafica from '../Components/Grafica.vue';
 import WelcomeModal from '../Components/WelcomeModal.vue';
 import UiIcon from '../Components/Ui/UiIcon.vue';
@@ -80,19 +81,11 @@ const opcionesGrafica = {
 </script>
 
 <template>
-    <AppLayout :premium="esAdmin" v-slot="{ theme }">
+    <AppLayout premium v-slot="{ theme }">
         <Head title="Inicio" />
 
-        <WelcomeModal v-if="mostrarBienvenida" :premium="esAdmin" :theme="theme" />
+        <WelcomeModal v-if="mostrarBienvenida" premium :theme="theme" :admin="esAdmin" />
 
-        <div v-if="!esAdmin" class="mb-4">
-            <h2 class="text-primary fs-3 mb-1">Bienvenido, {{ user?.nombre }} 👋</h2>
-            <p class="text-secondary small mb-0">
-                {{ new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) }}
-            </p>
-        </div>
-
-        <!-- Premium is deliberately opt-in for this administrator dashboard only. -->
         <template v-if="esAdmin">
             <div class="p-page-heading">
                 <div>
@@ -163,75 +156,8 @@ const opcionesGrafica = {
             </section>
         </template>
 
-        <!-- ======== CAJERO ======== -->
-        <template v-else>
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-md-3">
-                    <StatCard etiqueta="Mis ventas" :valor="misVentasHoy" sufijo="desde mi último corte" color="#8B0000" />
-                </div>
-                <div class="col-6 col-md-3">
-                    <StatCard etiqueta="Mi total" :valor="moneda(miTotalHoy)" sufijo="cobrado" color="#28a745" />
-                </div>
-                <div class="col-6 col-md-3">
-                    <StatCard etiqueta="💵 Efectivo" :valor="moneda(miEfectivo)" sufijo="en ventas" color="#17a2b8" />
-                </div>
-                <div class="col-6 col-md-3">
-                    <StatCard etiqueta="💳 Tarjeta" :valor="moneda(miTarjeta)" sufijo="en ventas" color="#6f42c1" />
-                </div>
-            </div>
-
-            <div class="row g-3 mb-4">
-                <div class="col-12 col-md-6">
-                    <Link href="/ventas" class="stat-card-link d-block">
-                        <div class="card border-0 text-white text-center" style="background: var(--dulce-rojo);">
-                            <div class="card-body py-4">
-                                <div class="fs-2">🛒</div>
-                                <div class="fw-bold fs-5">Ir al Punto de Venta</div>
-                            </div>
-                        </div>
-                    </Link>
-                </div>
-                <div class="col-12 col-md-6">
-                    <Link href="/caja" class="stat-card-link d-block">
-                        <div class="card border-0 text-center" style="border: 2px solid var(--dulce-rojo) !important;">
-                            <div class="card-body py-4">
-                                <div class="fs-2">🏦</div>
-                                <div class="fw-bold fs-5 text-primary">Mi Caja</div>
-                                <small class="text-secondary">
-                                    Efectivo esperado: {{ moneda(miEfectivoModal) }}
-                                </small>
-                            </div>
-                        </div>
-                    </Link>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header encabezado">Mis últimas ventas</div>
-                <div class="table-responsive">
-                    <table class="table mb-0 align-middle">
-                        <tbody>
-                            <tr v-for="v in misUltimasVentas" :key="v.id">
-                                <td>
-                                    <Link :href="`/ventas/${v.id}/ticket`" class="fw-bold text-primary text-decoration-none">
-                                        {{ v.folio }}
-                                    </Link>
-                                    <div class="text-secondary small">{{ v.hora }}</div>
-                                </td>
-                                <td class="text-end">
-                                    <span class="fw-bold text-primary">{{ moneda(v.total) }}</span>
-                                    <div class="text-secondary small">
-                                        {{ v.metodo_pago === 'efectivo' ? '💵 Efectivo' : '💳 Tarjeta' }}
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr v-if="!misUltimasVentas.length">
-                                <td class="text-center text-secondary small py-4">Sin ventas en este período.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </template>
+        <CashierDashboard v-else :nombre="user?.nombre" :fecha="fechaHoy" :mis-ventas-hoy="misVentasHoy"
+            :mi-total-hoy="miTotalHoy" :mi-efectivo="miEfectivo" :mi-tarjeta="miTarjeta"
+            :mi-efectivo-modal="miEfectivoModal" :ultimo-corte="ultimoCorte" :mis-ultimas-ventas="misUltimasVentas" />
     </AppLayout>
 </template>

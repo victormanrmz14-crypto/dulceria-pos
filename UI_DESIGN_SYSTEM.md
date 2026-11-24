@@ -4,7 +4,7 @@
 
 ## Alcance y activación
 
-La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4; las vistas de [Productos](resources/js/Pages/Productos/Index.vue) lo activan en Fase 2.6 dentro de sus permisos existentes; Caja y Cortes lo activan en Fase 2.7 y Reportes en Fase 2.8. Usuarios, Catálogos e Historial de Ventas lo activan en Fase 2.9; Configuración y el perfil personal, en Fase 2.10. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
+La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium se activa por página: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo utiliza para administrador y cajero desde la Fase 2.12; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4; las vistas de [Productos](resources/js/Pages/Productos/Index.vue) lo activan en Fase 2.6 dentro de sus permisos existentes; Caja y Cortes lo activan en Fase 2.7 y Reportes en Fase 2.8. Usuarios, Catálogos e Historial de Ventas lo activan en Fase 2.9; Configuración y el perfil personal, en Fase 2.10. El ticket de venta se incorpora al sistema premium en Fase 2.12. Los módulos fuera de ese alcance conservan su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
 
 Los componentes premium usan raíces `.pos-premium` locales: sidebar, header, Bottom Navigation y overlays reciben los tokens de marca sin activar esos estilos sobre el contenido heredado. `.tenant-shell` controla exclusivamente el espacio de navegación, el offset de notificaciones y el margen de scroll; `html:has(.tenant-shell)` reserva espacio de scroll en móvil. Los overlays teletransportados llevan su propia raíz premium. No se cambian resets, variables globales de Bootstrap ni Tailwind. La carga del CSS del piloto después de navegar no debe alterar pantallas vecinas.
 
@@ -80,7 +80,7 @@ Main: 32 px en escritorio, 24 en tablet y 16 horizontales en móvil. La tabla pu
 
 ## Conservación funcional
 
-Se conservan todos los props de Inertia, las cuatro métricas, filtros de stock, enlace a Caja, último corte, POS, historial, últimos siete días, unidades e importes del ranking, cajero, hora, método de pago y enlace a cada ticket. El contenido del dashboard de cajero conserva su plantilla original; su navegación compartida se adapta al rol. No se cambian controladores, modelos, migraciones, rutas, autenticación, permisos ni endpoints.
+Se conservan todos los props de Inertia, las cuatro métricas, filtros de stock, enlace a Caja, último corte, POS, historial, últimos siete días, unidades e importes del ranking, cajero, hora, método de pago y enlace a cada ticket. Desde Fase 2.12 el dashboard de cajero utiliza los componentes premium con las mismas métricas y permisos; su navegación compartida se adapta al rol. No se cambian controladores, modelos, migraciones, rutas, autenticación, permisos ni endpoints.
 
 Dependencia adicional única: `@lucide/vue@1.77.0`, fijada en package y lockfile. Sin Tailwind global, shadcn-vue ni instalación de herramientas de test adicionales.
 
@@ -489,3 +489,42 @@ La migración incremental `2026_11_23_000001_add_avatar_path_to_users_table` se 
 Validación: cuatro vistas en 320, 375, 390, 430, 768, 1024, 1366 y 1920 px; teclado, estados y roles mediante Playwright MCP con fixtures exclusivos del navegador. Persistencia real verificada por 15 pruebas Laravel / 150 aserciones, con SQLite en memoria y almacenamiento aislado. Se comprobó el disco público con Nginx en un contenedor aislado, sin publicar puertos. Los 38 pares de contraste calculados pasan: texto ≥4.5:1 y límites de controles ≥3:1. Son comprobaciones específicas, no una certificación de accesibilidad ni una auditoría integral.
 
 Informe e inventario: [Fase 2.10](docs/settings-profile-phase-2-10.md). Galería local, fuera de Git: `.playwright-mcp/settings-profile/comparison.html`.
+
+
+## Fase 2.12 · Tickets, cuenta y experiencia real del cajero
+
+### Detalle de venta y comprobante
+
+`Ventas/Ticket.vue` conserva los props `venta` y `config` del controlador. Encabeza «Detalle de venta» con regreso al historial y acciones Imprimir / Nueva venta. Desde 1200 px compone resumen de operación y comprobante en dos columnas; debajo se apilan en el mismo orden de lectura. A 320 px las acciones se apilan, con controles de al menos 44 px. Los importes usan cifras tabulares; nombres y metadatos extensos ajustan su línea sin truncarse.
+
+`Components/Ventas/SaleReceipt.vue` es el único comprobante para pantalla e impresión. Recibe los importes del servidor, sin recalcularlos. Cada producto conserva nombre, cantidad × precio unitario e importe. Folio, fecha/hora, cajero, total, método, recibido y cambio se mantienen; los dos últimos solo aparecen cuando no son nulos. Se respetan nombre, logo, RFC, dirección, teléfono, encabezado y pie del contrato existente: las opciones de mostrar logo/RFC siguen resueltas en Laravel. No se inventan datos fiscales ni se añaden QR, CFDI o servicios externos.
+
+La vista previa usa blanco, DM Sans y contraste neutro, sin emojis, fondos de marca ni sombras decorativas. El acento del tenant queda en las acciones y el foco. El selector de 80/58 mm controla el ancho del mismo comprobante; es una preferencia local de presentación, sin persistencia ni cambio del contrato Inertia.
+
+### Impresión
+
+El reset de impresión está limitado a la presencia de `.sale-ticket`. Oculta sidebar, header, barra inferior, banners, diálogos, notificaciones y acciones; elimina márgenes de navegación, bordes exteriores, fondos y sombras. El recibo conserva solo negro sobre blanco, separadores y logo configurado. Las filas de producto y parejas monetarias evitan cortes de página; nombres ajustan línea y cifras monetarias no se dividen. La tabla puede continuar en páginas posteriores y repetir su encabezado.
+
+El ancho CSS es `min(100%, 58mm/80mm)`. El usuario debe elegir también tamaño físico, márgenes, escala y encabezados/pies en el diálogo normal del navegador. No hay autodetección de impresora. Se revisaron PDF Chromium a 58 mm, 80 mm y A4; esto no certifica hardware, drivers, área imprimible ni corte de rollo. Una fila más alta que una página puede requerir ajuste manual de papel/escala.
+
+### Cuenta y finalización de sesión
+
+El menú conserva su disclosure con controles nativos. ArrowDown enfoca Mi perfil, Tab alcanza Cerrar sesión y Escape devuelve el foco al disparador. El formulario nativo POST con CSRF permanece montado durante el envío: cerrar un `v-if` en `submit` lo desconectaba y cancelaba la petición. El botón informa «Cerrando sesión…» y evita envíos repetidos. Laravel conserva la invalidación y regeneración de token existentes; el destino público continúa siendo `/`.
+
+Las respuestas autenticadas del tenant llevan `Cache-Control: no-store, private` para evitar que volver atrás restaure contenido privado después del logout. No cambian roles, rutas ni el controlador de sesión. SuperAdmin queda fuera de este ajuste de caché. Las comprobaciones de sesión se realizaron con credenciales de cuentas descartables en Laravel, sin alterar props de rol en JavaScript.
+
+### Logotipo del negocio
+
+El selector anuncia todos los formatos ya aceptados por la regla `image`: JPG, PNG, WebP, GIF y BMP, hasta 2048 KiB (2 MB en la interfaz). El cliente comprueba tamaño y MIME disponible; Laravel sigue siendo la autoridad. El JPG concreto reportado no estaba disponible. Un JPG válido mayor que el límite de PHP reproduce el mensaje anterior «The logo failed to upload»; ahora los errores de tamaño, formato, carga parcial y almacenamiento se explican en español.
+
+Se distinguen «Imagen seleccionada… Sin guardar», «Logotipo guardado» y ausencia de logo guardado. Descartar selección revoca su object URL y vuelve a la imagen persistida. Un error mantiene el borrador identificado como pendiente, muestra el motivo y evita la confirmación de guardado. Al recargar se recupera siempre la referencia persistida. El avatar personal conserva su flujo independiente.
+
+El reemplazo escribe primero, actualiza la configuración bajo transacción/bloqueo y elimina después el anterior. La eliminación también confirma primero la referencia. Un fallo de escritura o persistencia conserva el logo anterior; el fallo de DB intenta retirar la nueva subida. Un fallo al limpiar archivos se registra sin romper la referencia vigente. No cambian límites de PHP/Nginx ni se desactiva validación.
+
+### Cajero
+
+`CashierDashboard.vue` presenta las cuatro métricas propias, efectivo esperado, último corte cuando existe, POS/Caja y últimas ventas con el sistema premium. En móvil las últimas ventas usan una lista con importe visible; desde 768 px utilizan tabla. Los valores proceden de los mismos props del dashboard y no se recalculan. La bienvenida premium del cajero omite inventario y reportes administrativos.
+
+Se conserva la fuente de navegación `tenantNavigation.js`: Inicio, Vender, Ventas y Caja actual. Mi perfil y logout permanecen exclusivamente en cuenta. Cajero tiene cuatro destinos en la barra inferior contando Menú. Cortes conserva su acceso de servidor existente, limitado al usuario; no se añade a la navegación que antes lo reservaba al administrador. POS, Historial, Ticket, Caja, Cortes y Perfil mantienen sus permisos. Las pruebas reales devolvieron 403 para Usuarios, Productos, Reportes, Configuración, Catálogos y ticket ajeno.
+
+Evidencias y límites: [informe de la fase](docs/tickets-logout-logo-cashier-phase-2-12.md). La implementación sigue pendiente de revisión estética del usuario.
