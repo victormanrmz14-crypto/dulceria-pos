@@ -39,6 +39,6 @@ export function tenantNavigation(role, url) {
         items,
         primary,
         bottom: [...primary, { id: 'menu', label: 'Menú', icon: 'menu', active: !primary.some((item) => item.active) }],
-        sectionLabel: selected?.label || 'Menú',
+        sectionLabel: path === '/perfil' ? 'Mi perfil' : selected?.label || 'Menú',
     };
 }

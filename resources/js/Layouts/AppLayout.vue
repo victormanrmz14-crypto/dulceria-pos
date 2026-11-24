@@ -8,6 +8,7 @@ import { useMobileNavigationVisibility } from '../Composables/useMobileNavigatio
 import SidebarNav from '../Components/SidebarNav.vue';
 import UiIcon from '../Components/Ui/UiIcon.vue';
 import UiOverlay from '../Components/Ui/UiOverlay.vue';
+import AccountMenu from '../Components/AccountMenu.vue';
 import { premiumTheme as createPremiumTheme } from '../Components/Ui/theme';
 
 const props = defineProps({ premium: { type: Boolean, default: false } });
@@ -20,8 +21,6 @@ const navigation = computed(() => tenantNavigation(page.props.auth?.user?.rol, p
 const { suppressed } = useMobileNavigationVisibility();
 const stopNavigation = router.on('navigate', () => { drawer.value = false; });
 const brandName = computed(() => page.props.tenantConfig?.nombre_mostrar || 'Dulcería POS');
-const userName = computed(() => page.props.auth?.user?.nombre || 'Usuario');
-const initials = computed(() => userName.value.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join(''));
 const premiumTheme = computed(() => createPremiumTheme(page.props.tenantConfig?.colores));
 let desktopQuery;
 let tabletQuery;
@@ -142,7 +141,7 @@ const anunciosVisibles = computed(() =>
                         <button type="button" class="p-icon-button d-none d-md-inline-grid d-lg-none" data-tenant-menu-trigger aria-label="Abrir menú" :aria-expanded="drawer"
                             :aria-controls="drawerId" aria-haspopup="dialog" @click="drawer = true"><UiIcon name="menu" :size="20" /></button>
                         <div class="p-header__breadcrumb"><span>{{ brandName }}</span><span aria-hidden="true">/</span><strong>{{ navigation.sectionLabel }}</strong></div>
-                        <div class="p-header__user"><span class="p-avatar">{{ initials }}</span><span>{{ userName }}</span></div>
+                        <AccountMenu />
                     </div>
                 </header>
                 <main class="flex-grow-1 p-3 p-lg-4" :class="{ 'p-main': premium }" :id="premium ? 'premium-main' : undefined" :tabindex="premium ? -1 : undefined">

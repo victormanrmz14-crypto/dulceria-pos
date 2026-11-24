@@ -8,7 +8,6 @@ const props = defineProps({ navigation: { type: Object, required: true } });
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const esAdmin = computed(() => user.value?.rol === 'admin');
-const csrf = computed(() => page.props.csrf);
 const logoUrl = computed(() => page.props.tenantConfig?.logo);
 const premiumName = computed(() => page.props.tenantConfig?.nombre_mostrar || 'Dulcería POS');
 const primaryLinks = computed(() => props.navigation.primary.filter(item => item.id !== 'products'));
@@ -64,9 +63,7 @@ const catalogosId = useId();
             </Transition>
         </template>
     </nav>
-    <div class="p-nav__footer">
-        <Link v-if="settings" :href="settings.href" class="p-nav__item" :class="{ 'is-active': settings.active }" :aria-current="settings.current ? 'page' : undefined"><UiIcon :name="settings.icon" /><span>{{ settings.label }}</span></Link>
-        <div class="p-nav__identity"><span class="p-avatar">{{ user?.nombre?.charAt(0) }}</span><div><strong>{{ user?.nombre }}</strong><span>{{ esAdmin ? 'Administrador' : 'Cajero' }}</span></div></div>
-        <form method="POST" action="/logout"><input type="hidden" name="_token" :value="csrf"><button type="submit" class="p-nav__item p-nav__logout"><UiIcon name="logout" /><span>Cerrar sesión</span></button></form>
+    <div v-if="settings" class="p-nav__footer">
+        <Link :href="settings.href" class="p-nav__item" :class="{ 'is-active': settings.active }" :aria-current="settings.current ? 'page' : undefined"><UiIcon :name="settings.icon" /><span>{{ settings.label }}</span></Link>
     </div>
 </template>

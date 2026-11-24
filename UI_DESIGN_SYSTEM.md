@@ -4,7 +4,7 @@
 
 ## Alcance y activación
 
-La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4; las vistas de [Productos](resources/js/Pages/Productos/Index.vue) lo activan en Fase 2.6 dentro de sus permisos existentes; Caja y Cortes lo activan en Fase 2.7 y Reportes en Fase 2.8. Usuarios, Catálogos e Historial de Ventas lo activan en Fase 2.9. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
+La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4; las vistas de [Productos](resources/js/Pages/Productos/Index.vue) lo activan en Fase 2.6 dentro de sus permisos existentes; Caja y Cortes lo activan en Fase 2.7 y Reportes en Fase 2.8. Usuarios, Catálogos e Historial de Ventas lo activan en Fase 2.9; Configuración y el perfil personal, en Fase 2.10. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
 
 Los componentes premium usan raíces `.pos-premium` locales: sidebar, header, Bottom Navigation y overlays reciben los tokens de marca sin activar esos estilos sobre el contenido heredado. `.tenant-shell` controla exclusivamente el espacio de navegación, el offset de notificaciones y el margen de scroll; `html:has(.tenant-shell)` reserva espacio de scroll en móvil. Los overlays teletransportados llevan su propia raíz premium. No se cambian resets, variables globales de Bootstrap ni Tailwind. La carga del CSS del piloto después de navegar no debe alterar pantallas vecinas.
 
@@ -440,3 +440,52 @@ Los estilos específicos de las tarjetas de ventas tienen precedencia estable pa
 Los diálogos de proveedores distribuyen correo y teléfono en dos columnas desde 600 px; en móvil se apilan. Todas las acciones y pies mantienen espacio respecto a la navegación inferior, sin nuevas barras flotantes.
 
 Informe, matriz de las ocho anchuras, capturas y límites: [Fase 2.9](docs/users-catalogs-sales-history-phase-2-9.md). La comprobación visual usa únicamente datos simulados en el navegador porque no hay sesión autenticada disponible; no valida autorización, persistencia ni operaciones comerciales. Los componentes compartidos conservan sus contratos y el backend permanece sin cambios.
+
+## Fase 2.10 · Configuración y cuenta personal (implementada, pendiente de aprobación estética)
+
+Configuración y Mi perfil activan el contenido premium. La navegación de cuenta se comparte entre todos los módulos del tenant, incluidos los que conservan contenido heredado. SuperAdmin conserva su layout. Esta fase añade exclusivamente la persistencia del avatar personal; no amplía las funciones administrativas ni modifica los mecanismos del logotipo.
+
+### Configuración y formularios
+
+`SettingsWorkspace` organiza el encabezado y la navegación secundaria de Apariencia, Mi negocio, Tickets y Mi perfil. Usa botones nativos para cambiar de apartado y enlaces Inertia para el perfil personal. Los botones identifican el apartado actual con `aria-current` y `aria-controls`; no simulan un widget ARIA de pestañas. Los enlaces desde el perfil admiten los fragmentos `#apariencia`, `#negocio` y `#tickets`.
+
+Un panel agrupa cada formulario; encabezado de 15 px semibold, controles de 16 px, ayudas de 12–13 px, separación de 20–24 px y pie de guardado dentro del flujo. `UiFormField` conserva etiquetas, errores cercanos y `aria-describedby`/`aria-invalid`. El primer error del apartado activo recibe foco al terminar la respuesta. Carga y disabled impiden envíos duplicados; una nueva edición tiene prioridad sobre el mensaje de guardado reciente. No se añaden campos, reglas de validación ni ajustes comerciales.
+
+Las nueve paletas existentes mantienen sus valores y su payload. Los botones incluyen muestra, nombre, estado `aria-pressed`, borde e icono de selección. La miniatura de navegación usa superficies neutras y tokens calculados sobre blanco; se identifica siempre como **vista previa local**. La paleta del layout sigue representando el valor guardado hasta guardar la apariencia. Logotipo del negocio y avatar son entidades independientes. La vista de ticket conserva el ejemplo ilustrativo existente y usa los valores locales del formulario, con una indicación explícita de que hay que guardar para aplicarlos.
+
+### Componentes de cuenta
+
+| Componente | Contrato |
+|---|---|
+| `UserAvatar` | `name`, `src?`, `size=32`, `decorative=true`; círculo de tamaño reservado, `object-fit: cover`, iniciales de primer y último nombre cuando falta la imagen o falla su carga. No depende del tenant. |
+| `AccountMenu` | Identidad compartida en `auth.user`, disclosure de cuenta con botón accesible y `aria-expanded`; identidad y rol, enlace a Mi perfil y formulario POST/CSRF de logout existente. Tab/Shift+Tab nativos, ArrowDown hacia el enlace, Escape y restauración de foco, cierre exterior y por navegación; listeners liberados al desmontar. |
+| `SettingsWorkspace` | `active`, `admin`, `title`, `description`, evento `select` y slot; composición y estilos de los formularios de Configuración y Perfil. No decide permisos del servidor. |
+| `AdminDialog` | Añade `focusFallback` opcional, reenviado al overlay existente. Permite regresar al selector cuando desaparece la acción de eliminar la fotografía. |
+
+En Mi perfil, la fotografía guardada, la selección local y las iniciales tienen mensajes distintos. Se puede descartar la selección, guardar, reemplazar o eliminar con confirmación. El navbar muestra únicamente el avatar guardado. El formulario restaura el foco después de finalizar la petición, cuando el control ya está habilitado. La selección de archivos usa el control nativo del navegador y sus etiquetas localizadas por el sistema.
+
+El sidebar conserva todos sus destinos y grupos, incluido Configuración para administradores. Se retiran el avatar, nombre, rol y logout inferiores; no se añade contenido para rellenar el espacio. El rol de la dulcería en su marca («Administración» / «Punto de venta») se conserva. La barra inferior y su política de visibilidad no cambian.
+
+### Composición y roles
+
+| Ancho | Composición |
+|---|---|
+| 320–359 px | Navegación secundaria 2 × 2; una columna de paletas y formularios; avatar y caret visibles, nombre del navbar oculto. |
+| 360–599 px | Navegación 2 × 2 y paletas de dos columnas; campos y vistas previas apilados. |
+| 600–899 px | Navegación secundaria horizontal; campos del negocio en dos columnas; vistas previas debajo del formulario. |
+| 900–1199 px | Formularios y vista previa en dos columnas; navegación secundaria horizontal. |
+| Desde 1200 px | Navegación secundaria lateral de 164 px; contenido de hasta 1200 px. |
+
+La navegación general conserva sus cortes: barra inferior bajo 768 px, drawer hasta 991 px y sidebar desde 992 px. El menú de cuenta tiene ancho máximo de 288 px, respeta el ancho de ventana y limita su altura; no alcanza la barra inferior en las ocho anchuras revisadas. Los pies se alcanzan por scroll normal, con el espacio inferior existente y sin otra barra flotante.
+
+Administrador: Configuración administrativa y perfil. Cajero: `/perfil`, con únicamente navegación personal; Configuración continúa bajo `solo.admin`. SuperAdmin: sin cambios visuales; `usuario.activo` conserva su redirección al panel central.
+
+### Persistencia, evidencia y límites
+
+`users.avatar_path` es opcional, privado en la serialización y gestionado únicamente desde el usuario autenticado. Inertia añade solo `auth.user.avatar_url`. JPEG/PNG/WebP hasta 2 MB, MIME real, nombres hash y rutas `avatars/{id}/…`; nunca se acepta una ruta ni un ID objetivo del cliente. El archivo nuevo se almacena antes de confirmar su referencia en una transacción; después se retira el anterior, validando siempre el directorio propio. Los fallos de almacenamiento o persistencia conservan el anterior.
+
+La migración incremental `2026_11_23_000001_add_avatar_path_to_users_table` se aplicó únicamente en el entorno Docker local. No se modificaron migraciones históricas. No hubo escrituras sobre fotografías ni registros de empleados reales.
+
+Validación: cuatro vistas en 320, 375, 390, 430, 768, 1024, 1366 y 1920 px; teclado, estados y roles mediante Playwright MCP con fixtures exclusivos del navegador. Persistencia real verificada por 15 pruebas Laravel / 150 aserciones, con SQLite en memoria y almacenamiento aislado. Se comprobó el disco público con Nginx en un contenedor aislado, sin publicar puertos. Los 38 pares de contraste calculados pasan: texto ≥4.5:1 y límites de controles ≥3:1. Son comprobaciones específicas, no una certificación de accesibilidad ni una auditoría integral.
+
+Informe e inventario: [Fase 2.10](docs/settings-profile-phase-2-10.md). Galería local, fuera de Git: `.playwright-mcp/settings-profile/comparison.html`.

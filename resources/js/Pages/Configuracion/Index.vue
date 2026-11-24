@@ -1,14 +1,24 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUnmount, onMounted } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
+import SettingsWorkspace from '../../Components/Settings/SettingsWorkspace.vue';
+import UiButton from '../../Components/Ui/UiButton.vue';
+import UiIcon from '../../Components/Ui/UiIcon.vue';
+import UiFormField from '../../Components/Ui/UiFormField.vue';
+import { premiumTheme as createPremiumTheme } from '../../Components/Ui/theme';
 
 const props = defineProps({
     configuracion: Object,
     logoUrl: String,
 });
 
-const tab  = ref('apariencia');
+const tab = ref('apariencia');
+onMounted(() => {
+    const section = window.location.hash.slice(1);
+    if (['apariencia', 'negocio', 'tickets'].includes(section)) tab.value = section;
+});
+const focusError = () => requestAnimationFrame(() => document.querySelector(`#settings-${tab.value} [aria-invalid="true"]`)?.focus());
 
 // ── Paletas predefinidas ──────────────────────────────────────────────────────
 const paletas = [
@@ -39,13 +49,18 @@ const seleccionarPaleta = (p) => {
 // ── Formulario apariencia ─────────────────────────────────────────────────────
 const aparienciaForm = useForm({ paleta: null, logo: null, eliminar_logo: false });
 const logoInput     = ref(null);
-const previewLogo   = ref(props.logoUrl ?? null);
+const previewLogo = ref(props.logoUrl ?? null);
+let localLogoUrl;
+const releaseLogoPreview = () => { if (localLogoUrl) URL.revokeObjectURL(localLogoUrl); localLogoUrl = null; };
+onBeforeUnmount(releaseLogoPreview);
 
 const onLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
         aparienciaForm.logo = file;
-        previewLogo.value   = URL.createObjectURL(file);
+        releaseLogoPreview();
+        localLogoUrl = URL.createObjectURL(file);
+        previewLogo.value = localLogoUrl;
     }
 };
 
@@ -57,7 +72,10 @@ const guardarApariencia = () => {
             aparienciaForm.logo        = null;
             aparienciaForm.eliminar_logo = false;
             if (logoInput.value) logoInput.value.value = '';
+            releaseLogoPreview();
+            previewLogo.value = props.logoUrl ?? null;
         },
+        onError: focusError,
     });
 };
 
@@ -67,7 +85,8 @@ const eliminarLogo = () => {
     aparienciaForm.logo          = null;
     previewLogo.value            = null;
     aparienciaForm.post('/configuracion/apariencia', { forceFormData: true,
-        onSuccess: () => { aparienciaForm.eliminar_logo = false; }
+        onSuccess: () => { aparienciaForm.eliminar_logo = false; releaseLogoPreview(); },
+        onError: () => { previewLogo.value = props.logoUrl ?? null; focusError(); }
     });
 };
 
@@ -90,483 +109,109 @@ const ticketForm = useForm({
     mostrar_rfc:  tkt.mostrar_rfc ?? true,
 });
 
+
+const previewTheme = computed(() => createPremiumTheme(paletaSeleccionada.value));
+const appearanceDirty = computed(() => !!aparienciaForm.logo || paletaSeleccionada.value.primario !== paletaGuardada.value.primario);
+const businessFields = [
+    { key: 'nombre_mostrar', label: 'Nombre comercial', max: 100, type: 'text', placeholder: 'Nombre de tu dulcería' },
+    { key: 'rfc', label: 'RFC', max: 20, type: 'text', placeholder: 'RFC del negocio' },
+    { key: 'direccion', label: 'Dirección', max: 250, type: 'text', placeholder: 'Calle, número, colonia y ciudad', wide: true },
+    { key: 'telefono', label: 'Teléfono', max: 30, type: 'text', placeholder: '55 1234 5678' },
+    { key: 'email_negocio', label: 'Correo electrónico', max: 100, type: 'email', placeholder: 'contacto@tudulceria.mx' },
+];
 </script>
 
 <template>
-    <AppLayout>
-        <Head title="Configuración" />
-
-        <div class="cfg-wrap">
-            <!-- ── Header ──────────────────────────────────────────────── -->
-            <div class="cfg-header">
-                <div>
-                    <h1 class="cfg-title">⚙️ Configuración</h1>
-                    <p class="cfg-sub">Personaliza tu dulcería</p>
-                </div>
-            </div>
-
-            <!-- ── Tabs nav (dentro del lienzo) ──────────────────────── -->
-            <div class="cfg-tabs">
-                <button v-for="[k, icon, label] in [
-                    ['apariencia','🎨','Apariencia'],
-                    ['negocio','🏪','Mi Negocio'],
-                    ['tickets','🧾','Recibos'],
-                ]"
-                    :key="k"
-                    class="cfg-tab"
-                    :class="{ 'cfg-tab--active': tab === k }"
-                    @click="tab = k"
-                >
-                    <span class="cfg-tab-icon">{{ icon }}</span>
-                    <span class="cfg-tab-label">{{ label }}</span>
-                </button>
-            </div>
-
-            <!-- ══════════════════════════════════════════════════════════ -->
-            <!-- TAB: APARIENCIA                                           -->
-            <!-- ══════════════════════════════════════════════════════════ -->
-            <div v-if="tab === 'apariencia'" class="cfg-panel">
-
-                <!-- Paleta de colores -->
-                <div class="cfg-section">
-                    <div class="cfg-section-title">Paleta de colores</div>
-                    <p class="cfg-section-desc">El color que elijas se aplicará al sidebar y a los elementos destacados de tu dulcería.</p>
-
-                    <div class="paletas-grid">
-                        <button
-                            v-for="p in paletas"
-                            :key="p.primario"
-                            class="paleta-chip"
-                            :class="{ 'paleta-chip--active': paletaSeleccionada.primario === p.primario }"
-                            @click="seleccionarPaleta(p)"
-                            :title="p.nombre"
-                        >
-                            <span class="paleta-swatch" :style="{ background: p.primario }"></span>
-                            <span class="paleta-dot" :style="{ background: p.acento }"></span>
-                            <span class="paleta-nombre">{{ p.nombre }}</span>
-                            <span v-if="paletaSeleccionada.primario === p.primario" class="paleta-check">✓</span>
-                        </button>
+    <Head title="Configuración" />
+    <AppLayout premium v-slot="{ theme }">
+        <SettingsWorkspace :style="theme" :active="tab" @select="tab = $event">
+            <section v-show="tab === 'apariencia'" id="settings-apariencia" class="settings-panel" aria-labelledby="appearance-title">
+                <header class="settings-panel__header"><h2 id="appearance-title" class="settings-title">Apariencia del negocio</h2><p class="settings-help">Elige los colores y el logotipo que identifican a tu dulcería.</p></header>
+                <form @submit.prevent="guardarApariencia">
+                    <div class="settings-panel__body appearance-grid">
+                        <fieldset class="palette-fieldset"><legend class="settings-title">Paleta de colores</legend><p class="settings-help">La marca se aplica a las acciones y elementos destacados.</p>
+                            <div class="palette-grid"><button v-for="p in paletas" :key="p.primario" type="button" class="palette-option" :class="{ 'is-selected': paletaSeleccionada.primario === p.primario }" :aria-pressed="paletaSeleccionada.primario === p.primario" :disabled="aparienciaForm.processing" @click="seleccionarPaleta(p)"><span class="palette-swatch" :style="{ background: p.primario }" aria-hidden="true"><span :style="{ background: p.acento }"></span></span><span>{{ p.nombre }}</span><UiIcon v-if="paletaSeleccionada.primario === p.primario" name="success" :size="16" /></button></div>
+                            <p v-if="aparienciaForm.errors.paleta" class="settings-error" role="alert"><UiIcon name="warning" :size="16" />{{ aparienciaForm.errors.paleta }}</p>
+                        </fieldset>
+                        <figure class="appearance-preview" :style="previewTheme"><figcaption>Vista previa local</figcaption><div class="brand-preview"><div class="brand-preview__brand"><img v-if="previewLogo" :src="previewLogo" alt="" width="32" height="32" /><span v-else class="brand-preview__symbol"><UiIcon name="candy" :size="20" /></span><strong>{{ negocioForm.nombre_mostrar || 'Dulcería POS' }}</strong></div><div class="brand-preview__nav"><span><UiIcon name="house" :size="16" />Inicio</span><span><UiIcon name="plus" :size="16" />Vender</span><span><UiIcon name="package" :size="16" />Productos</span><span class="brand-preview__active"><UiIcon name="settings" :size="16" />Configuración</span></div></div><p>Los cambios se aplicarán al guardar.</p></figure>
                     </div>
+                    <div class="settings-panel__body logo-section"><div class="logo-preview"><img v-if="previewLogo" :src="previewLogo" alt="Vista previa del logotipo del negocio" width="88" height="88" /><template v-else><UiIcon name="store" :size="28" /><span>Sin logotipo</span></template></div><div class="logo-controls"><label for="logoInput" class="settings-title">Logotipo del negocio</label><p id="logo-help" class="settings-help">Aparece en la navegación y en los tickets, si lo habilitas.</p><input id="logoInput" ref="logoInput" type="file" accept="image/*" class="settings-file" :disabled="aparienciaForm.processing" :aria-invalid="aparienciaForm.errors.logo ? 'true' : undefined" :aria-describedby="`logo-help logo-format${aparienciaForm.errors.logo ? ' logo-error' : ''}`" @change="onLogoChange" /><p id="logo-format" class="settings-help logo-format">PNG, JPG o WebP · Máximo 2 MB</p><p v-if="aparienciaForm.logo" class="settings-help">Imagen seleccionada sin guardar.</p><p v-if="aparienciaForm.errors.logo" id="logo-error" class="settings-error" role="alert"><UiIcon name="warning" :size="16" />{{ aparienciaForm.errors.logo }}</p><button v-if="previewLogo" type="button" class="settings-text-action" :disabled="aparienciaForm.processing" @click="eliminarLogo">Eliminar logotipo</button></div></div>
+                    <footer class="settings-footer"><p class="settings-status" :class="{ 'settings-status--success': !appearanceDirty && aparienciaForm.recentlySuccessful }" role="status"><UiIcon :name="!appearanceDirty && aparienciaForm.recentlySuccessful ? 'success' : 'info'" :size="16" />{{ appearanceDirty ? 'Hay cambios sin guardar' : aparienciaForm.recentlySuccessful ? 'Apariencia guardada' : 'Apariencia actual del negocio' }}</p><UiButton type="submit" :loading="aparienciaForm.processing">{{ aparienciaForm.processing ? 'Guardando…' : 'Guardar apariencia' }}</UiButton></footer>
+                </form>
+            </section>
 
-                    <!-- Preview del sidebar -->
-                    <div class="sidebar-preview" :style="{ background: paletaSeleccionada.primario }">
-                        <div class="sp-marca" :style="{ background: paletaSeleccionada.medio }">
-                            <div v-if="previewLogo" class="sp-logo-wrap">
-                                <img :src="previewLogo" alt="Logo" class="sp-logo-img" />
-                            </div>
-                            <div class="sp-brand-name">{{ negocioForm.nombre_mostrar || '🍬 Dulcería POS' }}</div>
-                            <div class="sp-user">Usuario Admin</div>
-                        </div>
-                        <div class="sp-nav">
-                            <div class="sp-item sp-item--activo" :style="{ background: 'rgba(255,255,255,.15)' }">
-                                <span class="sp-dot" :style="{ background: paletaSeleccionada.acento }"></span>
-                                🏠 Inicio
-                            </div>
-                            <div class="sp-item">🛒 Ventas</div>
-                            <div class="sp-item">🍬 Productos</div>
-                            <div class="sp-item sp-item--cfg">⚙️ Configuración</div>
-                        </div>
-                    </div>
-                </div>
+            <section v-show="tab === 'negocio'" id="settings-negocio" class="settings-panel" aria-labelledby="business-title">
+                <header class="settings-panel__header"><h2 id="business-title" class="settings-title">Información del negocio</h2><p class="settings-help">Estos datos identifican tu dulcería en el sistema y los recibos.</p></header>
+                <form @submit.prevent="negocioForm.post('/configuracion/negocio', { onError: focusError })"><div class="settings-panel__body business-grid"><UiFormField v-for="field in businessFields" :key="field.key" :etiqueta="field.label" :error="negocioForm.errors[field.key]" :class="{ 'business-grid__wide': field.wide }" v-slot="{ control }"><input v-bind="control" v-model="negocioForm[field.key]" :type="field.type" :maxlength="field.max" :placeholder="field.placeholder" :disabled="negocioForm.processing" class="p-field-control" /></UiFormField></div><footer class="settings-footer"><p class="settings-status" :class="{ 'settings-status--success': !negocioForm.isDirty && negocioForm.recentlySuccessful }" role="status"><UiIcon :name="!negocioForm.isDirty && negocioForm.recentlySuccessful ? 'success' : 'info'" :size="16" />{{ negocioForm.isDirty ? 'Hay cambios sin guardar' : negocioForm.recentlySuccessful ? 'Información guardada' : 'Información actual del negocio' }}</p><UiButton type="submit" :loading="negocioForm.processing">{{ negocioForm.processing ? 'Guardando…' : 'Guardar información' }}</UiButton></footer></form>
+            </section>
 
-                <!-- Logo del negocio -->
-                <div class="cfg-section">
-                    <div class="cfg-section-title">Logo del negocio</div>
-                    <p class="cfg-section-desc">Aparecerá en el sidebar y en los recibos (si está habilitado). PNG o JPG, máx. 2 MB.</p>
-
-                    <div class="logo-area">
-                        <div class="logo-current">
-                            <div v-if="previewLogo" class="logo-preview-wrap">
-                                <img :src="previewLogo" alt="Logo actual" class="logo-preview" />
-                                <button type="button" class="logo-remove" @click="eliminarLogo" title="Eliminar logo">✕</button>
-                            </div>
-                            <div v-else class="logo-placeholder">
-                                <span class="logo-placeholder-icon">🍬</span>
-                                <span class="logo-placeholder-txt">Sin logo</span>
-                            </div>
-                        </div>
-                        <div class="logo-upload">
-                            <label class="upload-btn" for="logoInput">📂 Seleccionar imagen</label>
-                            <input id="logoInput" ref="logoInput" type="file" accept="image/*" class="d-none" @change="onLogoChange" />
-                            <p class="logo-hint">PNG, JPG, WebP · máx. 2 MB</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Guardar apariencia -->
-                <div class="cfg-footer">
-                    <button class="btn-guardar" :disabled="aparienciaForm.processing" @click="guardarApariencia">
-                        {{ aparienciaForm.processing ? 'Guardando...' : '💾 Guardar apariencia' }}
-                    </button>
-                </div>
-            </div>
-
-            <!-- ══════════════════════════════════════════════════════════ -->
-            <!-- TAB: MI NEGOCIO                                           -->
-            <!-- ══════════════════════════════════════════════════════════ -->
-            <div v-if="tab === 'negocio'" class="cfg-panel">
-                <div class="cfg-section">
-                    <div class="cfg-section-title">Información del negocio</div>
-                    <p class="cfg-section-desc">Esta información puede aparecer en los recibos y en el encabezado del sistema.</p>
-
-                    <form class="cfg-form" @submit.prevent="negocioForm.post('/configuracion/negocio')">
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <label class="cfg-label">Nombre a mostrar</label>
-                                <input v-model="negocioForm.nombre_mostrar" type="text" class="cfg-input" placeholder="Ej: Dulcería La Palomita" maxlength="100" />
-                                <span class="cfg-hint">Reemplaza "Dulcería POS" en el sidebar</span>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="cfg-label">RFC</label>
-                                <input v-model="negocioForm.rfc" type="text" class="cfg-input" placeholder="Ej: XAXX010101000" maxlength="20" />
-                            </div>
-                            <div class="col-12">
-                                <label class="cfg-label">Dirección</label>
-                                <input v-model="negocioForm.direccion" type="text" class="cfg-input" placeholder="Calle, número, colonia, ciudad" maxlength="250" />
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="cfg-label">Teléfono</label>
-                                <input v-model="negocioForm.telefono" type="text" class="cfg-input" placeholder="Ej: 55 1234 5678" maxlength="30" />
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="cfg-label">Correo del negocio</label>
-                                <input v-model="negocioForm.email_negocio" type="email" class="cfg-input" placeholder="contacto@tunegocio.com" maxlength="100" />
-                            </div>
-                        </div>
-                        <div v-if="Object.keys(negocioForm.errors).length" class="cfg-errors">
-                            <div v-for="(err, key) in negocioForm.errors" :key="key">{{ err }}</div>
-                        </div>
-                        <div class="cfg-footer">
-                            <button type="submit" class="btn-guardar" :disabled="negocioForm.processing">
-                                {{ negocioForm.processing ? 'Guardando...' : '💾 Guardar información' }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- ══════════════════════════════════════════════════════════ -->
-            <!-- TAB: RECIBOS / TICKETS                                    -->
-            <!-- ══════════════════════════════════════════════════════════ -->
-            <div v-if="tab === 'tickets'" class="cfg-panel">
-                <div class="cfg-section">
-                    <div class="cfg-section-title">Personalización de recibos</div>
-                    <p class="cfg-section-desc">Texto que aparecerá en la parte superior e inferior de cada comprobante de venta.</p>
-
-                    <form class="cfg-form" @submit.prevent="ticketForm.post('/configuracion/tickets')">
-                        <div class="row g-4">
-                            <div class="col-12 col-lg-7">
-                                <div class="row g-3">
-                                    <div class="col-12">
-                                        <label class="cfg-label">Encabezado del recibo</label>
-                                        <textarea v-model="ticketForm.encabezado" class="cfg-input cfg-textarea" rows="3" placeholder="Ej: Gracias por tu compra en Dulcería La Palomita&#10;Tel: 55 1234 5678"></textarea>
-                                        <span class="cfg-hint">Aparece arriba del ticket, antes del detalle de productos</span>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="cfg-label">Pie del recibo</label>
-                                        <textarea v-model="ticketForm.pie" class="cfg-input cfg-textarea" rows="3" placeholder="Ej: ¡Vuelve pronto! · No se aceptan devoluciones"></textarea>
-                                        <span class="cfg-hint">Aparece al final del ticket</span>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="toggles-group">
-                                            <label class="toggle-item">
-                                                <div class="toggle-wrap">
-                                                    <input type="checkbox" v-model="ticketForm.mostrar_logo" class="toggle-check" />
-                                                    <span class="toggle-slider"></span>
-                                                </div>
-                                                <div>
-                                                    <div class="toggle-label">Mostrar logo en recibo</div>
-                                                    <div class="toggle-desc">Imprime el logo del negocio al inicio del ticket</div>
-                                                </div>
-                                            </label>
-                                            <label class="toggle-item">
-                                                <div class="toggle-wrap">
-                                                    <input type="checkbox" v-model="ticketForm.mostrar_rfc" class="toggle-check" />
-                                                    <span class="toggle-slider"></span>
-                                                </div>
-                                                <div>
-                                                    <div class="toggle-label">Mostrar RFC en recibo</div>
-                                                    <div class="toggle-desc">Incluye el RFC del negocio en el ticket</div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Vista previa del ticket -->
-                            <div class="col-12 col-lg-5">
-                                <div class="cfg-label mb-2">Vista previa</div>
-                                <div class="ticket-preview">
-                                    <div class="tp-logo" v-if="ticketForm.mostrar_logo && previewLogo">
-                                        <img :src="previewLogo" alt="Logo" class="tp-logo-img" />
-                                    </div>
-                                    <div class="tp-business">{{ negocioForm.nombre_mostrar || 'Dulcería POS' }}</div>
-                                    <div v-if="ticketForm.mostrar_rfc && negocioForm.rfc" class="tp-rfc">RFC: {{ negocioForm.rfc }}</div>
-                                    <div v-if="negocioForm.direccion" class="tp-addr">{{ negocioForm.direccion }}</div>
-                                    <div class="tp-divider">────────────────</div>
-                                    <div class="tp-encabezado" v-if="ticketForm.encabezado">{{ ticketForm.encabezado }}</div>
-                                    <div class="tp-divider">────────────────</div>
-                                    <div class="tp-item"><span>1x Mazapán</span><span>$6.00</span></div>
-                                    <div class="tp-item"><span>2x Pulpa de tamarindo</span><span>$14.00</span></div>
-                                    <div class="tp-divider">────────────────</div>
-                                    <div class="tp-total"><span>TOTAL</span><span>$20.00</span></div>
-                                    <div class="tp-divider">────────────────</div>
-                                    <div class="tp-pie" v-if="ticketForm.pie">{{ ticketForm.pie }}</div>
-                                    <div class="tp-footer">Dulcería POS · dulceriapos.com</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="cfg-footer">
-                            <button type="submit" class="btn-guardar" :disabled="ticketForm.processing">
-                                {{ ticketForm.processing ? 'Guardando...' : '💾 Guardar configuración de recibos' }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-        </div>
+            <section v-show="tab === 'tickets'" id="settings-tickets" class="settings-panel" aria-labelledby="tickets-title">
+                <header class="settings-panel__header"><h2 id="tickets-title" class="settings-title">Configuración de tickets</h2><p class="settings-help">Personaliza los mensajes y la información que aparece en tus recibos.</p></header>
+                <form @submit.prevent="ticketForm.post('/configuracion/tickets', { onError: focusError })"><div class="settings-panel__body ticket-grid"><div class="ticket-controls"><UiFormField etiqueta="Encabezado del recibo" :error="ticketForm.errors.encabezado" v-slot="{ control }"><textarea v-bind="control" v-model="ticketForm.encabezado" class="p-field-control" rows="3" placeholder="Gracias por tu compra" :disabled="ticketForm.processing"></textarea><p class="settings-help">Aparece antes del detalle de productos.</p></UiFormField><UiFormField etiqueta="Pie del recibo" :error="ticketForm.errors.pie" v-slot="{ control }"><textarea v-bind="control" v-model="ticketForm.pie" class="p-field-control" rows="3" placeholder="¡Vuelve pronto!" :disabled="ticketForm.processing"></textarea><p class="settings-help">Aparece al final del ticket.</p></UiFormField><fieldset class="ticket-options"><legend class="settings-title">Información visible</legend><label class="ticket-toggle"><input v-model="ticketForm.mostrar_logo" type="checkbox" :disabled="ticketForm.processing" /><span><strong>Mostrar logotipo</strong><span>Incluye el logotipo al inicio del recibo.</span></span></label><p v-if="ticketForm.errors.mostrar_logo" class="settings-error" role="alert">{{ ticketForm.errors.mostrar_logo }}</p><label class="ticket-toggle"><input v-model="ticketForm.mostrar_rfc" type="checkbox" :disabled="ticketForm.processing" /><span><strong>Mostrar RFC</strong><span>Incluye el RFC del negocio en el recibo.</span></span></label><p v-if="ticketForm.errors.mostrar_rfc" class="settings-error" role="alert">{{ ticketForm.errors.mostrar_rfc }}</p></fieldset></div><figure class="receipt-figure"><figcaption>Vista previa local</figcaption><div class="ticket-preview"><img v-if="ticketForm.mostrar_logo && previewLogo" :src="previewLogo" alt="Logotipo en el recibo" width="64" height="64" /><strong class="ticket-preview__business">{{ negocioForm.nombre_mostrar || 'Dulcería POS' }}</strong><p v-if="ticketForm.mostrar_rfc && negocioForm.rfc">RFC: {{ negocioForm.rfc }}</p><p v-if="negocioForm.direccion">{{ negocioForm.direccion }}</p><div class="ticket-divider"></div><p v-if="ticketForm.encabezado" class="ticket-message">{{ ticketForm.encabezado }}</p><div class="ticket-divider"></div><div class="ticket-line"><span>1x Mazapán</span><span>$6.00</span></div><div class="ticket-line"><span>2x Pulpa de tamarindo</span><span>$14.00</span></div><div class="ticket-divider"></div><div class="ticket-line ticket-total"><span>TOTAL</span><span>$20.00</span></div><div class="ticket-divider"></div><p v-if="ticketForm.pie" class="ticket-message">{{ ticketForm.pie }}</p><p class="ticket-preview__footer">Dulcería POS · dulceriapos.com</p></div><p class="settings-help">Ejemplo ilustrativo con los valores del formulario. Guarda para aplicar los cambios.</p></figure></div><footer class="settings-footer"><p class="settings-status" :class="{ 'settings-status--success': !ticketForm.isDirty && ticketForm.recentlySuccessful }" role="status"><UiIcon :name="!ticketForm.isDirty && ticketForm.recentlySuccessful ? 'success' : 'info'" :size="16" />{{ ticketForm.isDirty ? 'Hay cambios sin guardar' : ticketForm.recentlySuccessful ? 'Configuración guardada' : 'Configuración actual de tickets' }}</p><UiButton type="submit" :loading="ticketForm.processing">{{ ticketForm.processing ? 'Guardando…' : 'Guardar tickets' }}</UiButton></footer></form>
+            </section>
+        </SettingsWorkspace>
     </AppLayout>
 </template>
 
 <style scoped>
-/* ── Estructura ────────────────────────────────────────────────────────────── */
-.cfg-wrap   { max-width: 1000px; }
-.cfg-header { margin-bottom: 1.5rem; }
-.cfg-title  { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin: 0; }
-.cfg-sub    { font-size: .8rem; color: #64748b; margin: .2rem 0 0; }
-
-/* ── Tabs ──────────────────────────────────────────────────────────────────── */
-.cfg-tabs {
-    display: flex;
-    gap: .25rem;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: .35rem;
-    margin-bottom: 1.5rem;
-    overflow-x: auto;
-    box-shadow: 0 1px 3px rgba(0,0,0,.04);
-}
-.cfg-tab {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: .2rem;
-    padding: .55rem 1.1rem;
-    border: none;
-    background: transparent;
-    color: #64748b;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all .15s;
-    white-space: nowrap;
-    flex: 1;
-    min-width: 80px;
-}
-.cfg-tab--active {
-    background: var(--dulce-rojo, #8B0000);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,.15);
-}
-.cfg-tab-icon  { font-size: 1.1rem; }
-.cfg-tab-label { font-size: .72rem; font-weight: 600; }
-
-/* ── Panel ─────────────────────────────────────────────────────────────────── */
-.cfg-panel {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,.04);
-}
-.cfg-section { padding: 1.75rem 2rem; border-bottom: 1px solid #f1f5f9; }
-.cfg-section:last-child { border-bottom: none; }
-.cfg-section-title { font-size: .95rem; font-weight: 700; color: #1e293b; margin-bottom: .35rem; }
-.cfg-section-desc  { font-size: .8rem; color: #64748b; margin: 0 0 1.25rem; line-height: 1.55; }
-
-.cfg-footer { padding: 1.25rem 2rem; background: #fafafa; border-top: 1px solid #f1f5f9; }
-
-/* ── Form elements ─────────────────────────────────────────────────────────── */
-.cfg-form { }
-.cfg-label { display: block; font-size: .73rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .35rem; }
-.cfg-input {
-    width: 100%;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: .55rem .85rem;
-    font-size: .88rem;
-    color: #1e293b;
-    outline: none;
-    font-family: inherit;
-    transition: border-color .15s, background .15s;
-}
-.cfg-input:focus { border-color: var(--dulce-rojo, #8B0000); background: #fff; }
-.cfg-textarea { resize: vertical; min-height: 72px; }
-.cfg-hint { font-size: .7rem; color: #94a3b8; margin-top: .25rem; display: block; }
-.cfg-error-msg { font-size: .72rem; color: #dc2626; margin-top: .25rem; display: block; }
-.cfg-errors { background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px; padding: .75rem 1rem; font-size: .8rem; color: #dc2626; margin-top: .75rem; }
-
-/* ── Botones ───────────────────────────────────────────────────────────────── */
-.btn-guardar {
-    background: var(--dulce-rojo, #8B0000);
-    color: #fff;
-    border: none;
-    border-radius: 9px;
-    padding: .6rem 1.5rem;
-    font-size: .88rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: opacity .15s;
-}
-.btn-guardar:hover:not(:disabled) { opacity: .88; }
-.btn-guardar:disabled { opacity: .55; cursor: not-allowed; }
-
-/* ── Paletas ───────────────────────────────────────────────────────────────── */
-.paletas-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: .65rem;
-    margin-bottom: 1rem;
-}
-.paleta-chip {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    padding: .55rem .75rem;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
-    background: #fff;
-    cursor: pointer;
-    font-size: .78rem;
-    font-weight: 600;
-    color: #475569;
-    transition: all .15s;
-    text-align: left;
-}
-.paleta-chip:hover { border-color: #94a3b8; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,.08); }
-.paleta-chip--active { border-color: var(--dulce-rojo, #8B0000) !important; box-shadow: 0 0 0 3px rgba(0,0,0,.06); }
-.paleta-swatch { width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0; }
-.paleta-dot    { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.paleta-nombre { flex: 1; font-size: .73rem; }
-.paleta-check  { color: #10b981; font-weight: 800; font-size: .85rem; margin-left: auto; }
-
-/* ── Preview sidebar ───────────────────────────────────────────────────────── */
-.sidebar-preview {
-    border-radius: 12px;
-    overflow: hidden;
-    width: 200px;
-    font-size: .72rem;
-    box-shadow: 0 4px 16px rgba(0,0,0,.15);
-    margin-top: 1rem;
-    transition: background .3s;
-}
-.sp-marca { padding: .75rem .85rem; text-align: center; transition: background .3s; }
-.sp-logo-wrap { margin-bottom: .35rem; }
-.sp-logo-img { max-height: 32px; max-width: 100%; object-fit: contain; border-radius: 4px; }
-.sp-brand-name { color: #fff; font-weight: 700; font-size: .78rem; margin-bottom: .15rem; }
-.sp-user  { color: rgba(255,255,255,.65); font-size: .65rem; }
-.sp-nav { padding: .4rem 0; }
-.sp-item {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    padding: .45rem .85rem;
-    color: rgba(255,255,255,.75);
-    font-size: .7rem;
-    cursor: default;
-}
-.sp-item--activo { background: rgba(255,255,255,.15); color: #fff; }
-.sp-item--cfg { margin-top: .25rem; border-top: 1px solid rgba(255,255,255,.08); padding-top: .5rem; }
-.sp-dot { width: 3px; height: 14px; border-radius: 2px; flex-shrink: 0; transition: background .3s; }
-
-/* ── Logo upload ───────────────────────────────────────────────────────────── */
-.logo-area { display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; }
-.logo-current { flex-shrink: 0; }
-.logo-preview-wrap { position: relative; display: inline-block; }
-.logo-preview { max-width: 120px; max-height: 80px; object-fit: contain; border: 2px solid #e2e8f0; border-radius: 10px; display: block; }
-.logo-remove {
-    position: absolute; top: -8px; right: -8px;
-    width: 22px; height: 22px; border-radius: 50%;
-    background: #ef4444; color: #fff; border: none;
-    font-size: .65rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
-}
-.logo-placeholder {
-    width: 100px; height: 70px; border: 2px dashed #e2e8f0; border-radius: 10px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3rem;
-}
-.logo-placeholder-icon { font-size: 1.5rem; }
-.logo-placeholder-txt  { font-size: .65rem; color: #94a3b8; }
-.logo-upload { display: flex; flex-direction: column; gap: .4rem; }
-.upload-btn {
-    display: inline-flex; align-items: center; gap: .4rem;
-    background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;
-    padding: .45rem 1rem; font-size: .8rem; font-weight: 600; color: #475569;
-    cursor: pointer; transition: background .15s;
-}
-.upload-btn:hover { background: #e2e8f0; }
-.logo-hint { font-size: .7rem; color: #94a3b8; margin: 0; }
-
-/* ── Toggles ───────────────────────────────────────────────────────────────── */
-.toggles-group { display: flex; flex-direction: column; gap: .85rem; }
-.toggle-item { display: flex; align-items: flex-start; gap: .85rem; cursor: pointer; }
-.toggle-wrap { position: relative; flex-shrink: 0; margin-top: .1rem; }
-.toggle-check { position: absolute; opacity: 0; width: 0; height: 0; }
-.toggle-slider {
-    display: block; width: 40px; height: 22px; border-radius: 11px;
-    background: #e2e8f0; transition: background .2s; cursor: pointer;
-}
-.toggle-slider::after {
-    content: '';
-    position: absolute; top: 3px; left: 3px;
-    width: 16px; height: 16px; border-radius: 50%;
-    background: #fff; transition: transform .2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,.2);
-}
-.toggle-check:checked + .toggle-slider { background: var(--dulce-rojo, #8B0000); }
-.toggle-check:checked + .toggle-slider::after { transform: translateX(18px); }
-.toggle-label { font-size: .82rem; font-weight: 600; color: #1e293b; }
-.toggle-desc  { font-size: .72rem; color: #94a3b8; }
-
-/* ── Ticket preview ─────────────────────────────────────────────────────────── */
-.ticket-preview {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 1rem;
-    font-family: 'Courier New', monospace;
-    font-size: .72rem;
-    color: #1e293b;
-    line-height: 1.7;
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
-}
-.tp-logo { text-align: center; margin-bottom: .5rem; }
-.tp-logo-img { max-height: 40px; max-width: 100%; object-fit: contain; }
-.tp-business { text-align: center; font-weight: 700; font-size: .82rem; }
-.tp-rfc  { text-align: center; color: #64748b; }
-.tp-addr { text-align: center; color: #64748b; font-size: .67rem; }
-.tp-divider { text-align: center; color: #94a3b8; margin: .2rem 0; font-size: .65rem; }
-.tp-encabezado { text-align: center; color: #475569; font-size: .67rem; white-space: pre-line; }
-.tp-item { display: flex; justify-content: space-between; }
-.tp-total { display: flex; justify-content: space-between; font-weight: 700; font-size: .82rem; }
-.tp-pie { text-align: center; color: #475569; font-size: .67rem; white-space: pre-line; }
-.tp-footer { text-align: center; color: #94a3b8; font-size: .62rem; margin-top: .25rem; }
-
-/* ── Utilities ─────────────────────────────────────────────────────────────── */
-.d-none { display: none; }
-.mb-0 { margin-bottom: 0 !important; }
-.mb-2 { margin-bottom: .5rem !important; }
-.mb-3 { margin-bottom: .75rem !important; }
-.mt-3 { margin-top: .75rem !important; }
-
-@media (max-width: 600px) {
-    .cfg-section { padding: 1.25rem 1rem; }
-    .cfg-footer  { padding: 1rem; }
-    .cfg-tab-label { display: none; }
-    .cfg-tab-icon  { font-size: 1.2rem; }
-    .cfg-tab { min-width: unset; }
-    .paletas-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-}
+.palette-fieldset, .ticket-options { min-width: 0; padding: 0; margin: 0; border: 0; }
+.palette-fieldset legend, .ticket-options legend { float: none; width: auto; }
+.appearance-grid { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 28px; align-items: start; }
+.palette-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 20px; }
+.palette-option { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px; border: 1px solid #858a94; border-radius: 6px; background: white; color: var(--p-text); font: inherit; font-size: 12px; text-align: left; }
+.palette-option > span:nth-child(2) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.palette-option:hover { background: var(--p-canvas); }
+.palette-option.is-selected { border: 2px solid var(--p-brand-ink); padding: 9px; background: white; }
+.palette-option.is-selected > .p-icon { flex-shrink: 0; color: var(--p-brand-ink); }
+.palette-option:focus-visible, .settings-text-action:focus-visible { outline: 2px solid var(--p-brand-ink); outline-offset: 3px; }
+.palette-option:disabled { opacity: .6; cursor: wait; }
+.palette-swatch { position: relative; display: block; width: 24px; height: 24px; flex-shrink: 0; border-radius: 5px; }
+.palette-swatch > span { position: absolute; right: -2px; bottom: -2px; width: 10px; height: 10px; border: 2px solid white; border-radius: 50%; }
+.appearance-preview { margin: 0; padding-top: 2px; }
+.appearance-preview figcaption, .receipt-figure figcaption { margin-bottom: 12px; color: var(--p-muted); font-size: 12px; font-weight: 500; }
+.appearance-preview > p { margin: 10px 0 0; color: var(--p-muted); font-size: 12px; line-height: 1.6; }
+.brand-preview { border: 1px solid var(--p-border); border-radius: 8px; overflow: hidden; background: white; }
+.brand-preview__brand { display: flex; align-items: center; gap: 8px; padding: 16px 12px; border-bottom: 1px solid var(--p-border); }
+.brand-preview__brand strong { min-width: 0; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.brand-preview__brand img { object-fit: contain; flex-shrink: 0; }
+.brand-preview__symbol { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; background: var(--p-brand); color: var(--p-on-brand); border-radius: 8px; }
+.brand-preview__nav { display: grid; gap: 4px; padding: 8px; }
+.brand-preview__nav > span { display: flex; align-items: center; gap: 8px; padding: 10px 8px; color: var(--p-muted); font-size: 12px; }
+.brand-preview__nav > .brand-preview__active { border-left: 2px solid var(--p-brand-ink); color: var(--p-brand-ink); font-weight: 600; }
+.logo-section { display: flex; align-items: flex-start; gap: 20px; border-top: 1px solid var(--p-border); }
+.logo-preview { display: grid; align-content: center; justify-items: center; gap: 6px; width: 88px; min-height: 88px; flex-shrink: 0; border: 1px dashed #858a94; border-radius: 8px; color: var(--p-muted); }
+.logo-preview img { object-fit: contain; width: 86px; height: 86px; padding: 6px; }
+.logo-preview > span { font-size: 12px; }
+.logo-controls { flex: 1; min-width: 0; }
+.logo-controls .settings-title { font-size: 13px; }
+.logo-format { font-size: 12px; }
+.settings-text-action { min-height: 44px; padding: 8px 0; border: 0; background: transparent; font: inherit; font-size: 13px; color: var(--p-danger); }
+.settings-text-action:hover { text-decoration: underline; }
+.business-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 20px; }
+.business-grid__wide { grid-column: 1 / -1; }
+.ticket-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 280px); gap: 32px; align-items: start; }
+.ticket-controls { display: grid; gap: 24px; min-width: 0; }
+.ticket-controls textarea { resize: vertical; }
+.ticket-options { padding-top: 4px; }
+.ticket-options legend { margin-bottom: 8px; font-size: 13px; }
+.ticket-toggle { display: flex; align-items: flex-start; gap: 12px; min-height: 64px; padding: 12px 0; cursor: pointer; }
+.ticket-toggle input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--p-brand-ink); }
+.ticket-toggle input:focus-visible { outline: 2px solid var(--p-brand-ink); outline-offset: 3px; }
+.ticket-toggle > span { min-width: 0; }
+.ticket-toggle strong { display: block; font-size: 13px; font-weight: 500; }
+.ticket-toggle span > span { display: block; margin-top: 4px; color: var(--p-muted); font-size: 12px; line-height: 1.6; }
+.receipt-figure { min-width: 0; margin: 0; }
+.ticket-preview { border: 1px solid #c9ccd3; border-radius: 4px; padding: 20px 16px; background: white; color: #34363d; font-family: var(--p-font-sans); font-size: 12px; text-align: center; overflow-wrap: anywhere; }
+.ticket-preview > img { object-fit: contain; margin-bottom: 12px; }
+.ticket-preview__business { display: block; font-size: 14px; }
+.ticket-preview p { margin: 6px 0 0; font-size: 12px; line-height: 1.6; }
+.ticket-message { white-space: pre-wrap; }
+.ticket-divider { margin: 14px 0; border-top: 1px dashed #a1a5af; }
+.ticket-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 8px 0; text-align: left; }
+.ticket-line span:last-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ticket-total { font-weight: 600; }
+.ticket-preview .ticket-preview__footer { margin-top: 16px; color: #666973; }
+@media (max-width: 899.98px) { .appearance-grid, .ticket-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; } .appearance-preview { max-width: 300px; width: 100%; } .receipt-figure { max-width: 320px; width: 100%; margin-inline: auto; } }
+@media (max-width: 599.98px) { .business-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; } .logo-section { flex-direction: column; gap: 16px; } .logo-controls { width: 100%; } }
+@media (max-width: 359.98px) { .palette-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; } }
 </style>
