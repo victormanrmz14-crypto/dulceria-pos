@@ -2,8 +2,15 @@
 import { ref } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
-import ModalPos from '../../Components/ModalPos.vue';
-import CampoForm from '../../Components/CampoForm.vue';
+import FinanceWorkspace from '../../Components/Finanzas/FinanceWorkspace.vue';
+import UiButton from '../../Components/Ui/UiButton.vue';
+import UiIcon from '../../Components/Ui/UiIcon.vue';
+import UiEmptyState from '../../Components/Ui/UiEmptyState.vue';
+import UiFormField from '../../Components/Ui/UiFormField.vue';
+import AdminActions from '../../Components/Admin/AdminActions.vue';
+import AdminStatus from '../../Components/Admin/AdminStatus.vue';
+import AdminDialog from '../../Components/Admin/AdminDialog.vue';
+import { Mail, Phone } from '@lucide/vue';
 
 defineProps({
     proveedores: Array,
@@ -49,115 +56,51 @@ const toggleActivo = (p) => {
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout premium v-slot="{ theme }">
         <Head title="Proveedores" />
-
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-            <h2 class="text-primary fs-3 mb-0">🚚 Proveedores</h2>
-            <button type="button" class="btn btn-primary fw-semibold" @click="abrirCrear">
-                + Nuevo proveedor
-            </button>
-        </div>
-
-        <div class="card">
-            <div class="table-responsive">
-                <table class="table mb-0 align-middle">
-                    <thead>
-                        <tr>
-                            <th>Proveedor</th>
-                            <th>Contacto</th>
-                            <th class="text-center">Productos</th>
-                            <th class="text-center">Estado</th>
-                            <th class="text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="p in proveedores" :key="p.id" :class="{ 'opacity-50': !p.activo }">
-                            <td>
-                                <div class="fw-semibold small">{{ p.nombre }}</div>
-                                <div v-if="p.notas" class="text-secondary" style="font-size: 0.75rem;">{{ p.notas }}</div>
-                            </td>
-                            <td>
-                                <div class="small">📧 {{ p.email }}</div>
-                                <div v-if="p.telefono" class="small text-secondary">📞 {{ p.telefono }}</div>
-                            </td>
-                            <td class="text-center">
-                                <span class="badge text-bg-light">{{ p.productos_count }}</span>
-                            </td>
-                            <td class="text-center">
-                                <span class="badge rounded-pill" :class="p.activo ? 'text-bg-success' : 'text-bg-secondary'">
-                                    {{ p.activo ? 'Activo' : 'Inactivo' }}
-                                </span>
-                            </td>
-                            <td class="text-end">
-                                <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-light" title="Editar" @click="abrirEditar(p)">✏️</button>
-                                    <button type="button" class="btn btn-light"
-                                            :title="p.activo ? 'Desactivar' : 'Activar'"
-                                            @click="toggleActivo(p)">
-                                        {{ p.activo ? '🚫' : '✅' }}
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr v-if="!proveedores.length">
-                            <td colspan="5" class="text-center text-secondary py-5">Sin proveedores registrados.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Modal crear / editar -->
-        <ModalPos
-            :abierto="modalAbierto"
-            :titulo="editando ? '✏️ Editar proveedor' : '🚚 Nuevo proveedor'"
-            ancho="520px"
-            @cerrar="modalAbierto = false"
-        >
-            <form @submit.prevent="enviar" class="d-flex flex-column gap-3">
-                <CampoForm etiqueta="Nombre" :error="form.errors.nombre" requerido>
-                    <template #default="{ clase }">
-                        <input v-model="form.nombre" type="text" maxlength="150"
-                               class="form-control" :class="clase" required>
-                    </template>
-                </CampoForm>
-                <div class="row g-3">
-                    <div class="col-12 col-sm-7">
-                        <CampoForm etiqueta="Email" :error="form.errors.email" requerido>
-                            <template #default="{ clase }">
-                                <input v-model="form.email" type="email" maxlength="255"
-                                       class="form-control" :class="clase" required>
-                            </template>
-                        </CampoForm>
-                    </div>
-                    <div class="col-12 col-sm-5">
-                        <CampoForm etiqueta="Teléfono" :error="form.errors.telefono">
-                            <template #default="{ clase }">
-                                <input v-model="form.telefono" type="tel" maxlength="20"
-                                       class="form-control" :class="clase">
-                            </template>
-                        </CampoForm>
-                    </div>
+        <FinanceWorkspace>
+            <div class="p-page-heading"><div><h1 class="p-page-title">Proveedores</h1><p class="finance-description">Consulta los contactos y administra tus proveedores.</p></div><UiButton @click="abrirCrear"><UiIcon name="plus" />Nuevo proveedor</UiButton></div>
+            <section class="p-panel" aria-labelledby="suppliers-title">
+                <div class="p-panel__heading"><div><h2 id="suppliers-title" class="p-panel__title">Directorio de proveedores</h2><p class="p-panel__description">Contacto, productos asociados y estado</p></div><UiIcon name="truck" class="finance-muted" /></div>
+                <template v-if="proveedores.length">
+                    <table class="finance-table suppliers-table"><caption class="finance-table-caption">Proveedores, datos de contacto, productos, estado y acciones</caption><thead><tr><th scope="col">Proveedor</th><th scope="col">Contacto</th><th scope="col" class="finance-number">Productos</th><th scope="col">Estado</th><th scope="col" class="finance-number">Acciones</th></tr></thead><tbody>
+                        <tr v-for="p in proveedores" :key="p.id"><td><span class="supplier-name">{{ p.nombre }}</span><p v-if="p.notas" class="supplier-notes">{{ p.notas }}</p></td><td><p class="supplier-contact"><Mail :size="15" :stroke-width="1.75" aria-hidden="true" /><span>{{ p.email }}</span></p><p v-if="p.telefono" class="supplier-contact"><Phone :size="15" :stroke-width="1.75" aria-hidden="true" /><span>{{ p.telefono }}</span></p></td><td class="finance-number">{{ p.productos_count }}</td><td><AdminStatus :active="p.activo" /></td><td><AdminActions :name="p.nombre" :active="p.activo" @edit="abrirEditar(p)" @toggle="toggleActivo(p)" /></td></tr>
+                    </tbody></table>
+                    <div class="finance-cards supplier-cards"><article v-for="p in proveedores" :key="p.id" class="finance-record">
+                        <div class="finance-record__heading"><h3 class="finance-record__title">{{ p.nombre }}</h3><AdminStatus :active="p.activo" /></div>
+                        <p class="supplier-contact"><Mail :size="15" :stroke-width="1.75" aria-hidden="true" /><span>{{ p.email }}</span></p><p v-if="p.telefono" class="supplier-contact"><Phone :size="15" :stroke-width="1.75" aria-hidden="true" /><span>{{ p.telefono }}</span></p>
+                        <p v-if="p.notas" class="supplier-notes">{{ p.notas }}</p><dl class="finance-pairs"><div class="finance-pair supplier-products"><dt>Productos asociados</dt><dd>{{ p.productos_count }}</dd></div></dl>
+                        <AdminActions class="supplier-card-actions" :name="p.nombre" :active="p.activo" labels @edit="abrirEditar(p)" @toggle="toggleActivo(p)" />
+                    </article></div>
+                </template>
+                <UiEmptyState v-else icon="truck" title="Sin proveedores registrados" description="Añade un proveedor para consultar sus datos de contacto y productos asociados." />
+            </section>
+        </FinanceWorkspace>
+        <AdminDialog :open="modalAbierto" :title="editando ? 'Editar proveedor' : 'Nuevo proveedor'" :theme="theme" wide @close="modalAbierto = false">
+            <form @submit.prevent="enviar" class="admin-dialog-form">
+                <UiFormField etiqueta="Nombre" :error="form.errors.nombre" requerido><template #default="{ control }"><input v-bind="control" v-model="form.nombre" type="text" name="nombre" autocomplete="off" maxlength="150" class="p-field-control" required></template></UiFormField>
+                <div class="admin-dialog-grid">
+                    <UiFormField etiqueta="Correo electrónico" :error="form.errors.email" requerido><template #default="{ control }"><input v-bind="control" v-model="form.email" type="email" name="email" autocomplete="off" :spellcheck="false" maxlength="255" class="p-field-control" required></template></UiFormField>
+                    <UiFormField etiqueta="Teléfono" :error="form.errors.telefono"><template #default="{ control }"><input v-bind="control" v-model="form.telefono" type="tel" inputmode="tel" name="telefono" autocomplete="off" maxlength="20" class="p-field-control"></template></UiFormField>
                 </div>
-                <CampoForm etiqueta="Notas" :error="form.errors.notas">
-                    <template #default="{ clase }">
-                        <textarea v-model="form.notas" rows="2" maxlength="500"
-                                  class="form-control" :class="clase"></textarea>
-                    </template>
-                </CampoForm>
-                <div class="row g-2">
-                    <div class="col-6">
-                        <button type="button" class="btn btn-light w-100 fw-semibold"
-                                @click="modalAbierto = false">Cancelar</button>
-                    </div>
-                    <div class="col-6">
-                        <button type="submit" class="btn btn-primary w-100 fw-bold" :disabled="form.processing">
-                            {{ editando ? 'Guardar' : 'Crear' }}
-                        </button>
-                    </div>
-                </div>
+                <UiFormField etiqueta="Notas" :error="form.errors.notas"><template #default="{ control }"><textarea v-bind="control" v-model="form.notas" name="notas" autocomplete="off" rows="2" maxlength="500" class="p-field-control"></textarea></template></UiFormField>
+                <div class="admin-dialog-actions"><UiButton variant="secondary" @click="modalAbierto = false">Cancelar</UiButton><UiButton type="submit" :loading="form.processing">{{ form.processing ? 'Guardando…' : (editando ? 'Guardar' : 'Crear') }}</UiButton></div>
             </form>
-        </ModalPos>
+        </AdminDialog>
     </AppLayout>
 </template>
+
+<style scoped>
+.supplier-name { font-weight: 500; }
+.suppliers-table :deep(td:first-child) { max-width: 320px; }
+.suppliers-table :deep(td:nth-child(2)) { max-width: 260px; }
+.suppliers-table :deep(td:last-child) { width: 140px; }
+.supplier-contact { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.6; margin: 0 0 6px; overflow-wrap: anywhere; }
+.supplier-contact:last-child { margin-bottom: 0; }
+.supplier-contact svg { flex-shrink: 0; margin-top: 3px; color: var(--p-muted); }
+.supplier-contact span { min-width: 0; }
+.supplier-notes { font-size: 12px; color: var(--p-muted); line-height: 1.7; margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.supplier-cards { padding: 16px; }
+.supplier-cards :deep(.supplier-products) { padding: 12px 0; margin-top: 8px; border-bottom: 0; }
+.supplier-card-actions { margin-top: 8px; }
+</style>

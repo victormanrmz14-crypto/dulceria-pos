@@ -4,7 +4,7 @@
 
 ## Alcance y activación
 
-La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4; las vistas de [Productos](resources/js/Pages/Productos/Index.vue) lo activan en Fase 2.6 dentro de sus permisos existentes; Caja y Cortes lo activan en Fase 2.7 y Reportes en Fase 2.8. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
+La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4; las vistas de [Productos](resources/js/Pages/Productos/Index.vue) lo activan en Fase 2.6 dentro de sus permisos existentes; Caja y Cortes lo activan en Fase 2.7 y Reportes en Fase 2.8. Usuarios, Catálogos e Historial de Ventas lo activan en Fase 2.9. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
 
 Los componentes premium usan raíces `.pos-premium` locales: sidebar, header, Bottom Navigation y overlays reciben los tokens de marca sin activar esos estilos sobre el contenido heredado. `.tenant-shell` controla exclusivamente el espacio de navegación, el offset de notificaciones y el margen de scroll; `html:has(.tenant-shell)` reserva espacio de scroll en móvil. Los overlays teletransportados llevan su propia raíz premium. No se cambian resets, variables globales de Bootstrap ni Tailwind. La carga del CSS del piloto después de navegar no debe alterar pantallas vecinas.
 
@@ -351,7 +351,7 @@ Los botones principales de estas vistas y diálogos añaden borde local `--p-bra
 
 Informe: [Fase 2.7 y comprobación responsive](docs/cash-cuts-2026-11-23.md). Playwright MCP, Chromium, las ocho anchuras solicitadas y simulaciones exclusivamente en navegador porque la sesión estaba expirada. Los assets se sirven desde localhost; no se realizan operaciones comerciales. Se conservan capturas y galería ignoradas por Git. Las comprobaciones visuales no certifican permisos, validación de servidor ni persistencia; el commit técnico queda pendiente de aprobación estética.
 
-## Fase 2.8 · Reportes y Analítica (implementada, pendiente de aprobación estética)
+## Fase 2.8 · Reportes y Analítica (aprobada)
 
 [Reportes/Index.vue](resources/js/Pages/Reportes/Index.vue) activa `AppLayout premium` y reutiliza `FinanceWorkspace` y `FinancialMetric` sin modificarlos. Conserva los colores del tenant, DM Sans, Lucide, tokens, navegación y superficies de las fases anteriores. No se cambian otros módulos, dependencias, Grafica ni componentes compartidos existentes.
 
@@ -391,4 +391,52 @@ Se conservan Hoy, Ayer, Últimos 7 días y Últimos 30 días, con las mismas URL
 
 Un ranking con un solo producto ocupa una fila completa en escritorio. Nombres extensos se ajustan sin truncado; los importes largos pasan a una línea propia en listas estrechas. Las tarjetas de venta mantienen todos los campos y el enlace contextual al ticket, con metas compactas y total separado. Paginación reutiliza su variante premium, incluyendo URL, labels y `preserve-scroll`. Los vacíos usan UiEmptyState; los de gráficas tienen mínimo de 128 px. La barra inferior y su reserva de espacio se conservan.
 
-Informe, capturas, contraste y límites: [Fase 2.8](docs/reports-analytics-2026-11-23.md). La simulación visual usa únicamente el navegador porque no hay sesión autenticada disponible. El commit técnico no constituye aprobación estética.
+Informe, capturas, contraste y límites: [Fase 2.8](docs/reports-analytics-2026-11-23.md). La simulación visual usa únicamente el navegador porque no hay sesión autenticada disponible. La Fase 2.8 fue aprobada por el propietario al solicitar la Fase 2.9; el informe conserva el registro de su entrega técnica original.
+
+## Fase 2.9 · Usuarios, Catálogos e Historial de Ventas (implementada, pendiente de aprobación estética)
+
+Las siete vistas del tenant activan `AppLayout premium`: listado/alta/edición de Usuarios, Categorías y Marcas sobre `Catalogos/Simple`, Proveedores e Historial de Ventas. Se conservan las rutas y permisos. Configuración y Superadministración quedan fuera del alcance. No se cambia el contenido de las fases anteriores; la variante predeterminada de la lista de ventas de Reportes conserva su presentación aprobada.
+
+### Colecciones administrativas
+
+Se reutilizan FinanceWorkspace y sus tablas, tarjetas y pares etiqueta/valor para mantener el mismo vocabulario de superficies y espaciados. Usuarios presenta nombre/apellido, usuario, correo, rol, estado y acciones. La marca «Tú» conserva la condición por id; activar/desactivar sigue ausente para la cuenta actual. Los estados inactivos conservan toda su legibilidad, sin opacidad aplicada a la fila.
+
+Categorías y Marcas siguen compartiendo la misma página y sus cinco props: `titulo`, `singular`, `icono`, `base` e `items`. El prop `icono` se conserva en el contrato; sus emojis no se renderizan y la vista usa Lucide. No se añaden búsquedas ni filtros. Proveedores conserva nombre, correo, teléfono opcional, notas opcionales, estado y `productos_count`, sin truncar datos de contacto o notas.
+
+| Componente nuevo | Contrato de presentación |
+|---|---|
+| [AdminActions](resources/js/Components/Admin/AdminActions.vue) | `name`, `active`, `editHref?`, `hideToggle?`, `labels?`; eventos `edit` y `toggle` sin payload. Link para editar usuarios y botón para abrir los diálogos de catálogos; no ejecuta HTTP ni confirmaciones propias. |
+| [AdminStatus](resources/js/Components/Admin/AdminStatus.vue) | `active`, `activeLabel?`, `inactiveLabel?`. Icono y texto en superficie neutra; variantes Activo/Inactivo y Activa/Inactiva. |
+| [UserRoleBadge](resources/js/Components/Admin/UserRoleBadge.vue) | `role`; administrador con ShieldCheck, cajero con ReceiptText. Mantiene la interpretación original del rol; no concede permisos. |
+| [AdminEditorFrame](resources/js/Components/Admin/AdminEditorFrame.vue) | `title`, `description`, `backHref` y slot. Marco de máximo 1040 px con encabezado, Volver y panel; usado por alta/edición de Usuarios. |
+| [AdminDialog](resources/js/Components/Admin/AdminDialog.vue) | `open`, `title`, `theme?`, `wide?`, slot y evento `close`. Reutiliza UiOverlay, con anchos máximos de 440/520 px, campos y pie de acciones en flujo. |
+
+Acciones de escritorio con iconos y nombres accesibles, de 44 × 44 px como mínimo, sin envolver el par de botones. Las celdas reservan 140 px para evitar filas innecesariamente altas. En tarjetas se muestran etiquetas Editar y Activar/Desactivar. Los handlers originales siguen poseyendo confirmaciones, endpoints, payloads y condiciones. La confirmación existente de Usuarios no se añade a los catálogos, que mantienen su comportamiento anterior.
+
+### Formularios administrativos
+
+UsuarioForm mantiene props `form`, `esEdicion`, `textoBoton` y evento `enviar`. Agrupa información personal, datos de acceso y rol; conserva los seis inputs, los dos botones de rol y todas sus restricciones. Contraseña/confirmación mantienen `minlength=8`, `autocomplete=new-password` y las mismas condiciones de required en alta/edición. Solo existen cajero y administrador. La selección usa fieldset/legend, `aria-pressed`, borde, peso e icono además del color. Cancelar vuelve al índice existente, sin guardas nuevas.
+
+UiFormField asocia labels, ids, `aria-invalid`, `aria-describedby` y errores con `role=alert`. Los errores de confirmación y rol también se presentan junto a su control. Texto de input de 16 px y altura mínima de 46 px. Los formularios de catálogos mantienen nombre de hasta 150 caracteres; Proveedores conserva email requerido de hasta 255, teléfono de hasta 20 y notas de hasta 500, con dos filas iniciales. No se añaden reglas ni requisitos.
+
+Loading consume únicamente `form.processing`, con UiButton, spinner, disabled y `aria-busy`. Los botones principales conservan borde local en `--p-brand-ink` para marcas claras. Los diálogos reutilizan inercia, Tab contenido, Escape, cierre y restauración de foco del overlay existente; la barra inferior se suprime mediante el composable ya implementado. Los campos largos de una línea mantienen desplazamiento nativo y cursor, sin ensanchar el documento ni perder su valor.
+
+### Historial y reutilización con Reportes
+
+Historial reutiliza AnalyticsSalesList con una extensión optativa: `ticketAction=false` por defecto, `caption`, `emptyTitle`, `emptyDescription` y slot `empty-action`. El modo predeterminado conserva los cinco campos y el folio enlazado de Reportes. Historial solicita `ticketAction`: folio informativo y acción explícita «Ver ticket», manteniendo el destino original en tabla y tarjetas. No se añaden filtros, búsquedas, exportaciones o acciones comerciales.
+
+Los estilos específicos de las tarjetas de ventas tienen precedencia estable para mantener el espaciado aprobado de Reportes, independientemente del orden de carga de CSS compartido. El vacío de Historial usa Lucide, mensaje, descripción y acceso al POS en un bloque compacto. La paginación conserva sus links, labels, condición de visibilidad y `preserve-scroll`.
+
+### Responsive y evidencia
+
+| Ancho CSS | Listados | Formularios y navegación |
+|---|---|---|
+| 320–399 px | Tarjetas completas de una columna, con acciones etiquetadas | Campos y roles apilados; barra inferior existente |
+| 400–599 px | Mismas tarjetas de una columna | Roles en dos columnas; campos en una |
+| 600–767 px | Tarjetas de una columna | Campos de usuario en dos columnas; barra inferior |
+| 768–1199 px | Tarjetas de dos columnas | Drawer hasta 991; sidebar desde 992; formularios con introducción superior |
+| ≥1200 px | Tablas completas, sin scroll horizontal | Introducción lateral en UsuarioForm; marco limitado a 1040 px |
+
+Los diálogos de proveedores distribuyen correo y teléfono en dos columnas desde 600 px; en móvil se apilan. Todas las acciones y pies mantienen espacio respecto a la navegación inferior, sin nuevas barras flotantes.
+
+Informe, matriz de las ocho anchuras, capturas y límites: [Fase 2.9](docs/users-catalogs-sales-history-phase-2-9.md). La comprobación visual usa únicamente datos simulados en el navegador porque no hay sesión autenticada disponible; no valida autorización, persistencia ni operaciones comerciales. Los componentes compartidos conservan sus contratos y el backend permanece sin cambios.

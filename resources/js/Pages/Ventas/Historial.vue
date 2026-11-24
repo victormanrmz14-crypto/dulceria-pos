@@ -1,8 +1,10 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
-import Paginacion from '../../Components/Paginacion.vue';
-import { moneda } from '../../utils';
+import FinanceWorkspace from '../../Components/Finanzas/FinanceWorkspace.vue';
+import AnalyticsSalesList from '../../Components/Analitica/AnalyticsSalesList.vue';
+import UiButton from '../../Components/Ui/UiButton.vue';
+import UiIcon from '../../Components/Ui/UiIcon.vue';
 
 defineProps({
     ventas: Object, // paginador de Laravel
@@ -10,51 +12,23 @@ defineProps({
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout premium>
         <Head title="Historial de ventas" />
-
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-            <h2 class="text-primary fs-3 mb-0">📋 Historial de ventas</h2>
-            <Link href="/ventas" class="btn btn-primary btn-sm fw-semibold">🛒 Ir al punto de venta</Link>
-        </div>
-
-        <div class="card">
-            <div class="table-responsive">
-                <table class="table mb-0 align-middle">
-                    <thead>
-                        <tr>
-                            <th>Folio</th>
-                            <th>Fecha</th>
-                            <th>Cajero</th>
-                            <th>Método</th>
-                            <th class="text-end">Total</th>
-                            <th class="text-end"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="v in ventas.data" :key="v.id">
-                            <td class="fw-bold text-primary">{{ v.folio }}</td>
-                            <td class="small">{{ v.fecha }}</td>
-                            <td class="small">{{ v.cajero }}</td>
-                            <td class="small">
-                                {{ v.metodo_pago === 'efectivo' ? '💵 Efectivo' : '💳 Tarjeta' }}
-                            </td>
-                            <td class="text-end fw-bold text-primary">{{ moneda(v.total) }}</td>
-                            <td class="text-end">
-                                <Link :href="`/ventas/${v.id}/ticket`" class="btn btn-sm btn-light fw-semibold">
-                                    Ver ticket
-                                </Link>
-                            </td>
-                        </tr>
-                        <tr v-if="!ventas.data.length">
-                            <td colspan="6" class="text-center text-secondary py-5">Sin ventas registradas.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="card-footer bg-white py-3">
-                <Paginacion :links="ventas.links" />
-            </div>
-        </div>
+        <FinanceWorkspace>
+            <div class="p-page-heading"><div><h1 class="p-page-title history-title"><UiIcon name="receipt" :size="23" />Historial de ventas</h1><p class="finance-description">Consulta las ventas registradas y accede a sus tickets.</p></div><UiButton href="/ventas"><UiIcon name="cart" />Ir al punto de venta</UiButton></div>
+            <section class="p-panel" aria-labelledby="history-list-title">
+                <div class="p-panel__heading"><div><h2 id="history-list-title" class="p-panel__title">Ventas registradas</h2><p class="p-panel__description">Folio, fecha, cajero y método de pago</p></div><UiIcon name="receipt" class="finance-muted" /></div>
+                <div class="history-sales"><AnalyticsSalesList :sales="ventas.data" :links="ventas.links" ticket-action caption="Historial de ventas y acceso a sus tickets" empty-title="Sin ventas registradas" empty-description="Las ventas aparecerán aquí con su fecha, cajero e importe.">
+                    <template #empty-action><UiButton href="/ventas" variant="secondary"><UiIcon name="cart" :size="16" />Ir al punto de venta</UiButton></template>
+                </AnalyticsSalesList></div>
+            </section>
+        </FinanceWorkspace>
     </AppLayout>
 </template>
+
+<style scoped>
+.history-title { display: flex; align-items: center; gap: 10px; }
+.history-title .p-icon { color: var(--p-muted); }
+.history-sales :deep(.p-empty) { flex-direction: column; text-align: center; min-height: 220px; gap: 12px; padding: 28px 16px; }
+.history-sales :deep(.p-empty__copy) { max-width: 46ch; }
+</style>

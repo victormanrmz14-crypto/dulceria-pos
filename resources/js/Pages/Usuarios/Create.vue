@@ -1,7 +1,8 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import UsuarioForm from '../../Components/UsuarioForm.vue';
+import AdminEditorFrame from '../../Components/Admin/AdminEditorFrame.vue';
 
 const form = useForm({
     nombre: '',
@@ -17,20 +18,8 @@ const enviar = () => form.post('/usuarios');
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout premium>
         <Head title="Nuevo usuario" />
-
-        <div class="mx-auto" style="max-width: 640px;">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-                <h2 class="text-primary fs-3 mb-0">👥 Nuevo usuario</h2>
-                <Link href="/usuarios" class="btn btn-light btn-sm fw-semibold">← Volver</Link>
-            </div>
-
-            <div class="card">
-                <div class="card-body p-4">
-                    <UsuarioForm :form="form" texto-boton="Crear usuario" @enviar="enviar" />
-                </div>
-            </div>
-        </div>
+        <AdminEditorFrame title="Nuevo usuario" description="Completa los datos de la cuenta y asigna su rol." back-href="/usuarios"><UsuarioForm :form="form" texto-boton="Crear usuario" @enviar="enviar" /></AdminEditorFrame>
     </AppLayout>
 </template>
