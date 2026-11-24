@@ -4,7 +4,7 @@
 
 ## Alcance y activación
 
-La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4; las vistas de [Productos](resources/js/Pages/Productos/Index.vue) lo activan en Fase 2.6 dentro de sus permisos existentes; Caja y Cortes lo activan en Fase 2.7. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
+La navegación responsive es compartida por todos los módulos del tenant mediante `AppLayout`. El contenido premium sigue siendo optativo: [Dashboard.vue](resources/js/Pages/Dashboard.vue) lo activa únicamente para `admin`; [Pos.vue](resources/js/Pages/Ventas/Pos.vue) lo activa para ambos roles del tenant en Fase 2.4; las vistas de [Productos](resources/js/Pages/Productos/Index.vue) lo activan en Fase 2.6 dentro de sus permisos existentes; Caja y Cortes lo activan en Fase 2.7 y Reportes en Fase 2.8. El contenido Bootstrap de los demás módulos y del dashboard de cajero conserva su presentación. `StatCard` y `WelcomeModal` mantienen sus variantes originales por defecto. No cambia la asignación ni la comprobación de permisos del servidor.
 
 Los componentes premium usan raíces `.pos-premium` locales: sidebar, header, Bottom Navigation y overlays reciben los tokens de marca sin activar esos estilos sobre el contenido heredado. `.tenant-shell` controla exclusivamente el espacio de navegación, el offset de notificaciones y el margen de scroll; `html:has(.tenant-shell)` reserva espacio de scroll en móvil. Los overlays teletransportados llevan su propia raíz premium. No se cambian resets, variables globales de Bootstrap ni Tailwind. La carga del CSS del piloto después de navegar no debe alterar pantallas vecinas.
 
@@ -350,3 +350,45 @@ Los botones principales de estas vistas y diálogos añaden borde local `--p-bra
 ### Evidencia y conservación
 
 Informe: [Fase 2.7 y comprobación responsive](docs/cash-cuts-2026-11-23.md). Playwright MCP, Chromium, las ocho anchuras solicitadas y simulaciones exclusivamente en navegador porque la sesión estaba expirada. Los assets se sirven desde localhost; no se realizan operaciones comerciales. Se conservan capturas y galería ignoradas por Git. Las comprobaciones visuales no certifican permisos, validación de servidor ni persistencia; el commit técnico queda pendiente de aprobación estética.
+
+## Fase 2.8 · Reportes y Analítica (implementada, pendiente de aprobación estética)
+
+[Reportes/Index.vue](resources/js/Pages/Reportes/Index.vue) activa `AppLayout premium` y reutiliza `FinanceWorkspace` y `FinancialMetric` sin modificarlos. Conserva los colores del tenant, DM Sans, Lucide, tokens, navegación y superficies de las fases anteriores. No se cambian otros módulos, dependencias, Grafica ni componentes compartidos existentes.
+
+### Jerarquía y semántica
+
+Encabezado con propósito y `rangoTexto` original. Filtros en panel propio; después, cuatro indicadores: ingresos por ventas, número de ventas, ventas en efectivo y ventas con tarjeta. Solo ingresos por ventas lleva énfasis superior de marca. No representa utilidad, saldo de caja ni movimientos manuales. Los importes usan `moneda()` y el conteo `numero()`, con cifras tabulares y sin saltos. Se conserva la composición financiera móvil compacta y la variante para valores largos de Fase 2.7.
+
+El análisis sigue con ingresos diarios y distribución por método de pago; después, productos más vendidos y, a todo el ancho disponible, historial de ventas. No se añaden porcentajes, comparativas, tendencias calculadas, pronósticos ni estadísticas comerciales.
+
+### Componentes analíticos
+
+| Componente nuevo | Contrato de presentación |
+|---|---|
+| [AnalyticsChart](resources/js/Components/Analitica/AnalyticsChart.vue) | `kind: line/doughnut`, `data` con labels y datasets numéricos, `color` accesible y `label`. Reutiliza Grafica/Chart.js; clona datasets para cambiar únicamente su estilo. No ordena, agrega, interpola ni cambia valores. |
+| [AnalyticsRanking](resources/js/Components/Analitica/AnalyticsRanking.vue) | `items` con `label`, `quantity` y `value` ya formateados. Mantiene el orden recibido, numera posiciones y presenta vacío. No calcula el ranking ni porcentajes. |
+| [AnalyticsSalesList](resources/js/Components/Analitica/AnalyticsSalesList.vue) | `sales` con los campos existentes de cada venta y `links` del paginador. Tabla/tarjetas con fecha, cajero, método, importe y enlace original al ticket. No ejecuta operaciones comerciales. |
+
+### Gráficas
+
+Línea de 220 px de alto, tinta accesible de marca, trazo de 2 px y segmentos rectos para evitar suavizados que sugieran valores intermedios distintos. Puntos visibles hasta 31 fechas; en rangos mayores se mantienen los datos completos y el acceso por tooltip. Ejes con DM Sans de 12 px, máximo de cinco etiquetas de fecha sin rotación y cuadrícula horizontal discreta. Eje monetario compacto con Intl es-MX; tooltip con `moneda()` completo. Sin animaciones.
+
+El donut mide 152 × 152 px, con dos segmentos, el segundo tramado para distinguirlo incluso con marcas grises, borde blanco y leyenda HTML de efectivo/tarjeta con iconos, muestra de textura, nombres e importes completos. El segundo color es el neutral analítico `#737b8c` (4.25:1 sobre blanco); no se usa como nuevo color global. La lectura exacta no depende del color ni del hover.
+
+La línea tiene nombre accesible y un disclosure «Datos por día» con todas las fechas/importes originales; el listado tiene altura máxima de 260 px y puede enfocarse para recorrerlo con teclado. Los canvas son decorativos para tecnologías de asistencia porque el contenido se ofrece en texto adyacente. Sin ventas (`totalVentas === 0`) no se montan gráficas ni escalas. Con ventas de importe cero se conserva la línea de valores reales; si ambos importes son cero, el donut muestra «Sin importes por método de pago». Son condiciones de presentación, no cálculos nuevos.
+
+### Filtros y resultados responsive
+
+Se conservan Hoy, Ayer, Últimos 7 días y Últimos 30 días, con las mismas URL; personalizado mantiene los dos modelos, la función `aplicarPersonalizado`, sus parámetros y `preserveState`. No se añaden required, límites, normalización de fechas ni filtros. Activo se reconoce por texto, peso, borde y subrayado interior. Personalizado indica «Activo» cuando lo determina el prop original. Labels y errores de fechas se asocian mediante UiFormField; loading refleja eventos de navegación Inertia de Reportes sin cambiar consultas ni persistencia.
+
+| Ancho CSS | Filtros | Indicadores y resultados |
+|---|---|---|
+| 320–359 px | Presets 2 × 2; fechas y Aplicar en una columna | Métricas/listas/tarjetas en una columna; gráficas apiladas |
+| 360–599 px | Presets 2 × 2; fechas en dos columnas, Aplicar debajo | Mismo contenido móvil, con importes completos |
+| 600–767 px | Presets en fila; fechas y Aplicar en una fila | Dos columnas de métricas; ventas y ranking en una columna |
+| 768–1199 px | Panel apilado de períodos/rango | Métricas, tarjetas de ventas y ranking en dos columnas; gráficas apiladas |
+| ≥1200 px | Períodos y rango a los lados del panel | Cuatro indicadores; gráficas 1.8:1; ranking de cinco posiciones; tabla de ventas a todo el ancho |
+
+Un ranking con un solo producto ocupa una fila completa en escritorio. Nombres extensos se ajustan sin truncado; los importes largos pasan a una línea propia en listas estrechas. Las tarjetas de venta mantienen todos los campos y el enlace contextual al ticket, con metas compactas y total separado. Paginación reutiliza su variante premium, incluyendo URL, labels y `preserve-scroll`. Los vacíos usan UiEmptyState; los de gráficas tienen mínimo de 128 px. La barra inferior y su reserva de espacio se conservan.
+
+Informe, capturas, contraste y límites: [Fase 2.8](docs/reports-analytics-2026-11-23.md). La simulación visual usa únicamente el navegador porque no hay sesión autenticada disponible. El commit técnico no constituye aprobación estética.
