@@ -12,8 +12,10 @@
         </fieldset>
         <fieldset class="auth-section">
             <legend>Crea tu cuenta de administrador</legend>
-            <x-auth.field name="nombre" label="Tu nombre" :value="old('nombre')" :optional="true" maxlength="150" autocomplete="name" />
-            <x-auth.field name="email" label="Correo electrónico" type="email" :value="old('email')" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" maxlength="255" required />
+            <div class="auth-account-grid">
+                <x-auth.field name="nombre" label="Tu nombre" :value="old('nombre')" :optional="true" maxlength="150" autocomplete="name" />
+                <x-auth.field name="email" label="Correo electrónico" type="email" :value="old('email')" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" maxlength="255" required />
+            </div>
             <div class="auth-password-grid">
                 <x-auth.field name="password" label="Contraseña" type="password" autocomplete="new-password" hint="Usa al menos 8 caracteres." required />
                 <x-auth.field name="password_confirmation" label="Confirmar contraseña" type="password" autocomplete="new-password" required />
