@@ -9,7 +9,7 @@
 @layer brand {
 /* Platform identity only: never overrides a tenant's configured theme. */
 .platform-brand {
-    --brand: #8b243a;
+    --brand: #960a2c;
     --brand-hover: #6f1d30;
     --brand-soft: #f8eff1;
     --canvas: #f7f8fa;

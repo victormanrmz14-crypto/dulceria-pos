@@ -40,6 +40,9 @@ docs
 # Evidencias locales de revisión; no son parte de la aplicación.
 .playwright-mcp
 
+# Fuente de diseño aportada para la fase de branding; no es runtime.
+dulceria-pos-figma-assets-seleccionados.zip
+
 # Basura de editores / SO
 .idea
 .vscode

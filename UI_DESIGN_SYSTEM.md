@@ -1,24 +1,36 @@
 # Dulcería POS · Design System
 
-## Identidad de plataforma · Fase 2.13 (pendiente de revisión estética)
+## Identidad de plataforma · Fase 2.13.2
 
-La marca **Dulcería POS** identifica la plataforma. Nunca sustituye `tenantConfig`, el logotipo de una dulcería ni su paleta. La propuesta seleccionada es la **D de envoltura**: inicial geométrica con contraforma amplia y dos pliegues laterales originales. Se evaluaron también una bolsa modular y un monograma DP; sus bocetos y criterios están en [la lámina de identidad](public/brand/identity.html).
+La identidad aprobada procede de `dulceria-pos-figma-assets-seleccionados.zip`, exportado de Figma. Identifica **Dulcería POS** en páginas públicas y favicon; la superadministración conserva su nombre de plataforma sin rediseñarse. Nunca sustituye la identidad comercial, el logotipo ni la paleta de un tenant. El ZIP es entrada local fuera de Git y del contexto Docker.
 
-Assets maestros: [principal horizontal](public/brand/logo-horizontal.svg), [símbolo](public/brand/symbol.svg), [monocromático](public/brand/logo-mono.svg) y [blanco para fondo oscuro](public/brand/logo-dark.svg). Los SVG contienen trazados y viewBox, sin fuentes externas, scripts ni recursos enlazados. La palabra se trazó desde DM Sans 700; los pliegues y la D son geometría propia. [Generador](scripts/generate-brand.py), con fontTools como herramienta opcional de generación, sin dependencia de runtime.
+| Recurso definitivo en `public/brand/` | Contexto / proporción original |
+|---|---|
+| `logo-primary.svg` | Autenticación sobre fondo claro, con descriptor; 300 × 65 |
+| `logo-compact.svg` | Encabezado de autenticación bajo 992 px, sin descriptor; 300 × 65 |
+| `logo-white.svg` | Header, footer y maquetas públicas de landing sobre fondo oscuro; 301 × 65 |
+| `symbol-color.svg` | Sello de autenticación y componente de logo heredado; 168 × 99 |
+| `favicon-16.svg`, `favicon-32.svg`, `favicon-64.svg` | D simplificada aprobada para cada tamaño; no usar el símbolo detallado a 16 px |
+| `favicon-16.png`, `favicon-32.png`, `favicon-64.png` | Exportaciones originales de Figma: fallback y touch icon de 64 px |
+| `android-foreground.svg`, `android-background.svg` | Fuentes reservadas para Android, 108 × 108; no se cargan en la web |
+
+Los SVG se copiaron **sin modificar bytes**, trazados, colores, composición ni viewBox. XML válido, tipografía trazada, sin scripts, eventos ni referencias externas. No se añaden filtros, sombras, degradados ni rotación a la marca. Las variantes grafito y símbolo borgoña se dejan en el ZIP por no tener consumidor; la referencia Android compuesta tampoco se publica. Se retiraron los recursos provisionales, la lámina de exploración y su generador.
+
+`platform-logo.blade.php` selecciona la variante y declara las dimensiones intrínsecas correctas; CSS conserva `height:auto`. Anchos aprobados de la interfaz: 206 px, 184 px en teléfono. El símbolo usa 62 px de ancho y altura automática; no se estira a un cuadrado. No se duplica el nombre inmediatamente junto al wordmark. `platform-favicons.blade.php` unifica favicon en Blade e Inertia; `public/favicon.ico` contiene los PNG originales de 16/32/64 sin remuestreo. URLs versionadas para los PNG e ICO reemplazados. El touch icon reutiliza el PNG original de 64 px: una exportación Apple de mayor resolución queda para la fase móvil.
 
 | Rol de plataforma | Valor |
 |---|---|
-| Cereza / hover borgoña | `#8B243A` / `#6F1D30` |
+| Borgoña aprobado / hover de interfaz | `#960A2C` / `#6F1D30` |
 | Tinte / canvas / superficie | `#F8EFF1` / `#F7F8FA` / `#FFFFFF` |
 | Texto / secundario / borde | `#202126` / `#666973` / `#DEE0E5` |
 | Contorno de campos | `#858892` |
 | Error / éxito | `#B42318` / `#166534` |
 
-[tokens.css](public/brand/tokens.css) limita las variables a `.platform-brand` y a la capa CSS `brand`. Los tokens dinámicos `--p-*` de los tenants permanecen intactos. DM Sans variable se sirve localmente; se incluye su [licencia SIL OFL 1.1](public/brand/fonts/OFL.txt), sin fuente comercial ni petición a Google Fonts en autenticación o landing.
+[tokens.css](public/brand/tokens.css) limita las variables a `.platform-brand` y a la capa CSS `brand`. El color de acción se alinea con el borgoña del SVG; los tokens dinámicos `--p-*` de los tenants no cambian. DM Sans variable y su [licencia SIL OFL 1.1](public/brand/fonts/OFL.txt) se conservan locales. Contraste comprobado: blanco/borgoña 8.84:1; foco borgoña/panel claro 7.92:1.
 
-Uso mínimo recomendado: símbolo de 24 px y horizontal de 144 px; reserva exterior de 8 unidades respecto al viewBox del símbolo de 64 unidades. Mantener proporciones, orientación y colores; usar blanco sobre fondo oscuro, monocromático en reproducción de una tinta. El favicon tiene composición propia para 16/32/48 px, con SVG y fallback ICO. No usar el símbolo aislado sobre colores de contraste insuficiente.
+Android: los dos SVG originales de 108 unidades son fuentes separadas de primer plano y fondo; este último usa `#F7F3F2`. No son VectorDrawable, APK, manifiesto, splash screen ni prueba de zona segura en Android. La conversión y comprobación con máscaras nativas corresponden a la fase móvil.
 
-Android futuro: [icono cuadrado](public/brand/app-icon.svg), PNG de 192/512 px y [primer plano independiente](public/brand/android-foreground.svg). El SVG de 108 unidades conserva el símbolo dentro del círculo seguro central de 66 unidades; fondo `#8B243A`. Son originales para exportación, no un APK, VectorDrawable ni configuración Android compilada. No se implementó una app ni una splash screen.
+Responsive y evidencia: se conserva la composición 2.13.1, sin escalado global ni recorte del scroll. Cinco páginas públicas × las nueve resoluciones solicitadas: sin overflow horizontal; login y recuperación sin scroll, registro móvil con scroll natural y reset con scroll legítimo a 320 × 568. Confirmación y verificación de correo comparten el layout y se abrieron con sesión aislada. [Informe de integración](docs/branding-tenant-identity-phase-2-13-2.md) y [comparativas locales antes/después](.playwright-mcp/branding-tenant-2-13-2/comparison.html), fuera de Git.
 
 ### Familia de autenticación Blade
 

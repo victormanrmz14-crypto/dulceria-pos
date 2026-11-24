@@ -36,8 +36,8 @@
     .auth-diagram-modules i { display: block; height: 4px; width: 28px; border-radius: 2px; background: #dee0e5; }
     .auth-diagram-line { height: 5px; width: 80%; background: #eeeef1; border-radius: 2px; margin-top: 16px; }
     .auth-diagram-line.short { width: 50%; margin-top: 9px; }
-    .auth-brand-seal { position: absolute; right: -14px; bottom: 16px; display: grid; place-items: center; width: 78px; height: 78px; background: var(--surface); border: 1px solid #ded8df; border-radius: 20px; transform: rotate(8deg); box-shadow: 0 4px 14px #20212608; }
-    .auth-brand-seal img { width: 54px; height: 54px; }
+    .auth-brand-seal { position: absolute; right: -14px; bottom: 16px; display: grid; place-items: center; width: 78px; height: 78px; background: var(--surface); border: 1px solid #ded8df; border-radius: 20px; }
+    .auth-brand-seal img { width: 62px; height: auto; object-fit: contain; }
     .auth-composition-caption { display: block; margin-top: 20px; font-size: 12px; color: var(--muted); }
     .auth-workspace { background: var(--surface); display: flex; flex-direction: column; min-width: 0; padding-top: env(safe-area-inset-top, 0px); }
     .auth-header { min-height: 76px; flex-shrink: 0; display: flex; justify-content: flex-end; align-items: center; padding-left: max(clamp(28px, 4vw, 64px), env(safe-area-inset-left, 0px)); padding-right: max(clamp(28px, 4vw, 64px), env(safe-area-inset-right, 0px)); }

@@ -4,7 +4,7 @@
   {{-- Sidebar --}}
   <div style="width:190px;flex-shrink:0;background:#8B0000;display:flex;flex-direction:column">
     <div style="background:#A52A2A;padding:20px 0 16px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.08)">
-      <div style="color:#fff;font-family:'Playfair Display',serif;font-size:16px;font-weight:700">🍬 Dulcería POS</div>
+      <img src="{{ asset('brand/logo-white.svg') }}" width="301" height="65" alt="Dulcería POS" style="display:block;width:154px;height:auto;margin-inline:auto" loading="lazy">
       <div style="color:#ffcccc;font-size:11.5px;margin-top:2px">Laura M.</div>
     </div>
     <div style="flex:1;padding:8px 0">

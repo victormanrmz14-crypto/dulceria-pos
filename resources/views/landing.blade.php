@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#8b243a">
-    <link rel="icon" type="image/svg+xml" href="{{ asset('brand/favicon.svg') }}">
-    <link rel="apple-touch-icon" href="{{ asset('brand/apple-touch-icon.png') }}">
-    <link rel="stylesheet" href="{{ asset('brand/tokens.css') }}">
+    <x-platform-favicons />
+    <link rel="stylesheet" href="{{ asset('brand/tokens.css') }}?v=figma-2132">
     <title>Dulcería POS — Punto de venta para dulcerías y abarrotes</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; }

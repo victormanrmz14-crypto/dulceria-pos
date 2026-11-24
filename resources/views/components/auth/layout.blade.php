@@ -8,11 +8,9 @@
     <meta name="theme-color" content="#f7f8fa">
     <meta name="color-scheme" content="light">
     <title>{{ $title }} · Dulcería POS</title>
-    <link rel="icon" type="image/svg+xml" href="{{ asset('brand/favicon.svg') }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" sizes="16x16 32x32 48x48">
-    <link rel="apple-touch-icon" href="{{ asset('brand/apple-touch-icon.png') }}">
+    <x-platform-favicons />
     <link rel="preload" href="{{ asset('brand/fonts/dm-sans-latin-variable.ttf') }}" as="font" type="font/ttf" crossorigin>
-    <link rel="stylesheet" href="{{ asset('brand/tokens.css') }}">
+    <link rel="stylesheet" href="{{ asset('brand/tokens.css') }}?v=figma-2132">
     @vite(['resources/css/auth.css', 'resources/js/auth.js'])
 </head>
 <body class="platform-brand auth-page">
@@ -37,7 +35,7 @@
                             <div class="auth-diagram-line"></div><div class="auth-diagram-line short"></div>
                         </div>
                     </div>
-                    <div class="auth-brand-seal"><img src="{{ asset('brand/symbol.svg') }}" width="64" height="64" alt=""></div>
+                    <div class="auth-brand-seal"><img src="{{ asset('brand/symbol-color.svg') }}" width="168" height="99" alt=""></div>
                     <span class="auth-composition-caption">Una vista de todo lo que importa.</span>
                 </div>
             </div>
@@ -45,7 +43,7 @@
         </aside>
         <div class="auth-workspace">
             <header class="auth-header">
-                <x-platform-logo class="auth-mobile-brand" />
+                <x-platform-logo compact class="auth-mobile-brand" />
                 <a href="{{ url('/') }}" class="auth-home"><x-auth.icon name="arrow-left" /> Volver al sitio</a>
             </header>
             <main id="auth-content" class="auth-main" tabindex="-1">
