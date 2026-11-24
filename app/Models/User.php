@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Tenant;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -27,6 +28,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'avatar_path',
     ];
 
     protected function casts(): array
@@ -42,6 +44,21 @@ class User extends Authenticatable
     public function esAdmin(): bool
     {
         return $this->es_super_admin || $this->rol === 'admin';
+    }
+
+    public function ownsAvatarPath(?string $path): bool
+    {
+        return $path !== null && preg_match(
+            '~\Aavatars/'.preg_quote((string) $this->getKey(), '~').'/[a-zA-Z0-9]{40}\.(?:jpg|jpeg|png|webp)\z~',
+            $path
+        ) === 1;
+    }
+
+    public function avatarUrl(): ?string
+    {
+        $path = $this->getAttribute('avatar_path');
+
+        return $this->ownsAvatarPath($path) ? Storage::disk('public')->url($path) : null;
     }
 
     public function tenant()

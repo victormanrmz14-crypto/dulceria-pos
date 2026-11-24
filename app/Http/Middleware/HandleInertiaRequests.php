@@ -41,6 +41,7 @@ class HandleInertiaRequests extends Middleware
                     'apellido' => $request->user()->apellido,
                     'rol' => $request->user()->rol,
                     'es_super_admin' => $request->user()->es_super_admin,
+                    'avatar_url' => $request->user()->avatarUrl(),
                 ] : null,
             ],
 

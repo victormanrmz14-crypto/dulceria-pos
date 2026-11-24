@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import UiOverlay from '../Ui/UiOverlay.vue';
-defineProps<{ open: boolean; title: string; theme?: Record<string, string>; wide?: boolean }>();
+defineProps<{ open: boolean; title: string; theme?: Record<string, string>; wide?: boolean; focusFallback?: string }>();
 defineEmits<{ close: [] }>();
 </script>
 
 <template>
-    <UiOverlay :open="open" :title="title" :theme="theme" class="admin-dialog" :class="{ 'admin-dialog--wide': wide }" @close="$emit('close')"><div class="admin-dialog__body"><slot /></div></UiOverlay>
+    <UiOverlay :open="open" :title="title" :theme="theme" :focus-fallback="focusFallback" class="admin-dialog" :class="{ 'admin-dialog--wide': wide }" @close="$emit('close')"><div class="admin-dialog__body"><slot /></div></UiOverlay>
 </template>
 
 <style scoped>

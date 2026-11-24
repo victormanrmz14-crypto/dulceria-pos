@@ -34,6 +34,11 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'usuario.activo'])->group(function () {
 
+    // Perfil personal: no concede acceso a la configuración administrativa.
+    Route::get('/perfil', [ProfileController::class, 'show'])->name('profile.show');
+    Route::post('/perfil/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/perfil/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/caja', [CajaController::class, 'index'])->name('caja.index');
