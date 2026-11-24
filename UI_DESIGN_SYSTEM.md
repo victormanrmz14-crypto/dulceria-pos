@@ -2,7 +2,7 @@
 
 ## Identidad de plataforma · Fase 2.13.2
 
-La identidad aprobada procede de `dulceria-pos-figma-assets-seleccionados.zip`, exportado de Figma. Identifica **Dulcería POS** en páginas públicas y favicon; la superadministración conserva su nombre de plataforma sin rediseñarse. Nunca sustituye la identidad comercial, el logotipo ni la paleta de un tenant. El ZIP es entrada local fuera de Git y del contexto Docker.
+La identidad aprobada procede de `dulceria-pos-figma-assets-seleccionados.zip`, exportado de Figma. Identifica **Dulcería POS** en páginas públicas y favicon; la superadministración adopta esta identidad de plataforma en su navegación desde la Fase 2.14. Nunca sustituye la identidad comercial, el logotipo ni la paleta de un tenant. El ZIP es entrada local fuera de Git y del contexto Docker.
 
 | Recurso definitivo en `public/brand/` | Contexto / proporción original |
 |---|---|
@@ -590,3 +590,16 @@ El reemplazo escribe primero, actualiza la configuración bajo transacción/bloq
 Se conserva la fuente de navegación `tenantNavigation.js`: Inicio, Vender, Ventas y Caja actual. Mi perfil y logout permanecen exclusivamente en cuenta. Cajero tiene cuatro destinos en la barra inferior contando Menú. Cortes conserva su acceso de servidor existente, limitado al usuario; no se añade a la navegación que antes lo reservaba al administrador. POS, Historial, Ticket, Caja, Cortes y Perfil mantienen sus permisos. Las pruebas reales devolvieron 403 para Usuarios, Productos, Reportes, Configuración, Catálogos y ticket ajeno.
 
 Evidencias y límites: [informe de la fase](docs/tickets-logout-logo-cashier-phase-2-12.md). La implementación sigue pendiente de revisión estética del usuario.
+
+
+## Superadministración · Fase 2.14
+
+`SuperAdminLayout` activa un shell propio de plataforma (`.sa-shell`), con DM Sans local, logo Figma compacto y Lucide. Usa superficies neutras y borgoña `#960A2C`, sin resolver nombre, logo ni colores de un negocio. El contenido tenant y sus tokens dinámicos no cambian. Sin animaciones.
+
+Patrones compartidos: `SaHeading` (título/explicación/acciones), `SaMetric` (etiqueta/cifra/definición, sin porcentajes ficticios), `SaTable` (tabla semántica que recompone las mismas celdas en tarjetas sin eliminar información), `SaPagination` (navegación y totales del servidor) y `SaChart` (una serie, eje desde cero, tooltip y tabla de datos accesible, vacío sin curva decorativa). `SaPlanForm` y `SaCommunicationForm` conservan las operaciones existentes; labels, errores asociados y foco al primer inválido. `UiOverlay` se reutiliza para drawer y contraseña con Escape, contención y restauración del foco. Mensajes persistentes del servidor con cierre manual y roles status/alert.
+
+Sidebar de 232 px desde 992; drawer por debajo. Gutter 32/24/16 px; contenido máximo de 1664 px. Cuatro métricas desde 1200, dos entre 360 y 1199, una bajo 360. Filas de tabla adaptadas al contenedor hasta 920 px, con dos columnas de datos desde 461; se conserva caption, encabezados y roles. Campos y acciones de al menos 44 px, borde de control `#858892`, foco borgoña de 2 px con offset de 3. Titular de 28/25 px, títulos de sección de 15, cuerpo de 14, datos de tabla de 13 y ayuda de 12. Cifras tabulares y nombres/correos largos con reflow. Contraste medido de blanco/borgoña 8.84:1 y secundario/blanco 5.48:1.
+
+Los cuatro KPIs principales son registradas, habilitadas administrativamente, con ventas en 30 días y altas en el mismo período. Atención se presenta aparte, deduplicada y con motivos. Última venta es histórica. Volumen comercial pertenece a los negocios; no se presenta como facturación de la plataforma. Planes muestra distribución y catálogo nominal; no MRR cobrado. El monitoreo declara fuente, instante y alcance del filesystem. Las ausencias de medición se indican como no disponibles.
+
+Definiciones completas, exclusiones, fuentes, pruebas SQL SQLite/MySQL, sesiones reales, accesibilidad, limitaciones y evidencia de nueve páginas × nueve resoluciones: [informe de Fase 2.14](docs/superadmin-premium-phase-2-14.md). [Galería local antes/después](.playwright-mcp/superadmin-2-14/comparison.html). Pendiente aprobación visual del usuario.
