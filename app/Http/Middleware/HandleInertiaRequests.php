@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Anuncio;
+use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
@@ -15,6 +16,17 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    public function handle(Request $request, Closure $next)
+    {
+        $response = parent::handle($request, $next);
+        // Private tenant pages must be revalidated after a native logout/back.
+        if ($request->user() && ! $request->user()->es_super_admin) {
+            $response->headers->set('Cache-Control', 'no-store, private');
+        }
+
+        return $response;
+    }
 
     /**
      * Determines the current asset version.

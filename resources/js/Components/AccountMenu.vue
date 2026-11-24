@@ -9,6 +9,7 @@ const user = computed(() => page.props.auth?.user as { nombre?: string; apellido
 const name = computed(() => [user.value?.nombre, user.value?.apellido].filter(Boolean).join(' ') || 'Usuario');
 const role = computed(() => user.value?.rol === 'admin' ? 'Administrador' : 'Cajero');
 const open = ref(false);
+const loggingOut = ref(false);
 const root = ref<HTMLElement | null>(null);
 const trigger = ref<HTMLButtonElement | null>(null);
 const panel = ref<HTMLElement | null>(null);
@@ -45,7 +46,8 @@ onBeforeUnmount(() => {
         <div v-if="open" :id="id" ref="panel" class="account__panel">
             <div class="account__identity"><UserAvatar :name="name" :src="user?.avatar_url" :size="40" /><div><strong>{{ name }}</strong><span>{{ role }}</span></div></div>
             <nav aria-label="Tu cuenta"><Link href="/perfil" class="account__action" @click="close()"><UiIcon name="users" :size="18" />Mi perfil</Link></nav>
-            <form method="POST" action="/logout" @submit="close()"><input type="hidden" name="_token" :value="page.props.csrf as string" /><button type="submit" class="account__action"><UiIcon name="logout" :size="18" />Cerrar sesión</button></form>
+            <!-- Keep the native form connected until the browser sends its POST. -->
+            <form method="POST" action="/logout" @submit="loggingOut = true"><input type="hidden" name="_token" :value="page.props.csrf as string" /><button type="submit" class="account__action" :disabled="loggingOut" :aria-busy="loggingOut || undefined"><UiIcon :name="loggingOut ? 'loading' : 'logout'" :size="18" />{{ loggingOut ? 'Cerrando sesión…' : 'Cerrar sesión' }}</button></form>
         </div>
     </div>
 </template>
