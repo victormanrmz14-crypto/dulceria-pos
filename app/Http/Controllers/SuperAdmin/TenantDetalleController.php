@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Producto;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Models\Venta;
 use App\Services\AuditLogger;
+use App\Services\SuperAdmin\Analytics;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,63 +17,51 @@ use Inertia\Response;
 
 class TenantDetalleController extends Controller
 {
-    public function show(Tenant $tenant): Response
+    public function show(Tenant $tenant, Analytics $analytics): Response
     {
-        $usuarios = User::where('tenant_id', $tenant->id)->get();
-        $admin    = $usuarios->where('rol', 'admin')->sortBy('created_at')->first();
-
-        $ventasMes    = Venta::where('tenant_id', $tenant->id)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
-        $ventasTotal  = Venta::where('tenant_id', $tenant->id)->count();
-        $ingresosMes  = Venta::where('tenant_id', $tenant->id)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('total');
-        $productos    = Producto::where('tenant_id', $tenant->id)->count();
-        $ultimasVentas = Venta::with('usuario')->where('tenant_id', $tenant->id)->latest()->limit(8)->get()->map(fn ($v) => [
-            'id'          => $v->id,
-            'folio'       => $v->folio,
-            'total'       => (float) $v->total,
-            'metodo_pago' => $v->metodo_pago,
-            'cajero'      => $v->usuario?->nombre ?? '—',
-            'fecha'       => $v->created_at->isoFormat('D MMM HH:mm'),
+        $usuarios = User::where('tenant_id', $tenant->id);
+        $admin = (clone $usuarios)->where('rol', 'admin')->orderByDesc('activo')->orderBy('created_at')->first();
+        $sales = $analytics->sales()->where('tenant_id', $tenant->id);
+        $ventasTotal = (clone $sales)->count();
+        $ultimaVenta = (clone $sales)->max('created_at');
+        $period = (clone $sales)->where('created_at', '>=', $analytics->start)->selectRaw('COUNT(*) as ventas, COALESCE(SUM(total), 0) as importe')->first();
+        $productos = Producto::where('tenant_id', $tenant->id)->count();
+        $ultimasVentas = (clone $sales)->with('usuario')->latest()->orderByDesc('id')->limit(8)->get()->map(fn ($v) => [
+            'id' => $v->id, 'folio' => $v->folio, 'total' => (float) $v->total,
+            'metodo_pago' => $v->metodo_pago, 'cajero' => $v->usuario?->nombre ?? '—',
+            'fecha' => $v->created_at->isoFormat('D MMM YYYY, HH:mm'),
         ]);
-
-        // Gráfica: ventas últimos 14 días
-        $ventasPorDia = Venta::where('tenant_id', $tenant->id)
-            ->where('created_at', '>=', now()->subDays(13)->startOfDay())
-            ->selectRaw('DATE(created_at) as fecha, COUNT(*) as ventas, SUM(total) as total')
-            ->groupBy('fecha')->get()->keyBy('fecha');
-
-        $grafica = collect(range(13, 0))->map(function ($d) use ($ventasPorDia) {
-            $fecha = now()->subDays($d)->toDateString();
-            $dia   = $ventasPorDia->get($fecha);
-            return ['fecha' => now()->subDays($d)->isoFormat('D MMM'), 'ventas' => (int) ($dia?->ventas ?? 0), 'total' => (float) ($dia?->total ?? 0)];
-        })->values();
+        $grafica = $analytics->series($tenant->id);
 
         return Inertia::render('SuperAdmin/TenantDetalle', [
             'tenant' => [
-                'id'             => $tenant->id,
-                'nombre'         => $tenant->nombre,
-                'activo'         => $tenant->activo,
-                'plan'           => $tenant->plan,
-                'plan_label'     => $tenant->planLabel(),
+                'id' => $tenant->id,
+                'nombre' => $tenant->nombre,
+                'activo' => $tenant->activo,
+                'plan' => $tenant->plan,
+                'plan_label' => $tenant->planLabel(),
                 'plan_expira_en' => $tenant->plan_expira_en?->isoFormat('D MMM YYYY'),
-                'notas'          => $tenant->notas,
-                'creado_en'      => $tenant->created_at->isoFormat('D MMM YYYY'),
-                'dias_trial'     => $tenant->diasRestantesTrial(),
+                'notas' => $tenant->notas,
+                'creado_en' => $tenant->created_at->isoFormat('D MMM YYYY'),
+                'dias_trial' => $tenant->diasRestantesTrial(),
             ],
             'admin' => $admin ? [
-                'id'     => $admin->id,
+                'id' => $admin->id,
                 'nombre' => trim("{$admin->nombre} {$admin->apellido}"),
-                'email'  => $admin->email,
+                'email' => $admin->email,
                 'activo' => $admin->activo,
             ] : null,
             'stats' => [
-                'usuarios'     => $usuarios->count(),
-                'productos'    => $productos,
-                'ventas_mes'   => $ventasMes,
+                'usuarios' => $usuarios->count(),
+                'productos' => $productos,
+                'ventas_30' => (int) $period->ventas,
                 'ventas_total' => $ventasTotal,
-                'ingresos_mes' => (float) $ingresosMes,
+                'importe_30' => round((float) $period->importe, 2),
+                'ultima_venta' => $ultimaVenta ? CarbonImmutable::parse($ultimaVenta)->isoFormat('D MMM YYYY, HH:mm') : null,
             ],
             'ultimasVentas' => $ultimasVentas->values(),
-            'grafica'       => $grafica,
+            'grafica' => $grafica,
+            'periodo' => $analytics->period(),
         ]);
     }
 
@@ -81,14 +70,18 @@ class TenantDetalleController extends Controller
         $tenant->update(['activo' => ! $tenant->activo]);
         $accion = $tenant->activo ? 'activado' : 'desactivado';
         AuditLogger::log('tenant_toggle', "Tenant '{$tenant->nombre}' {$accion}", $tenant->id, ['activo' => $tenant->activo]);
+
         return back()->with('success', "Dulcería {$accion} correctamente.");
     }
 
     public function guardarNotas(Request $request, Tenant $tenant): RedirectResponse
     {
-        $request->validate(['notas' => 'nullable|string|max:5000']);
+        $request->validate(['notas' => 'nullable|string|max:5000'], [
+            'notas.max' => 'Las notas admiten hasta :max caracteres.',
+        ]);
         $tenant->update(['notas' => $request->notas]);
         AuditLogger::log('notas_tenant', "Notas actualizadas para '{$tenant->nombre}'", $tenant->id);
+
         return back()->with('success', 'Notas guardadas.');
     }
 

@@ -4,43 +4,46 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
+use App\Services\SuperAdmin\Analytics;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class TenantController extends Controller
 {
-    public function index()
+    public function index(Request $request, Analytics $analytics)
     {
-        $tenants = Tenant::withCount('users')
-            ->with([
-                'users' => fn ($q) => $q->where('rol', 'admin')->orderBy('created_at')->limit(1),
-            ])
-            ->latest()
-            ->get()
-            ->map(function (Tenant $t) {
-                $admin = $t->users->first();
-
-                $problemas = [];
-                if (! $admin)                   $problemas[] = 'Sin administrador asignado';
-                if ($admin && ! $admin->activo)  $problemas[] = 'Administrador desactivado';
-
-                return [
-                    'id'           => $t->id,
-                    'nombre'       => $t->nombre,
-                    'admin_nombre' => $admin ? trim("{$admin->nombre} {$admin->apellido}") : null,
-                    'admin_email'  => $admin?->email,
-                    'admin_activo' => $admin?->activo,
-                    'usuarios'     => $t->users_count,
-                    'problemas'    => $problemas,
-                    'estado'       => count($problemas) > 0 ? 'problema' : 'ok',
-                    'creado_en'    => $t->created_at->isoFormat('D MMM YYYY, HH:mm'),
-                    'creado_diff'  => $t->created_at->diffForHumans(),
-                ];
-            });
+        $filters = $request->validate(['q' => 'nullable|string|max:200', 'estado' => 'nullable|in:habilitadas,deshabilitadas,atencion,ok', 'actividad' => 'nullable|in:reciente,sin_recientes,nunca']);
+        $query = $analytics->tenants();
+        $q = trim($filters['q'] ?? '');
+        if ($q !== '') {
+            $query->where(fn ($b) => $b->where('nombre', 'like', '%'.$q.'%')->orWhereHas('users', fn ($u) => $u->where('rol', 'admin')->where(fn ($u) => $u->where('email', 'like', '%'.$q.'%')->orWhere('nombre', 'like', '%'.$q.'%')->orWhere('apellido', 'like', '%'.$q.'%'))));
+        }
+        $state = $filters['estado'] ?? '';
+        if ($state === 'habilitadas' || $state === 'deshabilitadas') {
+            $query->where('activo', $state === 'habilitadas');
+        }
+        if ($state === 'atencion') {
+            $analytics->attention($query);
+        }
+        if ($state === 'ok') {
+            $query->whereNotIn('id', $analytics->attention(Tenant::query())->select('id'));
+        }
+        $activity = $filters['actividad'] ?? '';
+        if ($activity === 'nunca') {
+            $query->whereNotIn('id', $analytics->sales()->select('tenant_id'));
+        }
+        if ($activity === 'reciente') {
+            $query->whereIn('id', $analytics->sales()->select('tenant_id')->where('created_at', '>=', $analytics->start));
+        }
+        if ($activity === 'sin_recientes') {
+            $query->whereIn('id', $analytics->sales()->select('tenant_id'))->whereNotIn('id', $analytics->sales()->select('tenant_id')->where('created_at', '>=', $analytics->start));
+        }
 
         return Inertia::render('SuperAdmin/Dulcerias', [
-            'tenants' => $tenants->values(),
-            'total'   => $tenants->count(),
-            'conProblemas' => $tenants->where('estado', 'problema')->count(),
+            'tenants' => $query->latest()->orderByDesc('id')->paginate(20)->withQueryString()->through(fn ($t) => $analytics->row($t)),
+            'filters' => $filters, 'periodo' => $analytics->period(),
+            'total' => Tenant::count(), 'habilitadas' => Tenant::where('activo', true)->count(),
+            'conProblemas' => $analytics->attention(Tenant::query())->count(),
         ]);
     }
 }
