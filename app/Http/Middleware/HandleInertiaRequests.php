@@ -82,7 +82,13 @@ class HandleInertiaRequests extends Middleware
                 $tenant = $user->tenant;
                 if (!$tenant) return null;
                 $config = $tenant->configuracion ?? [];
+                $commercialName = trim($config['negocio']['nombre_mostrar'] ?? '');
+                $tenantName = trim($tenant->nombre ?? '');
                 return [
+                    // Navigation identity: commercial name, registered tenant name, platform.
+                    // Resolve from this request's user; never cache across sessions.
+                    'nombre'        => $commercialName !== '' ? $commercialName
+                        : ($tenantName !== '' ? $tenantName : 'Dulcería POS'),
                     'colores'       => $config['colores'] ?? null,
                     'logo'          => !empty($config['logo'])
                         ? Storage::disk('public')->url($config['logo'])

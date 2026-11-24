@@ -32,6 +32,20 @@ Android: los dos SVG originales de 108 unidades son fuentes separadas de primer 
 
 Responsive y evidencia: se conserva la composición 2.13.1, sin escalado global ni recorte del scroll. Cinco páginas públicas × las nueve resoluciones solicitadas: sin overflow horizontal; login y recuperación sin scroll, registro móvil con scroll natural y reset con scroll legítimo a 320 × 568. Confirmación y verificación de correo comparten el layout y se abrieron con sesión aislada. [Informe de integración](docs/branding-tenant-identity-phase-2-13-2.md) y [comparativas locales antes/después](.playwright-mcp/branding-tenant-2-13-2/comparison.html), fuera de Git.
 
+### Identidad comercial del tenant y navegación
+
+Fuente única: `HandleInertiaRequests::share()` deriva `tenantConfig.nombre` del usuario autenticado y su relación `User::tenant`. Orden: `configuracion.negocio.nombre_mostrar` no vacío, después `Tenant.nombre` no vacío y, por último, `Dulcería POS`. Se ignoran espacios de borde para decidir un valor vacío; no se trunca ni se persiste ninguna modificación. `tenantConfig.nombre_mostrar` conserva su contrato opcional original. No hay consultas en Vue, selectores de tenant, caché global ni localStorage de identidad.
+
+Administrador y cajero reciben la misma identidad del negocio asociado. Para invitado, superadministrador o usuario sin relación de tenant, `tenantConfig` es `null`; el fallback visual es `Dulcería POS`. Durante impersonación se utiliza el usuario efectivo del tenant según el comportamiento existente; no se cambia esa funcionalidad.
+
+`TenantIdentityName.vue` representa el mismo valor en sidebar de escritorio, drawer y breadcrumb de `AppLayout`, con actualización reactiva desde Inertia. La ruta conserva el nombre de sección de `tenantNavigation` y expone `nav[aria-label="Ruta de navegación"]` y `aria-current="page"`. La corrección llega a todos los módulos que usan el layout: Inicio, Productos, Usuarios, Caja, Cortes, Vender, Ventas, Reportes, Configuración, perfil y Catálogos; también a sus páginas de edición existentes.
+
+Sidebar: se conserva `tenantConfig.logo`, `object-fit:contain`, paleta comercial e icono de respaldo existente cuando falta logo. La marca Figma no reemplaza un logotipo de negocio. Subtítulos: Administración para administrador y Punto de venta para cajero. Nombre limitado visualmente a dos líneas; breadcrumb de una línea con elipsis. `details/summary` compartido permite desplegar el nombre completo mediante toque, clic, Enter o Espacio; Escape o salida del foco cierran. Incluye nombre completo accesible, `title`, foco de 2 px y objetivo de al menos 44 px. No se recorta el dato original.
+
+Composición: `min-width:0` en los contenedores, máximo de nombre de 240 px en escritorio, 145 px en móvil y 120 px bajo 360 px; panel de nombre completo acotado al viewport. Header medido de 56 px aun con el nombre extenso. Bottom Navigation bajo 768 px, drawer entre 768 y 991 px y sidebar desde 992 px; permanece el espacio inferior para no cubrir el último contenido.
+
+Sesiones reales aisladas: administrador y cajero de dos negocios, logout nativo entre cuentas, superadministrador y caso defensivo sin tenant. No se reutiliza el nombre de la cuenta anterior. Pruebas de presentación y navegación de lectura: no equivalen a auditoría de aislamiento comercial ni de permisos. Evidencia y límites en el [informe 2.13.2](docs/branding-tenant-identity-phase-2-13-2.md).
+
 ### Familia de autenticación Blade
 
 [auth/layout](resources/views/components/auth/layout.blade.php) compone identidad, formulario y pie. [auth/field](resources/views/components/auth/field.blade.php) es propietario de label, control, ayuda, error asociado y revelado de contraseña; `auth/feedback` presenta estados del servidor y resumen; `auth/submit` informa envío nativo. [auth.css](resources/css/auth.css) usa la capa `auth`, posterior a `brand`; [auth.js](resources/js/auth.js) añade únicamente revelado, espera, restauración de botón en `pageshow`, foco de error y compatibilidad del marcador histórico `#forgot`. Sin migración a Vue ni carga del bundle Inertia en estas vistas.
@@ -85,7 +99,7 @@ Fuente de verdad: [premium.css](resources/css/premium.css). Tema de marca: [them
 
 Las cantidades usan cifras tabulares y no se dividen entre líneas; título de página 26 px (24 en móvil), métricas fluidas hasta 30 px y secciones 14 px semibold. Las etiquetas de métricas usan 13 px en escritorio; estados, unidades y moneda usan 12 px. Los ejes de la gráfica usan 11 px con DM Sans. En tarjetas estrechas la cifra se adapta al ancho del contenedor; los valores largos tienen una variante de al menos 18 px y pasan a una línea propia en móvil. Se mantiene la carga de fuentes existente, sin nuevas fuentes remotas.
 
-La configuración de colores completa, nombre y logo sigue funcionando. El piloto reserva el primario para acción principal, selección y gráfica; no reemplaza las opciones guardadas de acento, fondos o recibos, ni sus usos fuera del piloto. El logo conserva sus proporciones con `object-fit: contain`. Los nombres largos se ajustan en sidebar y breadcrumb; el header puede aumentar su altura para conservar el texto completo.
+La configuración de colores completa, nombre y logo sigue funcionando. El piloto reserva el primario para acción principal, selección y gráfica; no reemplaza las opciones guardadas de acento, fondos o recibos, ni sus usos fuera del piloto. El logo conserva sus proporciones con `object-fit: contain`. Los nombres largos se muestran en hasta dos líneas en sidebar y en una línea con elipsis en breadcrumb. El control desplegable compartido permite consultar el valor completo con ratón, toque y teclado, sin aumentar la altura del header.
 
 ## Componentes y estados
 

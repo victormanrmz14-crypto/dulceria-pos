@@ -6,6 +6,7 @@ import UiBottomNav from '../Components/Ui/UiBottomNav.vue';
 import { tenantNavigation } from '../Navigation/tenantNavigation';
 import { useMobileNavigationVisibility } from '../Composables/useMobileNavigationVisibility';
 import SidebarNav from '../Components/SidebarNav.vue';
+import TenantIdentityName from '../Components/TenantIdentityName.vue';
 import UiIcon from '../Components/Ui/UiIcon.vue';
 import UiOverlay from '../Components/Ui/UiOverlay.vue';
 import AccountMenu from '../Components/AccountMenu.vue';
@@ -20,7 +21,6 @@ const drawerId = useId();
 const navigation = computed(() => tenantNavigation(page.props.auth?.user?.rol, page.url));
 const { suppressed } = useMobileNavigationVisibility();
 const stopNavigation = router.on('navigate', () => { drawer.value = false; });
-const brandName = computed(() => page.props.tenantConfig?.nombre_mostrar || 'Dulcería POS');
 const premiumTheme = computed(() => createPremiumTheme(page.props.tenantConfig?.colores));
 let desktopQuery;
 let tabletQuery;
@@ -140,7 +140,7 @@ const anunciosVisibles = computed(() =>
                     <div class="p-header__inner">
                         <button type="button" class="p-icon-button d-none d-md-inline-grid d-lg-none" data-tenant-menu-trigger aria-label="Abrir menú" :aria-expanded="drawer"
                             :aria-controls="drawerId" aria-haspopup="dialog" @click="drawer = true"><UiIcon name="menu" :size="20" /></button>
-                        <div class="p-header__breadcrumb"><span>{{ brandName }}</span><span aria-hidden="true">/</span><strong>{{ navigation.sectionLabel }}</strong></div>
+                        <nav class="p-header__breadcrumb" aria-label="Ruta de navegación"><TenantIdentityName /><span aria-hidden="true">/</span><strong aria-current="page">{{ navigation.sectionLabel }}</strong></nav>
                         <AccountMenu />
                     </div>
                 </header>

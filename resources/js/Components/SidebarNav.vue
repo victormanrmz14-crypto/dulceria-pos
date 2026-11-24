@@ -2,6 +2,7 @@
 import { computed, ref, useId } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import UiIcon from './Ui/UiIcon.vue';
+import TenantIdentityName from './TenantIdentityName.vue';
 
 const props = defineProps({ navigation: { type: Object, required: true } });
 
@@ -9,7 +10,6 @@ const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const esAdmin = computed(() => user.value?.rol === 'admin');
 const logoUrl = computed(() => page.props.tenantConfig?.logo);
-const premiumName = computed(() => page.props.tenantConfig?.nombre_mostrar || 'Dulcería POS');
 const primaryLinks = computed(() => props.navigation.primary.filter(item => item.id !== 'products'));
 const adminLinks = computed(() => props.navigation.items.filter(item => ['products', 'users', 'reports'].includes(item.id)));
 const catalogLinks = computed(() => props.navigation.items.filter(item => ['categories', 'brands', 'suppliers'].includes(item.id)));
@@ -25,9 +25,9 @@ const catalogosId = useId();
 
 <template>
     <div class="p-brand">
-        <img v-if="logoUrl" :src="logoUrl" :alt="premiumName" width="34" height="34" class="p-brand__logo" />
+        <img v-if="logoUrl" :src="logoUrl" alt="" width="34" height="34" class="p-brand__logo" />
         <span v-else class="p-brand__symbol"><UiIcon name="candy" :size="22" /></span>
-        <div><span class="p-brand__name">{{ premiumName }}</span><span class="p-brand__caption">{{ esAdmin ? 'Administración' : 'Punto de venta' }}</span></div>
+        <div><TenantIdentityName multiline /><span class="p-brand__caption">{{ esAdmin ? 'Administración' : 'Punto de venta' }}</span></div>
     </div>
     <nav class="p-nav" aria-label="Navegación principal">
         <span class="p-nav__label">Tu negocio</span>
