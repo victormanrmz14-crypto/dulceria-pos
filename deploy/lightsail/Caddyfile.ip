@@ -1,4 +1,9 @@
 # Public IP certificates require the Let's Encrypt shortlived ACME profile.
+{
+	# Browsers omit SNI for IP URLs; Docker sees a private destination address.
+	default_sni {$APP_DOMAIN}
+}
+
 {$APP_DOMAIN} {
 	tls {
 		issuer acme https://acme-v02.api.letsencrypt.org/directory {

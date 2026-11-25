@@ -1,6 +1,8 @@
-# Configuración propuesta de Dulcería POS en Lightsail
+# Despliegue de Dulcería POS en Lightsail
 
-Estado: creación autorizada; instancia `dulceria-pos-demo` creada e IP fija **13.184.138.10** asignada. Docker y Compose verificados; despliegue de la aplicación en curso. Región: Ohio, `us-east-2`. Perfil local autenticado: `dulceria.` (con punto final). Fecha de precios: 24 de noviembre de 2026.
+Estado: **desplegado y verificado** en **https://13.184.138.10**. Instancia `dulceria-pos-demo`, IP fija adjunta, seis servicios activos y certificado público Let's Encrypt para la IP. Región: Ohio, `us-east-2`. Perfil local autenticado: `dulceria.` (con punto final). Fecha de despliegue y precios: 24 de noviembre de 2026.
+
+Las imágenes de aplicación y Nginx se construyeron desde `96c6f9e`; la configuración posterior del proxy añade `default_sni` para navegadores que omiten SNI al abrir una IP detrás de Docker. La base nueva contiene la simulación solicitada de 20 dulcerías, con operaciones del 17 de septiembre al 24 de noviembre de 2026. La cuenta de acceso es `superadmin@dulceria-demo.test`; la contraseña se entrega por separado y no se incluye en este repositorio.
 
 ## Máquina y costo
 
@@ -31,15 +33,15 @@ Una IP fija desasociada durante más de una hora tiene tarifa de USD 0.005/h. La
 - `firewall.example.json`: reglas IPv4 TCP 80/443 públicas y SSH desde una sola IP. `192.0.2.1/32` es un marcador reservado: debe sustituirse por la IP pública real del operador inmediatamente antes de aplicar las reglas. No abre IPv6, MySQL, Redis, PHP-FPM ni Vite.
 - `bootstrap.sh`: user data para la **instancia Ubuntu nueva**. Instala Docker desde su repositorio oficial, Compose y Git; limita los logs de contenedores cuando no hay configuración previa. No contiene claves, contraseñas, código comercial ni comandos de creación de recursos AWS.
 - `production.env.example`: plantilla del entorno del servidor. `APP_KEY`, contraseñas, correo y dominio deben reemplazarse. No copiar la `.env` de la laptop al servidor ni publicar credenciales de la simulación.
-- `Caddyfile`: HTTPS para un dominio con correo de contacto. `Caddyfile.ip`: HTTPS para la IP pública con emisor ACME explícito y perfil `shortlived`; no usa un certificado autofirmado. `CADDY_CONFIG_FILE` selecciona la variante.
+- `Caddyfile`: HTTPS para un dominio con correo de contacto. `Caddyfile.ip`: HTTPS para la IP pública con emisor ACME explícito y perfil `shortlived`; no usa un certificado autofirmado. Define `default_sni` para los clientes que omiten SNI al abrir la IP: Docker ve una IP privada de destino y no puede seleccionar el certificado público por esa dirección. [Opción oficial de Caddy](https://caddyserver.com/docs/caddyfile/options#default-sni). `CADDY_CONFIG_FILE` selecciona la variante.
 - `prepare-env.py`: genera `.env` en el servidor con claves nuevas y permisos 600. Rechaza sobrescribir un entorno existente y no imprime secretos. Ejemplo: `python3 deploy/lightsail/prepare-env.py --host 13.184.138.10 --image-tag REVISION`.
 - `../../docker-compose.lightsail.yml`: extensión explícita de Compose de producción; retira el puerto público de Nginx y publica solamente Caddy. Añade un worker Redis con la misma imagen de la aplicación. Conserva los volúmenes persistentes existentes y añade los de certificados.
 
-La ruta del servidor será `/srv/dulceria-pos`. El proyecto Compose será `dulceria-prod`. Los seis servicios son app, Nginx, MySQL, Redis, Caddy y worker. Se mantiene la autenticación Laravel, sesiones Redis y aislamiento multi-tenant actuales.
+La ruta del servidor es `/srv/dulceria-pos`. El proyecto Compose es `dulceria-prod`. Los seis servicios son app, Nginx, MySQL, Redis, Caddy y worker. Se mantiene la autenticación Laravel, sesiones Redis y aislamiento multi-tenant actuales.
 
-## Secuencia después de autorizar la creación
+## Procedimiento de instalación
 
-Estos pasos describen la ejecución futura. La aprobación del precio de la máquina habilita crear la instancia; configurar DNS o comprar un dominio se tratará según el dominio elegido.
+Estos pasos documentan la instalación de una instancia nueva. No repetir la creación sobre la máquina existente ni regenerar su `.env`; conservar las claves y los volúmenes cuando se actualice el código.
 
 1. Comprobar cuenta, región, paquete y ausencia de una instancia con el nombre propuesto. Crear el par de despliegue `dulceria-pos-deploy` en Lightsail y guardar su clave privada solo en la estación del operador, con permisos 600, sin mostrarla. No copiar credenciales AWS a la máquina. La importación de claves locales fue rechazada por el servicio; se utilizó el par generado por AWS.
 2. Crear la instancia con los argumentos revisados y el bootstrap:
@@ -58,16 +60,18 @@ Estos pasos describen la ejecución futura. La aprobación del precio de la máq
 
    ```bash
    sudo docker compose -f docker-compose.yml -f docker-compose.lightsail.yml build app nginx
-   sudo docker compose -f docker-compose.yml -f docker-compose.lightsail.yml up -d
+   sudo docker compose -f docker-compose.yml -f docker-compose.lightsail.yml pull db redis caddy
+   sudo docker compose -f docker-compose.yml -f docker-compose.lightsail.yml up -d --no-build db redis app nginx
    sudo docker compose -f docker-compose.yml -f docker-compose.lightsail.yml exec -T app php artisan migrate --force
+   # Crear las cuentas iniciales antes de exponer la aplicación (ver paso 7).
    sudo docker compose -f docker-compose.yml -f docker-compose.lightsail.yml exec -T app php artisan config:cache
    sudo docker compose -f docker-compose.yml -f docker-compose.lightsail.yml exec -T app php artisan route:cache
    sudo docker compose -f docker-compose.yml -f docker-compose.lightsail.yml exec -T app php artisan view:cache
-   sudo docker compose -f docker-compose.yml -f docker-compose.lightsail.yml restart worker
+   sudo docker compose -f docker-compose.yml -f docker-compose.lightsail.yml up -d --no-build worker caddy
    sudo docker compose -f docker-compose.yml -f docker-compose.lightsail.yml exec -T app php docker/check-assets.php http://nginx
    ```
 
-7. Crear el SuperAdmin por el comando interactivo existente `platform-admin:create`, con contraseña nueva. Verificar HTTPS, cookies seguras, login/logout, permisos, archivos, assets y conectividad de la base. No usar `migrate:fresh`, restaurar la base local ni cargar la simulación automáticamente. SMTP continúa pendiente: `MAIL_MAILER=log` no entrega correos reales.
+7. En una instalación comercial, crear el SuperAdmin por el comando interactivo existente `platform-admin:create`, con contraseña nueva. La instancia inicial está destinada a la simulación solicitada: cargar explícitamente `SuperAdminDemoSeeder` contra la base nueva, antes de generar la caché, con `exec -T -e APP_ENV=local app php artisan db:seed --force --class=SuperAdminDemoSeeder`. El cambio de entorno se limita a ese proceso CLI; la aplicación web conserva `APP_ENV=production`, `APP_DEBUG=false` y cookies seguras. Las credenciales generadas se entregan al operador y no se guardan en Git. No ejecutar esta carga en una instalación con datos comerciales. No usar `migrate:fresh` ni restaurar la base local. Verificar HTTPS, login/logout, permisos, assets y conectividad de la base. SMTP continúa pendiente: `MAIL_MAILER=log` no entrega correos reales.
 
 ## Estado sin dominio y límites
 
@@ -75,7 +79,9 @@ La entrega inicial utiliza `https://13.184.138.10`, con certificado público par
 
 Esta arquitectura inicial usa un único servidor: es un punto de partida para demo y validación de carga, no alta disponibilidad ni capacidad garantizada para un número de negocios. Los datos persisten ante recreación de contenedores mediante volúmenes, pero eso no es un respaldo externo y no protege ante pérdida del servidor. Antes de operar con datos comerciales debe acordarse respaldo y recuperación. No se han contratado ni configurado snapshots en esta propuesta.
 
-El bootstrap, los JSON de instancia/firewall y el modelo combinado de Compose se validaron localmente. Se comprobó que solo Caddy publica 80/443, que el worker utiliza la imagen de la aplicación y que los volúmenes de datos se conservan. `caddy validate` confirmó las dos variantes; su imagen quedó fijada al digest validado. `prepare-env.py` se comprobó en un directorio temporal: permisos, secretos nuevos, rechazo de sobreescritura y entradas inválidas. El wrapper `/bin/sh` de Lightsail rechazó inicialmente `pipefail`; se corrigió el bootstrap para entrar explícitamente en Bash y se ejecutó por SSH. Docker 29.10.1 y Compose v5.8.0 verificados en la VM; el error inicial permanece en el historial de cloud-init. La verificación pública se completará al terminar el despliegue.
+El bootstrap, los JSON de instancia/firewall y el modelo combinado de Compose se validaron localmente. Se comprobó que solo Caddy publica 80/443, que el worker utiliza la imagen de la aplicación y que los volúmenes de datos se conservan. `caddy validate` confirmó las dos variantes; su imagen quedó fijada al digest validado. `prepare-env.py` se comprobó en un directorio temporal: permisos, secretos nuevos, rechazo de sobreescritura y entradas inválidas. El wrapper `/bin/sh` de Lightsail rechazó inicialmente `pipefail`; se corrigió el bootstrap para entrar explícitamente en Bash y se ejecutó por SSH. Docker 29.10.1 y Compose v5.8.0 verificados en la VM; el error inicial permanece en el historial de cloud-init.
+
+Verificación pública completada con `curl` y Playwright: HTTPS `/login` y `/up` devuelven 200, con validación de certificado habilitada; HTTP redirige a HTTPS. Login real de SuperAdmin correcto. Vista general, Centro de atención, Dulcerías y detalle de una dulcería devuelven 200 sin errores JavaScript ni peticiones fallidas. Contadores principales: 20 registradas, 19 habilitadas, 13 con ventas en 30 días y 6 nuevas. Cookie de sesión `Secure` y `HttpOnly`; a 390 px no hay desbordamiento horizontal de la página. Los 89 assets coinciden entre PHP y Nginx, `composer check-platform-reqs --no-dev` pasa y Laravel confirma entorno `production` con depuración desactivada. Las capturas de escritorio y móvil se guardaron localmente bajo `.playwright-mcp/aws-lightsail-deploy/`, excluido de Git.
 
 ## Validación local sin crear recursos
 
