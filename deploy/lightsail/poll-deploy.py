@@ -68,11 +68,11 @@ def command(args, log, capture=False):
 
 
 def health(log):
-    command(COMPOSE + ["exec", "-T", "app", "php", "docker/check-assets.php", "http://nginx"], log)
     for path in ["/up", "/login"]:
         command(["curl", "--fail", "--silent", "--show-error", "--retry", "12",
                  "--retry-all-errors", "--retry-delay", "2", "--max-time", "15",
                  "--output", "/dev/null", "https://13.184.138.10" + path], log)
+    command(COMPOSE + ["exec", "-T", "app", "php", "docker/check-assets.php", "http://nginx"], log)
 
 
 def launch(log):
@@ -103,7 +103,7 @@ def deploy(run, state):
             (ROOT / ".deploy-status").mkdir(mode=0o755, exist_ok=True)
             command(COMPOSE + ["build", "app", "nginx"], log)
             # Migrate with the approved image before replacing live web containers.
-            command(COMPOSE + ["run", "--rm", "--no-deps", "--no-build", "-T", "app",
+            command(COMPOSE + ["run", "--rm", "--no-deps", "-T", "app",
                                "php", "artisan", "migrate", "--force"], log)
             rollout_started = True
             launch(log)

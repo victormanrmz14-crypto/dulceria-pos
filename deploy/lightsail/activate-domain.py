@@ -57,7 +57,7 @@ def main():
             launched = False
             try:
                 cd.atomic_write(cd.ROOT / ".env", configured)
-                cd.command(cd.COMPOSE + ["run", "--rm", "--no-deps", "--no-build", "-T", "caddy",
+                cd.command(cd.COMPOSE + ["run", "--rm", "--no-deps", "-T", "caddy",
                                         "caddy", "validate", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"], log)
                 launched = True
                 cd.launch(log)
