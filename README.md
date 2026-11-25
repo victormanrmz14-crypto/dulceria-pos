@@ -64,32 +64,70 @@ APP_KEY=          # se genera en el paso 4
 ### 3. Levantar los contenedores
 
 ```bash
-docker compose up -d
+docker compose -f docker-compose.yml up -d --build
 ```
 
 Esto levanta cuatro servicios: `app` (PHP-FPM), `nginx`, `db` (MySQL 8) y `redis`.
+El archivo explícito usa las imágenes con assets compilados. Reconstruye siempre
+`app` y `nginx` juntos para que PHP y el servidor web compartan la misma compilación.
 
 ### 4. Generar clave de la aplicación
 
 ```bash
-docker compose exec app php artisan key:generate
+docker compose -f docker-compose.yml exec app php artisan key:generate
 ```
 
 ### 5. Ejecutar migraciones
 
 ```bash
-docker compose exec app php artisan migrate
+docker compose -f docker-compose.yml exec app php artisan migrate
 ```
 
 ### 6. Crear el primer super administrador
 
 ```bash
-docker compose exec app php artisan platform-admin:create
+docker compose -f docker-compose.yml exec app php artisan platform-admin:create
 ```
 
 ### 7. Acceder a la aplicación
 
 Abre [http://localhost](http://localhost) en tu navegador.
+
+### Actualizar o recuperar assets con error 404
+
+Si el login funciona pero el dashboard queda en blanco y `/build/assets/...js`
+responde 404, comprueba que ambos servicios usan la misma versión:
+
+```bash
+docker compose -f docker-compose.yml up -d --build app nginx
+docker compose -f docker-compose.yml exec -T app php docker/check-assets.php http://nginx
+```
+
+La comprobación verifica que todos los archivos del manifest de PHP, incluidos
+los chunks de las vistas, se sirven con el mismo contenido en Nginx. El despliegue
+automático también ejecuta esta comprobación. Después, recarga el navegador.
+
+### Desarrollo con Vite
+
+Sin `-f`, Compose también carga `docker-compose.override.yml`: PHP y Nginx leen
+el código y los assets del host, y el servicio `vite` publica el puerto 5173.
+Instala primero las dependencias PHP en ese directorio:
+
+```bash
+docker compose build app
+docker compose run --rm --no-deps app composer install
+docker compose up -d
+```
+
+El servicio `vite` instala las dependencias de Node y mantiene la recarga en
+caliente. Al volver al modo de imágenes compiladas, detén Vite y elimina su
+archivo de desarrollo antes de iniciar los servicios:
+
+```bash
+docker compose stop vite
+rm -f public/hot
+docker compose -f docker-compose.yml up -d --build app nginx
+```
 
 ---
 

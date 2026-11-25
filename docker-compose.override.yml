@@ -9,18 +9,19 @@ services:
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
+    command: ["php-fpm", "-d", "opcache.validate_timestamps=1"]
+    volumes:
+      # PHP y nginx deben leer el mismo public/build (y public/hot de Vite).
+      # Requiere vendor/ instalado en el host: composer install.
+      - ./:/var/www/html
 
   db:
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "1"
-    volumes:
-      # Los cambios en .php se reflejan sin rebuild.
-      # (Requiere vendor/ instalado en el host: composer install.)
-      - ./:/var/www/html
 
   nginx:
     volumes:
-      - ./public:/var/www/html/public
+      - ./public:/var/www/html/public:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
 
   vite:
