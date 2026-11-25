@@ -1,0 +1,51 @@
+# Always use with -f docker-compose.yml -f docker-compose.lightsail.yml.
+# Requires Docker Compose >= 2.24.4 for !reset. Never loads the development override.
+name: dulceria-prod
+
+services:
+  app:
+    image: dulceria-pos-app:${APP_IMAGE_TAG:-local}
+
+  nginx:
+    image: dulceria-pos-nginx:${APP_IMAGE_TAG:-local}
+    # Only Caddy publishes web ports. The backend cannot bypass TLS or proxy headers.
+    ports: !reset []
+
+  caddy:
+    image: caddy:2-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Define APP_DOMAIN con la IP o el dominio definitivo}
+      TLS_EMAIL: ${TLS_EMAIL:-}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${CADDY_CONFIG_FILE:-./deploy/lightsail/Caddyfile}:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - nginx
+    networks:
+      - dulceria
+
+  worker:
+    image: dulceria-pos-app:${APP_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file: .env
+    command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--timeout=60", "--max-time=3600"]
+    volumes:
+      - storage_public:/var/www/html/storage/app/public
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      app:
+        condition: service_started
+    networks:
+      - dulceria
+
+volumes:
+  caddy_data:
+  caddy_config:

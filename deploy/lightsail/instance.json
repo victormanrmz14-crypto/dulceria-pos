@@ -1,0 +1,12 @@
+{
+  "instanceNames": ["dulceria-pos-demo"],
+  "availabilityZone": "us-east-2a",
+  "blueprintId": "ubuntu_24_04",
+  "bundleId": "medium_3_0",
+  "keyPairName": "dulceria-pos-deploy",
+  "ipAddressType": "dualstack",
+  "tags": [
+    {"key": "Project", "value": "dulceria-pos"},
+    {"key": "Environment", "value": "demo"}
+  ]
+}
