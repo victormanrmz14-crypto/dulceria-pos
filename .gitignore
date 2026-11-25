@@ -28,6 +28,7 @@ Landing page profesional del proyecto/
 
 # Evidencias y servidores temporales de revisión visual
 /.playwright-mcp/
+/.deploy-status/
 
 # Cachés generadas al ejecutar las skills Python
 __pycache__/

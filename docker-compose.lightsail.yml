@@ -8,6 +8,9 @@ services:
 
   nginx:
     image: dulceria-pos-nginx:${APP_IMAGE_TAG:-local}
+    volumes:
+      # Public revision marker only; private CD state lives outside the repo.
+      - ./.deploy-status:/var/www/html/public/.well-known/dulceria:ro
     # Only Caddy publishes web ports. The backend cannot bypass TLS or proxy headers.
     ports: !reset []
 
@@ -16,6 +19,7 @@ services:
     restart: unless-stopped
     environment:
       APP_DOMAIN: ${APP_DOMAIN:?Define APP_DOMAIN con la IP o el dominio definitivo}
+      APP_PUBLIC_IP: ${APP_PUBLIC_IP:-13.184.138.10}
       TLS_EMAIL: ${TLS_EMAIL:-}
     ports:
       - "80:80"

@@ -18,6 +18,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Test deployment safeguards
+        run: python3 -m unittest discover -s tests/deploy -p 'test_*.py' -v
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:

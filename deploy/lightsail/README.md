@@ -1,5 +1,7 @@
 # Despliegue de Dulcería POS en Lightsail
 
+La configuración del dominio **midulcepos.shop**, el CD que sustituye al runner de la PC anterior y los pasos de Namecheap/GitHub están documentados en **[CI-CD.md](CI-CD.md)**. El CD usa GitHub Actions y un servicio de consulta en AWS, sin secretos SSH en GitHub.
+
 Estado: **desplegado y verificado** en **https://13.184.138.10**. Instancia `dulceria-pos-demo`, IP fija adjunta, seis servicios activos y certificado público Let's Encrypt para la IP. Región: Ohio, `us-east-2`. Perfil local autenticado: `dulceria.` (con punto final). Fecha de despliegue y precios: 24 de noviembre de 2026.
 
 Las imágenes de aplicación y Nginx se construyeron desde `96c6f9e`; la configuración posterior del proxy añade `default_sni` para navegadores que omiten SNI al abrir una IP detrás de Docker. La base nueva contiene la simulación solicitada de 20 dulcerías, con operaciones del 17 de septiembre al 24 de noviembre de 2026. La cuenta de acceso es `superadmin@dulceria-demo.test`; la contraseña se entrega por separado y no se incluye en este repositorio.
@@ -73,9 +75,9 @@ Estos pasos documentan la instalación de una instancia nueva. No repetir la cre
 
 7. En una instalación comercial, crear el SuperAdmin por el comando interactivo existente `platform-admin:create`, con contraseña nueva. La instancia inicial está destinada a la simulación solicitada: cargar explícitamente `SuperAdminDemoSeeder` contra la base nueva, antes de generar la caché, con `exec -T -e APP_ENV=local app php artisan db:seed --force --class=SuperAdminDemoSeeder`. El cambio de entorno se limita a ese proceso CLI; la aplicación web conserva `APP_ENV=production`, `APP_DEBUG=false` y cookies seguras. Las credenciales generadas se entregan al operador y no se guardan en Git. No ejecutar esta carga en una instalación con datos comerciales. No usar `migrate:fresh` ni restaurar la base local. Verificar HTTPS, login/logout, permisos, assets y conectividad de la base. SMTP continúa pendiente: `MAIL_MAILER=log` no entrega correos reales.
 
-## Estado sin dominio y límites
+## Acceso por IP, dominio y límites
 
-La entrega inicial utiliza `https://13.184.138.10`, con certificado público para la IP y renovación automática a cargo de Caddy. La emisión y renovación requieren mantener abiertos 80/443 y conservar el volumen `caddy_data`. Los valores `pos.example.com` y `admin@example.com` de la plantilla son ejemplos y no se utilizan para solicitar certificados. Cuando se disponga de dominio se puede cambiar a `Caddyfile` y actualizar `APP_URL`/`APP_DOMAIN`.
+La entrega inicial utiliza `https://13.184.138.10`, con certificado público para la IP y renovación automática a cargo de Caddy. El dominio elegido es `midulcepos.shop`; `activate-domain.py` selecciona `Caddyfile.domain` después de verificar DNS, conserva el acceso por IP y activa la redirección de `www` al dominio raíz. La emisión y renovación requieren mantener abiertos 80/443 y conservar el volumen `caddy_data`. Los valores `pos.example.com` y `admin@example.com` de la plantilla son ejemplos y no se utilizan para solicitar certificados.
 
 Esta arquitectura inicial usa un único servidor: es un punto de partida para demo y validación de carga, no alta disponibilidad ni capacidad garantizada para un número de negocios. Los datos persisten ante recreación de contenedores mediante volúmenes, pero eso no es un respaldo externo y no protege ante pérdida del servidor. Antes de operar con datos comerciales debe acordarse respaldo y recuperación. No se han contratado ni configurado snapshots en esta propuesta.
 

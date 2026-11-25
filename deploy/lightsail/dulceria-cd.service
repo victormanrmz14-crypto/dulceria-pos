@@ -1,0 +1,17 @@
+[Unit]
+Description=Deploy Dulceria POS only after successful main CI
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/srv/dulceria-pos
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /usr/local/lib/dulceria-pos/poll-deploy.py
+TimeoutStartSec=30min
+# Git/build sources must remain readable in the non-root application image.
+# The script creates private logs/state and .env with explicit mode 600.
+UMask=0022
+Nice=10

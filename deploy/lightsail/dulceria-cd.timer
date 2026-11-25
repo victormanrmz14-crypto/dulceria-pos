@@ -1,0 +1,11 @@
+[Unit]
+Description=Check GitHub CI for Dulceria POS every three minutes
+
+[Timer]
+OnBootSec=90s
+OnUnitInactiveSec=180s
+AccuracySec=10s
+Unit=dulceria-cd.service
+
+[Install]
+WantedBy=timers.target
