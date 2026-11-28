@@ -1,9 +1,69 @@
 \chapter{Marco Teórico}
 
-\section{Sección}
+\section{Sistemas de punto de venta}
 
-\section{Sección 2}
+Un sistema de punto de venta (POS, por sus siglas en inglés) registra la operación comercial en el momento en que se realiza. El ciclo básico comprende identificar artículos, determinar cantidades y precios, calcular el importe, registrar el medio de pago y conservar el comprobante de la transacción. En Dulcería POS, el servidor valida de nuevo los productos y sus precios antes de guardar la venta; de esta forma el importe persistido no depende exclusivamente de lo que envíe el navegador.
 
-\section{Modelos matemáticos}
+El registro relaciona una cabecera de venta con varios renglones de detalle. La cabecera conserva folio, usuario, fecha, método de pago e importes; cada renglón conserva producto, cantidad, precio unitario e importe. Esa estructura permite reconstruir el contenido de un ticket y analizar ventas por periodo.
 
-\subsection{Formalismo de Euler-Lagrange}
+\section{Gestión de inventario y caja}
+
+El inventario representa la cantidad disponible de cada producto. Para una venta con cantidad \(q_i\) del producto \(i\), el saldo esperado tras la operación es:
+\[
+  S_{i,\mathrm{nuevo}} = S_{i,\mathrm{anterior}} - q_i,
+\]
+donde \(S_i\) es el stock registrado. El sistema compara las existencias con el umbral mínimo configurado y considera bajo el stock cuando \(S_i \leq S_{i,\min}\). El código permite registrar stock decimal en el modelo; la validación del POS web restringe actualmente la cantidad vendida a números enteros.
+
+El control de caja distingue efectivo y tarjeta. El efectivo esperado del periodo considera las ventas en efectivo, los ingresos y retiros manuales y el fondo de caja dejado por el corte anterior:
+\[
+  E_{\mathrm{esperado}} =
+  V_{\mathrm{efectivo}} + I_{\mathrm{caja}} - R_{\mathrm{caja}} + F_{\mathrm{anterior}}.
+\]
+El total por tarjeta se calcula por separado a partir de las ventas correspondientes. Si se proporciona el efectivo contado, la diferencia se obtiene mediante:
+\[
+  D_{\mathrm{caja}} = E_{\mathrm{contado}} - E_{\mathrm{esperado}}.
+\]
+Un valor positivo indica sobrante y uno negativo indica faltante. El cálculo se centraliza en el servicio \texttt{CajaResumen}, reutilizado por las pantallas de caja, cortes y dashboard.
+
+\section{Arquitectura web y separación por empresa}
+
+La arquitectura cliente-servidor separa la presentación en navegador de las reglas y persistencia del servidor. El frontend de Vue 3 se comunica con Laravel mediante Inertia.js para las pantallas web; Laravel valida solicitudes, aplica permisos y coordina las operaciones sobre MySQL. La API sigue rutas REST y protege las solicitudes autenticadas con tokens de Laravel Sanctum. La documentación oficial de Laravel describe sus mecanismos de rutas, middleware, autenticación y persistencia \cite{laravel12,sanctum}; Vue documenta el modelo de componentes reactivos utilizado por la interfaz \cite{vue3}.
+
+La estrategia multiempresa asigna un identificador \texttt{tenant\_id} a los usuarios y registros de negocio. El trait \texttt{HasTenant} aplica un filtro global a los modelos que lo utilizan y completa el tenant al crear registros con un usuario autenticado. Las rutas restringidas y los middleware aplican además las reglas de rol. La separación lógica de datos no equivale por sí misma a una base de datos física independiente: el diseño actual usa tablas compartidas con registros asociados a cada tenant.
+
+\section{Persistencia relacional y transacciones}
+
+Una base de datos relacional organiza la información en tablas vinculadas por claves primarias y foráneas. En este proyecto, una venta pertenece a un usuario y puede tener varios detalles; cada detalle apunta a un producto. El inventario, los usuarios, los tenants y los movimientos de caja se relacionan para conservar contexto y permitir consultas.
+
+El registro de una venta agrupa sus escrituras en una transacción. Dentro de ella, los productos se vuelven a consultar con bloqueo de fila, se comprueba que estén activos y que tengan existencias, se calcula el precio desde la base de datos y se comprueba que el total coincida con el que confirmó el cajero. A continuación, se crea la venta y sus detalles, y se decrementa el stock. Una transacción permite confirmar el conjunto como una operación indivisible ante errores de persistencia \cite{mysqltransactions}.
+
+\section{Control de acceso y trazabilidad}
+
+La autenticación comprueba la identidad; la autorización determina qué acciones puede realizar esa identidad. Dulcería POS implementa comprobaciones de usuario activo, middleware de administración y superadministración, y restricciones adicionales para que un cajero consulte únicamente sus ventas y cortes. La API utiliza tokens de acceso de Sanctum y límites de solicitudes en rutas protegidas. El sistema registra eventos de auditoría para acciones seleccionadas, incluyendo inicio y cierre de sesión.
+
+\section{Proceso de desarrollo de software}
+
+El desarrollo incremental organiza el producto en módulos que pueden construirse e integrarse progresivamente. Sommerville presenta los procesos de software como actividades estructuradas de especificación, desarrollo, validación y evolución \cite{sommerville2015}. Para este proyecto, este enfoque facilita priorizar primero el flujo crítico de venta y después incorporar administración, caja, reportes y supervisión, verificando la integración con las rutas y modelos existentes.
+
+\section{Tecnologías utilizadas}
+
+\begin{table}[htbp]
+\centering
+\caption{Tecnologías que integran la solución}
+\label{tab:tecnologias}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{3.1cm}|>{\raggedright\arraybackslash}p{3.4cm}|X|}
+\hline
+\textbf{Componente} & \textbf{Tecnología} & \textbf{Uso en el proyecto} \\
+\hline
+Servidor y lógica & PHP 8.2 o superior, Laravel 12 & Rutas web y API, validación, autorización, modelos y transacciones. \\
+\hline
+Interfaz web & Vue 3, Inertia.js & Vistas reactivas servidas desde la aplicación Laravel. \\
+\hline
+Datos & MySQL 8 & Persistencia relacional de tenants y operaciones. \\
+\hline
+Autenticación API & Laravel Sanctum & Tokens Bearer para las rutas REST protegidas. \\
+\hline
+Entrega & Docker Compose, Nginx y PHP-FPM & Ejecución reproducible de la aplicación y sus servicios. \\
+\hline
+\end{tabularx}
+\end{table}
