@@ -2,18 +2,66 @@
 
 \section{Introducción}
 
+La operación de una dulcería combina actividades que ocurren de manera continua: consultar precios y existencias, cobrar productos, entregar comprobantes, registrar movimientos de efectivo y revisar el desempeño del negocio. Cuando estas tareas se apoyan en registros separados o cálculos manuales, el personal debe repetir trabajo y resulta más difícil mantener una visión consistente de las ventas y del inventario.
+
+Como respuesta a esta necesidad se desarrolló \textit{Dulcería POS}, una aplicación web adaptable a dispositivos móviles que integra el punto de venta con la administración cotidiana del negocio. Puede utilizarse desde el navegador de un teléfono, una tableta o una computadora para registrar ventas, actualizar existencias, controlar operaciones de caja, consultar cortes y reportes, y administrar usuarios y catálogos. Su diseño contempla varias dulcerías dentro de una misma plataforma, manteniendo sus registros separados mediante una identificación de empresa (tenant).
+
+Este documento describe el problema que dio origen al proyecto, sus objetivos y límites, los conceptos que fundamentan la solución, el proceso de desarrollo y los resultados que pueden comprobarse en el repositorio. La descripción se basa en las rutas, modelos, migraciones, componentes y pruebas automatizadas disponibles en el código fuente.
+
 \section{Antecedentes}
 
-\subsection{Subsección}
+En un flujo de venta tradicional, el personal identifica los artículos, determina el importe, recibe el pago y registra la operación. Si el inventario, las entradas o salidas de efectivo y los reportes se llevan por separado, la información puede quedar dispersa entre notas, hojas de cálculo o sistemas que no comparten datos. Esto complica el cierre de turno y la consulta posterior de una venta.
+
+Los sistemas de punto de venta integran la captura de productos y pagos con el almacenamiento de transacciones. En el caso de este proyecto, el alcance se amplió para cubrir también inventario, caja y administración de varias dulcerías. El repositorio implementa una interfaz web con Laravel 12, Vue 3 e Inertia.js, persistencia relacional en MySQL y una API autenticada para operaciones de productos. La infraestructura puede ejecutarse con Docker Compose.
+
+La evolución funcional presente en el repositorio incluye módulos de usuarios y catálogos, productos e inventario, ventas y tickets, caja y cortes, reportes y configuración del negocio, además de un panel de superadministración de la plataforma. Los archivos de pruebas existentes cubren, entre otros aspectos, autenticación, permisos administrativos, perfil y operaciones del panel global.
 
 \section{Objetivo General}
 
+Desarrollar una aplicación web multiempresa, usable desde dispositivos móviles, apoyando la operación de dulcerías mediante el registro de ventas, la gestión de productos e inventario, el control de caja y la consulta de información operativa, con acceso diferenciado según el perfil de usuario.
+
 \section{Objetivos Específicos}
+
+\begin{enumerate}
+  \item Implementar un punto de venta que permita buscar productos, formar un carrito, validar existencias y registrar el pago de una venta.
+  \item Mantener un catálogo de productos con precio, unidad, stock, nivel mínimo, categoría, marca, proveedor y estado.
+  \item Registrar ingresos y retiros de caja y generar cortes por usuario con desglose de efectivo y tarjeta.
+  \item Proporcionar historial, tickets y reportes para facilitar la consulta de operaciones y tendencias de venta.
+  \item Separar la información de cada dulcería y restringir las funciones de acuerdo con los roles de cajero, administrador y superadministrador.
+  \item Incorporar una interfaz web adaptable y mecanismos de autenticación para el acceso desde navegador y API.
+\end{enumerate}
 
 \section{Alcance}
 
+\subsection{Funciones incluidas}
+La aplicación incluye:
+\begin{itemize}
+  \item Inicio de sesión y perfiles con roles de cajero, administrador de dulcería y superadministrador de plataforma.
+  \item Gestión de productos, categorías, marcas y proveedores; consulta de stock bajo y activación o desactivación de productos.
+  \item Registro de ventas con pago en efectivo o tarjeta, cálculo del cambio cuando aplica, folio y vista de ticket.
+  \item Historial de ventas, movimientos de efectivo, cortes de caja por cajero y consulta del detalle de cada corte.
+  \item Reportes con filtros por periodo, ingresos por método de pago, ventas agrupadas por día y productos destacados.
+  \item Configuración del negocio y presentación del ticket, administración de usuarios y panel de supervisión de tenants.
+  \item API protegida con tokens de Sanctum para autenticación y operaciones CRUD de productos.
+\end{itemize}
+
+\subsection{Usuarios previstos}
+El \textbf{cajero} registra ventas, consulta sus operaciones y administra la caja de su turno. El \textbf{administrador} gestiona el catálogo, usuarios y configuración de su dulcería, además de consultar reportes. El \textbf{superadministrador} administra la plataforma y consulta información operativa global de las dulcerías registradas.
+
 \section{Limitación}
+
+El producto es una herramienta operativa y no sustituye un sistema contable o fiscal. El código de ventas establece impuestos en cero y no integra timbrado de comprobantes fiscales. Los medios de pago modelados son efectivo y tarjeta; el sistema no procesa pagos directamente con bancos ni pasarelas. El repositorio no implementa compras a proveedores, órdenes de abastecimiento ni contabilidad general. El acceso desde teléfonos se realiza mediante navegador: el repositorio no incluye una aplicación nativa instalable para Android o iOS.
+
+La API actual se concentra en autenticación y productos; no expone todas las funciones disponibles en la interfaz web. La ejecución requiere configurar y mantener la infraestructura, la base de datos, el almacenamiento y las credenciales de despliegue. El alcance documentado tampoco implica que las pruebas automatizadas cubran exhaustivamente todas las combinaciones de negocio o que se haya realizado una evaluación formal de rendimiento con usuarios reales.
 
 \section{Problemática}
 
+Una operación con información fragmentada obliga al personal a consultar o actualizar datos en distintos lugares. Esto puede ocasionar diferencias entre el stock registrado y el disponible, errores al calcular el total o el cambio, dificultad para identificar quién realizó una operación y demoras al preparar el cierre del turno. Para una solución que atiende a más de un negocio, además, es esencial impedir que la información de una dulcería se mezcle con la de otra.
+
+El problema central se define como la falta de una herramienta unificada que permita registrar y consultar, de forma consistente y con acceso controlado, las operaciones diarias de una dulcería y que pueda servir a varios negocios desde una plataforma común.
+
 \section{Justificación}
+
+La centralización de las operaciones reduce la dependecia de registros dispersos y facilita que ventas, existencias e información de caja compartan una misma fuente de datos. Registrar cada venta con sus conceptos y usuario asociado mejora la trazabilidad; verificar el stock durante el cobro ayuda a evitar vender artículos sin existencia; y contar con cortes e informes proporciona al responsable una base más clara para revisar el turno y el comportamiento comercial.
+
+La arquitectura multiempresa permite que cada negocio utilice módulos comunes sin compartir sus datos operativos con otros tenants. La interfaz web adaptable permite usar el sistema desde pantallas móviles y de escritorio, mientras que los roles y las rutas protegidas distinguen las responsabilidades. El proyecto integra conocimientos de ingeniería de software, bases de datos, desarrollo web, seguridad de acceso y despliegue, por lo que también constituye un caso práctico completo para la presentación académica.
