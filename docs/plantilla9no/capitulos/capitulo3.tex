@@ -2,6 +2,427 @@
 
 \section{Metodología}
 
+Se organizó el trabajo con un enfoque incremental por módulos. Cada incremento parte de una necesidad operativa, se traduce a rutas, modelos, reglas de acceso y vistas, y se integra con los módulos ya existentes. Este enfoque es congruente con la estructura del repositorio, que separa controladores, modelos, componentes y páginas, y con la incorporación gradual de capacidades de operación y administración.
+
+Las etapas siguientes presentan una síntesis técnica para explicar el proceso; no pretenden ser un registro diario de horas ni una medición retrospectiva del esfuerzo:
+\begin{enumerate}
+  \item \textbf{Análisis:} identificación de actores, operaciones del negocio, datos requeridos y permisos.
+  \item \textbf{Diseño:} definición de módulos, relaciones de datos, navegación y aislamiento por tenant.
+  \item \textbf{Construcción:} implementación del backend, interfaz, persistencia y reglas comerciales por incrementos.
+  \item \textbf{Integración y validación:} conexión entre interfaz y servidor, revisión de permisos y ejecución de pruebas automatizadas disponibles.
+  \item \textbf{Entrega:} preparación de la configuración de ejecución, documentación y material de presentación.
+\end{enumerate}
+
 \section{Fases}
 
+La solución se divide en módulos que comparten autenticación, persistencia y contexto de tenant. La Tabla~\ref{tab:fases} resume el propósito y los principales productos de cada fase.
+
+\begin{table}[htbp]
+\centering
+\caption{Fases funcionales y entregables}
+\label{tab:fases}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{2.6cm}|X|>{\raggedright\arraybackslash}p{4.0cm}|}
+\hline
+\textbf{Fase} & \textbf{Actividades principales} & \textbf{Resultado integrado} \\
+\hline
+Análisis y diseño & Delimitar actores, módulos, permisos y entidades del negocio. & Requisitos funcionales y modelo inicial. \\
+\hline
+Base y acceso & Configurar Laravel, autenticación, roles, tenants y estructura de datos. & Acceso diferenciado y datos separados por dulcería. \\
+\hline
+Operación de tienda & Construir catálogos, productos, POS, tickets, caja y cortes. & Flujo de operación diaria disponible en web. \\
+\hline
+Plataforma & Añadir reportes, configuración, usuarios y panel de plataforma. & Herramientas de consulta y supervisión. \\
+\hline
+Integración y entrega & Revisar pruebas existentes, preparar Docker y completar documentación. & Aplicación ejecutable y memoria técnica. \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Arquitectura de la solución}
+La Figura~\ref{fig:arquitectura} resume la comunicación entre los usuarios, la aplicación y los servicios de persistencia. Redis forma parte de la configuración de despliegue indicada por el proyecto para caché y sesiones; no sustituye a MySQL como base de datos principal.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+  \node[bloque, text width=3.0cm] (actores) at (0,1.5) {\textbf{Perfiles de usuario}\\Cajero\\Administrador\\Superadmin de plataforma};
+  \node[servicio, text width=3.0cm] (web) at (3.8,1.5) {\textbf{Aplicación web}\\Vue 3 + Inertia.js};
+  \node[servicio, text width=3.5cm] (app) at (7.8,0) {\textbf{Laravel 12}\\Rutas, validación, roles\\y reglas del negocio};
+  \node[bloque, text width=3.0cm] (cliente) at (0,-1.5) {\textbf{Cliente de integración}\\Solicitud autenticada};
+  \node[destacado, text width=3.0cm] (api) at (3.8,-1.5) {\textbf{API REST}\\Sanctum\\Bearer token};
+  \node[bloque, text width=3.0cm] (db) at (12,1.1) {\textbf{MySQL 8}\\Datos por tenant\\y transacciones};
+  \node[bloque, text width=3.0cm] (redis) at (12,-1.1) {\textbf{Redis}\\Caché y sesiones};
+  \draw[flujo] (actores) -- node[above,font=\scriptsize]{HTTPS} (web);
+  \draw[flujo] (cliente) -- node[above,font=\scriptsize]{token} (api);
+  \draw[relacion] (web) -- node[above,sloped,font=\scriptsize]{solicitudes web} (app);
+  \draw[relacion] (api) -- node[below,sloped,font=\scriptsize]{rutas protegidas} (app);
+  \draw[relacion] (app) -- node[above,sloped,font=\scriptsize]{Eloquent / SQL} (db);
+  \draw[relacion] (app) -- node[below,sloped,font=\scriptsize]{caché / sesión} (redis);
+\end{tikzpicture}
+\caption{Arquitectura lógica de Dulcería POS.}
+\label{fig:arquitectura}
+\end{figure}
+
+\subsection{Modelo de datos principal}
+La Figura~\ref{fig:datos} presenta una vista simplificada de las entidades centrales. Por claridad se omiten atributos secundarios, marcas de tiempo y tablas del framework. Las entidades operativas incorporan \texttt{tenant\_id} para asociar registros con la dulcería correspondiente.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=12mm and 12mm]
+  \node[destacado, text width=2.4cm] (tenant) {\textbf{TENANT}\\id\\nombre};
+  \node[bloque, text width=2.4cm, below left=of tenant] (user) {\textbf{USUARIO}\\id\\tenant\_id, rol};
+  \node[bloque, text width=2.8cm, below right=of tenant] (producto) {{\scriptsize\textbf{PRODUCTO}}\\id\\tenant\_id, precio\\stock};
+  \node[bloque, text width=2.4cm, below=22mm of user] (venta) {\textbf{VENTA}\\id\\tenant\_id, user\_id\\folio, total};
+  \node[servicio, text width=2.7cm, right=of venta] (detalle) {\textbf{DETALLE VENTA}\\venta\_id\\producto\_id\\cantidad, importe};
+  \node[bloque, text width=3.0cm, below=of producto] (catalogos) {{\scriptsize\textbf{CATÁLOGOS}}\\categoría\\marca, proveedor};
+  \node[bloque, text width=2.5cm, below=of detalle] (caja) {\textbf{CAJA}\\cortes\\movimientos};
+  \draw[relacion] (tenant) -- node[left,font=\scriptsize]{1:N} (user);
+  \draw[relacion] (tenant) -- node[right,font=\scriptsize]{1:N} (producto);
+  \draw[relacion] (tenant) |- node[pos=.75,left,font=\scriptsize]{1:N} (venta);
+  \draw[relacion] (user) -- node[left,font=\scriptsize]{1:N} (venta);
+  \draw[relacion] (venta) -- node[above,font=\scriptsize]{1:N} (detalle);
+  \draw[relacion] (producto) |- node[pos=.78,right,font=\scriptsize]{1:N} (detalle);
+  \draw[opcional] (producto) -- node[right,font=\scriptsize]{clasifica} (catalogos);
+  \draw[relacion] (user) |- node[pos=.8,left,font=\scriptsize]{registra} (caja);
+\end{tikzpicture}}
+\caption{Relaciones simplificadas del modelo de datos.}
+\label{fig:datos}
+\end{figure}
+
+\subsection{Flujo de registro de venta}
+El flujo de la Figura~\ref{fig:flujo-venta} ilustra controles presentes en \texttt{VentaController}: validación del carrito, lectura de precios actuales, bloqueo de las filas de producto, comprobación del stock y persistencia transaccional de la venta y sus detalles.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=7mm]
+  \node[bloque, text width=3.1cm] (inicio) {Cajero arma el carrito y confirma pago};
+  \node[servicio, text width=3.4cm, below=of inicio] (validar) {Laravel valida productos, cantidades y método de pago};
+  \node[servicio, text width=3.5cm, below=of validar] (lock) {Transacción: bloquea filas y consulta precios/stock actuales};
+  \node[destacado, text width=3.4cm, below=of lock] (verifica) {¿Producto disponible, stock suficiente y total vigente?};
+  \node[bloque, text width=3.2cm, below left=of verifica] (rechazo) {Se informa el error; no se confirma la venta};
+  \node[servicio, text width=3.6cm, below right=of verifica] (guardar) {Guarda venta y detalles; descuenta stock};
+  \node[bloque, text width=3.3cm, below=of guardar] (ticket) {Confirma transacción y muestra el ticket};
+  \draw[flujo] (inicio) -- (validar);
+  \draw[flujo] (validar) -- (lock);
+  \draw[flujo] (lock) -- (verifica);
+  \draw[flujo] (verifica) -- node[above left,font=\scriptsize]{No} (rechazo);
+  \draw[relacion] (verifica) -- node[above right,font=\scriptsize]{Sí} (guardar);
+  \draw[relacion] (guardar) -- (ticket);
+\end{tikzpicture}
+\caption{Flujo simplificado del registro de una venta.}
+\label{fig:flujo-venta}
+\end{figure}
+
+\subsection{Diagramas }
+
+Se incorporan a continuación los diagramas del documento MVP compartido, agrupados por tema. Se conservan las figuras originales y se añade una descripción sintética de cada una; estas descripciones resumen el alcance representado y no constituyen una verificación independiente de su implementación.
+
+\subsubsection{Flujo general y arquitectura}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_01.png}
+\caption{Flujo principal del MVP para web y WebView.}
+\label{fig:mvp-01}
+\par\smallskip{\small\textit{Descripción.} Representa el recorrido general desde el acceso y la autenticación hasta las operaciones de administración o venta, con resolución del negocio y comprobación de permisos.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_02.png}
+\caption{Arquitectura tecnológica y acceso Android declarado.}
+\label{fig:mvp-02}
+\par\smallskip{\small\textit{Descripción.} Expone la relación entre el cliente web, el contenedor Android WebView, el servidor y los componentes tecnológicos, además de la persistencia centralizada de los datos.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_03.png}
+\caption{Módulos de la plataforma de dulcerías.}
+\label{fig:mvp-03}
+\par\smallskip{\small\textit{Descripción.} Organiza los módulos funcionales principales de la plataforma y presenta las capacidades de administración, inventario, ventas, caja y reportes.}
+\end{figure}
+
+\subsubsection{Modelo de datos}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_04.png}
+\caption{Entidades y relaciones principales del repositorio web.}
+\label{fig:mvp-04}
+\par\smallskip{\small\textit{Descripción.} Identifica las entidades centrales del dominio y sus relaciones, incluidos usuarios, dulcerías, productos, ventas y operaciones de caja.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_05.png}
+\caption{Modelo relacional simplificado basado en migraciones y modelos Laravel.}
+\label{fig:mvp-05}
+\par\smallskip{\small\textit{Descripción.} Presenta una vista resumida del esquema relacional conforme a los modelos y migraciones, destacando los vínculos que respaldan la integridad de los registros.}
+\end{figure}
+
+\subsubsection{Casos de uso y navegación}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_06.png}
+\caption{Acceso y administración de cuentas.}
+\label{fig:mvp-06}
+\par\smallskip{\small\textit{Descripción.} Resume las interacciones de autenticación y gestión de cuentas, diferenciando las acciones disponibles para usuarios y administradores.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_07.png}
+\caption{Casos de uso del punto de venta y reportes.}
+\label{fig:mvp-07}
+\par\smallskip{\small\textit{Descripción.} Describe las operaciones de consulta de productos, registro de ventas y acceso a información de ventas y reportes.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_08.png}
+\caption{Casos de uso de productos, caja y controles asociados.}
+\label{fig:mvp-08}
+\par\smallskip{\small\textit{Descripción.} Agrupa los casos de uso relacionados con productos, categorías, proveedores, existencias y operaciones de caja.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_09.png}
+\caption{Casos de uso del acceso desde WebView.}
+\label{fig:mvp-09}
+\par\smallskip{\small\textit{Descripción.} Representa el acceso móvil mediante WebView a la aplicación web y sus funciones, sujeto a la misma autenticación y autorización del sistema.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_10.png}
+\caption{Pantallas y accesos por rol.}
+\label{fig:mvp-10}
+\par\smallskip{\small\textit{Descripción.} Muestra la organización de las pantallas y los accesos previstos para administrador, cajero y superadministrador.}
+\end{figure}
+
+\subsubsection{Diagramas por acción}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_11.png}
+\caption{A01: Acceder a la dulcería.}
+\label{fig:mvp-11}
+\par\smallskip{\small\textit{Descripción.} Describe la autenticación del usuario y la determinación de la dulcería y los permisos aplicables antes de habilitar el acceso.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_12.png}
+\caption{A02: Cerrar sesión.}
+\label{fig:mvp-12}
+\par\smallskip{\small\textit{Descripción.} Representa la terminación controlada de la sesión activa y el retorno a un estado no autenticado.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_13.png}
+\caption{A03: Recuperar contraseña.}
+\label{fig:mvp-13}
+\par\smallskip{\small\textit{Descripción.} Expone la secuencia para solicitar la recuperación de credenciales y continuar el proceso de restablecimiento.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_14.png}
+\caption{A04: Crear cuenta de cajero.}
+\label{fig:mvp-14}
+\par\smallskip{\small\textit{Descripción.} Detalla la captura y validación de datos para que el administrador registre una cuenta con perfil de cajero.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_15.png}
+\caption{A05: Consultar usuarios.}
+\label{fig:mvp-15}
+\par\smallskip{\small\textit{Descripción.} Presenta la consulta administrativa de las cuentas asociadas a la dulcería correspondiente.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_16.png}
+\caption{A06: Editar usuario permitido.}
+\label{fig:mvp-16}
+\par\smallskip{\small\textit{Descripción.} Describe la modificación de los datos autorizados de una cuenta, conforme al rol y al ámbito de la dulcería.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_17.png}
+\caption{A07: Crear producto.}
+\label{fig:mvp-17}
+\par\smallskip{\small\textit{Descripción.} Representa el registro de un producto con sus datos de catálogo y existencias iniciales.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_18.png}
+\caption{A08: Editar producto.}
+\label{fig:mvp-18}
+\par\smallskip{\small\textit{Descripción.} Expone la consulta y actualización de los datos de un producto existente, incluido el campo de existencia.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_19.png}
+\caption{A09: Consultar catálogo.}
+\label{fig:mvp-19}
+\par\smallskip{\small\textit{Descripción.} Describe la búsqueda y visualización del catálogo disponible para los roles autorizados.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_20.png}
+\caption{A10: Administrar categoría.}
+\label{fig:mvp-20}
+\par\smallskip{\small\textit{Descripción.} Detalla las operaciones de consulta, registro y mantenimiento de categorías de productos.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_21.png}
+\caption{A11: Administrar proveedor.}
+\label{fig:mvp-21}
+\par\smallskip{\small\textit{Descripción.} Presenta las operaciones de gestión de proveedores disponibles para el administrador.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_22.png}
+\caption{A12: Actualizar existencias desde producto.}
+\label{fig:mvp-22}
+\par\smallskip{\small\textit{Descripción.} Representa el ajuste de las existencias mediante el formulario del producto y la persistencia del valor actualizado.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_23.png}
+\caption{A13: Consultar stock bajo.}
+\label{fig:mvp-23}
+\par\smallskip{\small\textit{Descripción.} Describe la consulta de productos cuyas existencias requieren atención según los niveles registrados.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_24.png}
+\caption{A14: Buscar en punto de venta.}
+\label{fig:mvp-24}
+\par\smallskip{\small\textit{Descripción.} Expone la búsqueda de productos en el punto de venta y su incorporación a la venta en curso.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_25.png}
+\caption{A15: Confirmar venta.}
+\label{fig:mvp-25}
+\par\smallskip{\small\textit{Descripción.} Representa la validación y confirmación de una venta, el registro de sus detalles y la actualización de existencias.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_26.png}
+\caption{A16: Consultar historial de ventas.}
+\label{fig:mvp-26}
+\par\smallskip{\small\textit{Descripción.} Describe la consulta administrativa de las ventas registradas para revisar las operaciones realizadas.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_27.png}
+\caption{A17: Abrir caja de turno.}
+\label{fig:mvp-27}
+\par\smallskip{\small\textit{Descripción.} Presenta la apertura de caja por el cajero y el registro del saldo inicial del turno.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_28.png}
+\caption{A18: Registrar ingreso de caja.}
+\label{fig:mvp-28}
+\par\smallskip{\small\textit{Descripción.} Expone el registro de una entrada de efectivo durante el turno y su asociación con la caja correspondiente.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_29.png}
+\caption{A19: Registrar retiro de caja.}
+\label{fig:mvp-29}
+\par\smallskip{\small\textit{Descripción.} Describe el registro de una salida de efectivo, con sus datos y vínculo a la caja activa.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_30.png}
+\caption{A20: Realizar corte de caja.}
+\label{fig:mvp-30}
+\par\smallskip{\small\textit{Descripción.} Representa el cierre del turno mediante el cálculo y registro del corte de caja.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_31.png}
+\caption{A21: Consultar cortes históricos.}
+\label{fig:mvp-31}
+\par\smallskip{\small\textit{Descripción.} Presenta la consulta administrativa de cortes previos para dar seguimiento a los turnos cerrados.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_32.png}
+\caption{A22: Consultar reportes.}
+\label{fig:mvp-32}
+\par\smallskip{\small\textit{Descripción.} Describe la selección y consulta de reportes disponibles para el administrador de la dulcería.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_33.png}
+\caption{A23: Iniciar aplicación WebView.}
+\label{fig:mvp-33}
+\par\smallskip{\small\textit{Descripción.} Expone el inicio del contenedor Android, la carga de la aplicación web y el acceso sujeto a conectividad.}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{imagenes/mvp_cap3_34.png}
+\caption{A24: Operar punto de venta desde Android.}
+\label{fig:mvp-34}
+\par\smallskip{\small\textit{Descripción.} Representa el uso del punto de venta desde WebView con el mismo backend y las restricciones del rol de cajero.}
+\end{figure}
+
 \section{Actividades y diagrama de Gantt}
+
+La Tabla~\ref{tab:gantt} presenta un calendario de referencia de ocho semanas para explicar una secuencia razonable de trabajo en una exposición académica. Es una planificación orientativa, no una afirmación de que el proyecto se haya ejecutado exactamente en ese plazo.
+
+\begin{table}[htbp]
+\centering
+\caption{Cronograma orientativo por semanas}
+\label{tab:gantt}
+\begin{tabularx}{\textwidth}{|X|*{8}{>{\centering\arraybackslash}p{0.65cm}|}}
+\hline
+\textbf{Actividad} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} \\
+\hline
+Análisis y diseño & \cellcolor{azulNoche!18} & \cellcolor{azulNoche!18} & & & & & & \\
+\hline
+Acceso, roles y tenants & & \cellcolor{turquesa!22} & \cellcolor{turquesa!22} & & & & & \\
+\hline
+Catálogos, productos e inventario & & & \cellcolor{dorado!28} & \cellcolor{dorado!28} & & & & \\
+\hline
+Ventas, tickets y caja & & & & \cellcolor{azulNoche!18} & \cellcolor{azulNoche!18} & & & \\
+\hline
+Reportes y administración & & & & & \cellcolor{turquesa!22} & \cellcolor{turquesa!22} & & \\
+\hline
+Integración, pruebas y documentación & & & & & & \cellcolor{dorado!28} & \cellcolor{dorado!28} & \cellcolor{dorado!28} \\
+\hline
+\end{tabularx}
+\end{table}
+
+Las actividades se solapan para que el diseño y la integración acompañen la construcción. En un ciclo real, la duración y el orden deben ajustarse según el equipo, las prioridades y la retroalimentación obtenida.
+
