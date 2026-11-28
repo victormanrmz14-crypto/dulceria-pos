@@ -26,8 +26,32 @@
 \usepackage{textcomp}
 \usepackage[utf8]{inputenc}
 \usepackage{csquotes}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
 \usepackage[backend=biber,style=ieee, sorting=none, style=numeric]{biblatex}
 \addbibresource{Referencias.bib}
+
+\definecolor{azulNoche}{RGB}{18,53,91}
+\definecolor{turquesa}{RGB}{53,167,160}
+\definecolor{dorado}{RGB}{230,176,80}
+
+\tikzset{
+  bloque/.style={
+    rectangle,rounded corners=2mm,draw=azulNoche,fill=white,
+    align=center,minimum height=1.3cm,inner sep=3mm
+  },
+  servicio/.style={
+    rectangle,rounded corners=2mm,draw=turquesa,fill=turquesa!10,
+    align=center,minimum height=1.3cm,inner sep=3mm
+  },
+  destacado/.style={
+    rectangle,rounded corners=2mm,draw=dorado,fill=dorado!18,
+    align=center,minimum height=1.3cm,inner sep=3mm
+  },
+  flujo/.style={-{Latex[length=2mm]},draw=azulNoche,thick},
+  relacion/.style={-{Latex[length=2mm]},draw=azulNoche!75},
+  opcional/.style={-{Latex[length=2mm]},draw=turquesa,dashed}
+}
 
     
 \lstdefinestyle{mystyle}{
